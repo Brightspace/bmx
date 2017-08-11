@@ -3,17 +3,17 @@
 import sys
 import cmd
 
-import bmxaws
-import bmxrenew
+import bmx.bmxaws
+import bmx.bmxrenew
 
 class Bmx(cmd.Cmd):
     def do_aws(self, myarg):
         sys.argv.insert(0, 'bmxaws')
 
-        return bmxaws.main()
+        return bmx.bmxaws.main()
 
     def do_writecreds(self, myarg):
-        return bmxrenewcreds.main()
+        return bmx.bmxrenewcreds.main()
 
 def main():
     sys.argv.pop(0)

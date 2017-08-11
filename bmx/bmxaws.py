@@ -7,8 +7,8 @@ import sys
 
 import awscli.clidriver
 
-import bmxrenew
-import prompt
+import bmx.bmxrenew
+import bmx.prompt
 
 def main():
     while True:
@@ -27,16 +27,16 @@ def main():
         ):
             print("Your AWS STS token has expired.  Renewing...")
 
-            bmxrenew.renew_credentials()
+            bmx.bmxrenew.renew_credentials()
         else:
             break
 
     errstring = err.getvalue()
-    if not prompt.is_empty(errstring):
+    if not bmx.prompt.is_empty(errstring):
         print(errstring, file=sys.stderr)
 
     outstring = out.getvalue()
-    if not prompt.is_empty(outstring):
+    if not bmx.prompt.is_empty(outstring):
         print(outstring)
 
     return ret
