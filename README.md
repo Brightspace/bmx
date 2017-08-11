@@ -1,5 +1,5 @@
 ```bash
-$ ./bmxaws.py cloudformation describe-stacks
+$ ./bmx.py aws cloudformation describe-stacks
 {
     "Stacks": [
         {
@@ -10,7 +10,7 @@ $ ./bmxaws.py cloudformation describe-stacks
 
 $ rm ~/.aws/credentials
 
-$ ./bmxaws.py cloudformation describe-stacks
+$ ./bmx.py aws cloudformation describe-stacks
 Your AWS STS token has expired.  Renewing...
 Okta username: credekop
 Okta password:
