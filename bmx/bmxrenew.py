@@ -14,32 +14,32 @@ import lxml
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
 
-import bmx.prompt
-import bmx.oktautil
+from . import prompt
+from . import oktautil
 
 def renew_credentials():
     write_credentials(get_credentials())
 
 def get_credentials():
-    auth_client = bmx.oktautil.create_auth_client()
-    sessions_client = bmx.oktautil.create_sessions_client()
+    auth_client = oktautil.create_auth_client()
+    sessions_client = oktautil.create_sessions_client()
 
     while True:
         try:
-            username = bmx.prompt.prompt_for_value(input, 'Okta username: ')
-            password = bmx.prompt.prompt_for_value(getpass.getpass, 'Okta password: ')
+            username = prompt.prompt_for_value(input, 'Okta username: ')
+            password = prompt.prompt_for_value(getpass.getpass, 'Okta password: ')
 
             authentication = auth_client.authenticate(username, password)
             session = sessions_client.create_session(username, password)
 
             applink = get_app_selection(
                 filter_applinks(
-                    bmx.oktautil.create_users_client(session.id).
+                    oktautil.create_users_client(session.id).
                         get_user_applinks(session.userId)
                 )
             )
 
-            saml_assertion = bmx.oktautil.connect_to_app(
+            saml_assertion = oktautil.connect_to_app(
                 applink.linkUrl, 
                 authentication.sessionToken
             )
@@ -75,7 +75,7 @@ def filter_applinks(applinks):
 
 def get_app_selection(applinks):
     return applinks[
-        bmx.prompt.MinMenu(
+        prompt.MinMenu(
             '\nAvailable AWS Accounts: ',
             list(map(lambda x: '{}'.format(x.label), applinks)),
             'AWS Account Index: '
@@ -84,7 +84,7 @@ def get_app_selection(applinks):
 
 def get_role_selection(app_name, roles):
     return roles[
-        bmx.prompt.MinMenu(
+        prompt.MinMenu(
             '\nAvailable Roles in {}:'.format(app_name),
             list(map(lambda x: re.sub('.*role/', '', x.split(',')[1]), roles)),
             'Role Index: '

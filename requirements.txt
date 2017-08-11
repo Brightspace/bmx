@@ -9,7 +9,7 @@ future == 0.16.0
 
 # bmx/bmxrenew.py: 12
 # bmx/oktautil.py: 3,11
-lxml == 3.8.0
+lxml == 3.7.3
 
 # bmx/bmxrenew.py: 15
 # bmx/oktautil.py: 4
