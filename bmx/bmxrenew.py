@@ -10,11 +10,12 @@ import requests
 
 import boto3
 import lxml
-import oktautil
-import prompt
 
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
+
+from . import prompt
+from . import oktautil
 
 def renew_credentials():
     write_credentials(get_credentials())

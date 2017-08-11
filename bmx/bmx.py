@@ -3,8 +3,8 @@
 import sys
 import cmd
 
-import bmxaws
-import bmxrenew
+from . import bmxaws
+from . import bmxrenew
 
 class Bmx(cmd.Cmd):
     def do_aws(self, myarg):

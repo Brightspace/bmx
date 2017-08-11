@@ -7,8 +7,8 @@ import sys
 
 import awscli.clidriver
 
-import bmxrenew
-import prompt
+from . import bmxrenew
+from . import prompt
 
 def main():
     while True:

@@ -4,11 +4,9 @@ import lxml
 import okta
 import requests
 
-import boto3
 import inspect
 import re
 import sys
-import awscli.clidriver
 
 from lxml import html
 
