@@ -9,36 +9,31 @@ from . import bmxprint
 
 class Parser:
     def __init__(self):
-        def add_username_arg(sub_parser):
-            sub_parser.add_argument('--username', required=False,
-                help='Use the environment variable USERNAME as the username')
 
         parser = argparse.ArgumentParser(
             description='Okta time-out helper for AWS CLI',
             epilog='Copyright 2017 D2L Corporation')
-        subparsers = parser.add_subparsers(title='okta',
-            description='Automatic STS token renewal from Okta',
-            help='')
+        parser.add_argument('--username', required=False,
+            help='specify username instead of being prompted')
+
+        subparsers = parser.add_subparsers(title='commands')
         aws_parser = subparsers.add_parser('aws', help='awscli with automatic STS token renewal')
         aws_parser.set_defaults(func=self.aws)
-        add_username_arg(aws_parser)
 
-        renew_parser = subparsers.add_parser('renew', help='renew default credentials')
-        renew_parser.set_defaults(func=self.renew)
-        add_username_arg(renew_parser)
+        write_parser = subparsers.add_parser('write', help='write default credentials')
+        write_parser.set_defaults(func=self.write)
 
-        print_parser = subparsers.add_parser('print', help='renew default credentials and print to console')
+        print_parser = subparsers.add_parser('print', help='write default credentials and print to console')
         print_parser.set_defaults(func=self.print)
         print_parser.add_argument('--duration', required=False, default=3600,
             help='Expiry duration in seconds')
-        add_username_arg(print_parser)
 
         self._parser = parser
 
     def aws(self, known_args, unknown_args):
         return bmxaws.main(unknown_args, known_args.username)
 
-    def renew(self, known_args, unknown_args):
+    def write(self, known_args, unknown_args):
         return bmxrenew.main(known_args)
 
     def print(self, known_args, unknown_args):
