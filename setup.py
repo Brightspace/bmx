@@ -27,7 +27,6 @@ setup(
         'boto3>=1.4.5',
         'future>=0.16.0',
         'okta>=0.0.4',
-        'html5lib>=0.999999999',
         'pies2overrides>=2.6.7',
         'prompt>=0.4.1',
         'requests>=2.18.3',
