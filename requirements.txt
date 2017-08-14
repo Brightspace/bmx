@@ -7,6 +7,8 @@ boto3 == 1.4.5
 # bmx/bmxrenew.py: 4
 future == 0.16.0
 
+html5lib == 0.999999999
+
 # bmx/bmxrenew.py: 15
 # bmx/oktautil.py: 4
 okta == 0.0.4
