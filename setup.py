@@ -1,9 +1,5 @@
 from setuptools import setup, find_packages
 
-print('foo')
-print(find_packages())
-print('bar')
-
 setup(
     name='bmx',
     version='0.0.1',
@@ -19,7 +15,7 @@ setup(
 	'License :: Other/Proprietary License'
     ],
     keywords='aws cli okta sts token credentials',
-    packages=['bmx'],
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'bmx=bmx.bmx:main',
