@@ -5,8 +5,6 @@ import configparser
 import getpass
 import os
 import re
-import sys
-import requests
 
 import boto3
 import lxml
@@ -17,16 +15,16 @@ from requests import HTTPError
 from . import prompt
 from . import oktautil
 
-def renew_credentials():
-    write_credentials(get_credentials())
+def renew_credentials(default_username=None, duration_seconds=3600):
+    write_credentials(get_credentials(default_username, duration_seconds))
 
-def get_credentials():
+def get_credentials(default_username, duration_seconds):
     auth_client = oktautil.create_auth_client()
     sessions_client = oktautil.create_sessions_client()
 
     while True:
         try:
-            username = prompt.prompt_for_value(input, 'Okta username: ')
+            username = default_username or prompt.prompt_for_value(input, 'Okta username: ')
             password = prompt.prompt_for_value(getpass.getpass, 'Okta password: ')
 
             authentication = auth_client.authenticate(username, password)
@@ -53,7 +51,8 @@ def get_credentials():
             credentials = sts_assume_role(
                 saml_assertion,
                 split_role[0],
-                split_role[1]
+                split_role[1],
+                duration_seconds=duration_seconds
             )
 
             break
@@ -97,12 +96,12 @@ def get_app_roles(saml_assertion):
         namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
     )
 
-def sts_assume_role(saml_assertion, principal, role):
+def sts_assume_role(saml_assertion, principal, role, duration_seconds):
     response = boto3.client('sts').assume_role_with_saml(
-        PrincipalArn = principal,
-        RoleArn = role,
-        SAMLAssertion = saml_assertion,
-        DurationSeconds = 3600
+        PrincipalArn=principal,
+        RoleArn=role,
+        SAMLAssertion=saml_assertion,
+        DurationSeconds=duration_seconds
     )
 
     return response['Credentials']
@@ -121,10 +120,7 @@ def write_credentials(credentials):
     with open(os.path.expanduser('~/.aws/credentials'), 'w') as config_file:
         config.write(config_file)
 
-def main():
-    renew_credentials()
+def main(args):
+    renew_credentials(args.username)
 
     return 0
-
-if __name__ == "__main__":
-    sys.exit(main())

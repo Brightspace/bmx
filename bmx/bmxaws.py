@@ -10,14 +10,14 @@ import awscli.clidriver
 from . import bmxrenew
 from . import prompt
 
-def main():
+def main(args, username=None):
     while True:
         try:
             out = io.StringIO()
             err = io.StringIO()
             with contextlib.redirect_stdout(out):
                 with contextlib.redirect_stderr(err):
-                    ret = awscli.clidriver.main()
+                    ret = awscli.clidriver.create_clidriver().main(args)
         except SystemExit as e:
             ret = e.code
 
@@ -27,7 +27,7 @@ def main():
         ):
             print("Your AWS STS token has expired.  Renewing...")
 
-            bmxrenew.renew_credentials()
+            bmxrenew.renew_credentials(username)
         else:
             break
 
@@ -40,7 +40,3 @@ def main():
         print(outstring)
 
     return ret
-
-if __name__ == "__main__":
-    sys.exit(main())
-

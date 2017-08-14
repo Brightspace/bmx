@@ -1,8 +1,35 @@
+# BMX
+
+## Install
 ```bash
-$ cd bmx
+git clone git@github.com:Brightspace/bmx.git
+cd bmx
+pip install -e .
+bmx -h
+```
 
-$ pip install -e .
+## Usage
+```
+usage: bmx [-h] {aws,renew,print} ...
 
+Okta time-out helper for AWS CLI
+
+optional arguments:
+  -h, --help         show this help message and exit
+
+okta:
+  Automatic STS token renewal from Okta
+
+  {aws,renew,print}
+    aws              awscli with automatic STS token renewal
+    renew            renew default credentials
+    print            renew default credentials and print to console
+
+Copyright 2017 D2L Corporation
+```
+
+## Example
+```
 $ bmx aws cloudformation describe-stacks
 {
     "Stacks": [
