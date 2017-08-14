@@ -7,7 +7,7 @@ BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI. 
 3. writes the new AWS credentials to your AWS .credentials file, and
 4. reruns the AWS CLI command.
 
-See example usage below for an example.
+See usage below for an example.
 
 ## System Requirements
 
