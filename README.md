@@ -1,7 +1,40 @@
-```bash
-$ cd bmx
+# BMX
 
-$ pip install -e .
+BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI.  As you run AWS CLI commands, BMX watches each one.  When BMX sees a command fail due to an expired (or a missing) token,
+
+1. it prompts for your Okta credentials and desired AWS account/role,
+2. requests a new STS token from AWS,
+3. writes the new AWS credentials to your AWS .credentials file, and
+4. reruns the AWS CLI command.
+
+See example usage below for an example.
+
+## System Requirements
+
+* [Python 3.5+](https://www.python.org/downloads/windows/) (BMX uses [contextlib.redirect_stderr](https://docs.python.org/3/library/contextlib.html), which was introduced in version 3.5.)
+* pip, the Python installer.
+* [The AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) (BMX does not install the AWS CLI as a dependency; if you don't already have it, install the AWS CLI before proceeding.)
+
+## Installation
+
+BMX lives in D2L's Artifactory repository.  You need to tell pip about this repository when you install BMX; otherwise the installation is just like AWS CLI's.
+
+### PowerShell
+
+```
+PS C:\Users\credekop> py -3 --version
+Python 3.6.2
+
+PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url https://d2lartifacts.artifactoryonline.com/d2lartifacts/api/pypi/pypi-local/simple bmx
+```
+
+## Usage
+
+To use BMX, just prepend your AWS CLI calls with 'bmx '.  An example usage in Cygwin is below.
+
+```bash
+$ python3 --version
+Python 3.6.2
 
 $ bmx aws cloudformation describe-stacks
 {
