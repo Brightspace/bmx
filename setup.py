@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='bmx',
-    version='0.0.1',
+    version='0.0.2',
     description='An AWS CLI wrapper that renews STS tokens',
     url='https://github.com/Brightspace/bmx',
     license='Proprietary',
