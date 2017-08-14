@@ -26,6 +26,7 @@ setup(
     install_requires=[
         'boto3>=1.4.5',
         'future>=0.16.0',
+        'lxml>=3.7.3',
         'okta>=0.0.4',
         'pies2overrides>=2.6.7',
         'prompt>=0.4.1',
