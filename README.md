@@ -10,20 +10,19 @@ bmx -h
 
 ## Usage
 ```
-usage: bmx [-h] {aws,renew,print} ...
+usage: bmx [-h] [--username USERNAME] {aws,write,print} ...
 
 Okta time-out helper for AWS CLI
 
 optional arguments:
-  -h, --help         show this help message and exit
+  -h, --help           show this help message and exit
+  --username USERNAME  specify username instead of being prompted
 
-okta:
-  Automatic STS token renewal from Okta
-
-  {aws,renew,print}
-    aws              awscli with automatic STS token renewal
-    renew            renew default credentials
-    print            renew default credentials and print to console
+commands:
+  {aws,write,print}
+    aws                awscli with automatic STS token renewal
+    write              write default credentials
+    print              write default credentials and print to console
 
 Copyright 2017 D2L Corporation
 ```

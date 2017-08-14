@@ -31,7 +31,7 @@ class Parser:
         self._parser = parser
 
     def aws(self, known_args, unknown_args):
-        return bmxaws.main(unknown_args, known_args.username)
+        return bmxaws.main(known_args, unknown_args)
 
     def write(self, known_args, unknown_args):
         return bmxrenew.main(known_args)
