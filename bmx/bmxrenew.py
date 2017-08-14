@@ -7,9 +7,9 @@ import os
 import re
 import sys
 import requests
+import xml.etree.ElementTree as ET
 
 import boto3
-import lxml
 
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
@@ -43,6 +43,7 @@ def get_credentials():
                 applink.linkUrl, 
                 authentication.sessionToken
             )
+            foo = base64.b64decode(saml_assertion)
 
             role = get_role_selection(
                 applink.label,
@@ -92,9 +93,14 @@ def get_role_selection(app_name, roles):
     ]
 
 def get_app_roles(saml_assertion):
-    return lxml.etree.fromstring(saml_assertion).xpath(
-        '//x:AttributeStatement/x:Attribute[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/x:AttributeValue/text()',
-        namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
+    return list(
+        map(
+            lambda x: x.text,
+            ET.fromstring(saml_assertion).findall(
+                './/saml2:AttributeStatement/saml2:Attribute[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/saml2:AttributeValue',
+                {'saml2': 'urn:oasis:names:tc:SAML:2.0:assertion'}
+            )
+        )
     )
 
 def sts_assume_role(saml_assertion, principal, role):

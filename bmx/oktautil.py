@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import lxml
 import okta
 import requests
 
@@ -8,7 +7,7 @@ import inspect
 import re
 import sys
 
-from lxml import html
+import html5lib
 
 BASE_URL = 'https://d2l.okta.com/'
 API_TOKEN = 'apitoken'
@@ -44,6 +43,7 @@ def connect_to_app(app_url, session_token):
     )
     response.raise_for_status()
 
-    return html.fromstring(
-        response.content
-    ).xpath("//input[@name='SAMLResponse']/@value")[0]
+    return html5lib.parse(
+        response.text,
+        namespaceHTMLElements = False,
+    ).find(".//input[@name='SAMLResponse']").get('value')
