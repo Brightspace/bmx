@@ -25,7 +25,6 @@ BMX is written in Python, like the AWS CLI.
 ```bash
 git clone git@github.com:Brightspace/bmx.git
 cd bmx
-pip install awscli
 pip install -e .
 bmx -h
 ```
@@ -82,8 +81,8 @@ Okta time-out helper for AWS CLI
 commands:
   {aws,write,print}
     aws                awscli with automatic STS token renewal
-    write              write default credentials
-    print              write default credentials and print to console
+    write              create new AWS credentials and write them to ~/.aws/credentials
+    print              create new AWS credentials and print them to stdout
 
 Copyright 2017 D2L Corporation
 ```

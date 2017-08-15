@@ -17,16 +17,16 @@ from requests import HTTPError
 from . import prompt
 from . import oktautil
 
-def renew_credentials(default_username=None, duration_seconds=3600):
-    write_credentials(get_credentials(default_username, duration_seconds))
+def renew_credentials(username=None, duration_seconds=3600):
+    write_credentials(get_credentials(username, duration_seconds))
 
-def get_credentials(default_username, duration_seconds):
+def get_credentials(username, duration_seconds):
     auth_client = oktautil.create_auth_client()
     sessions_client = oktautil.create_sessions_client()
 
     while True:
         try:
-            username = default_username or prompt.prompt_for_value(input, 'Okta username: ')
+            username = username or prompt.prompt_for_value(input, 'Okta username: ')
             password = prompt.prompt_for_value(getpass.getpass, 'Okta password: ')
 
             authentication = auth_client.authenticate(username, password)

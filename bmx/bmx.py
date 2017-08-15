@@ -22,12 +22,12 @@ class Parser:
         aws_parser.set_defaults(func=self.aws)
 
         write_parser = subparsers.add_parser('write',
-            help='write default credentials',
+            help='create new AWS credentials and write them to ~/.aws/credentials',
             add_help=False)
         write_parser.set_defaults(func=self.write)
 
         print_parser = subparsers.add_parser('print',
-            help='write default credentials and print to console',
+            help='create new AWS credentials and print them to stdout',
             add_help=False)
         print_parser.set_defaults(func=self.print)
 
