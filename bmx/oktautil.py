@@ -1,12 +1,7 @@
 #!/usr/bin/python3
 
-import lxml
 import okta
 import requests
-
-import inspect
-import re
-import sys
 
 from lxml import html
 

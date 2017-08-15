@@ -18,7 +18,7 @@ class MinMenu:
         choice = -1
         while choice < 1 or choice > len(self.items):
             print(self.title)
-     
+
             i = 0
             for item in self.items:
                 i += 1
@@ -40,4 +40,3 @@ def prompt_for_value(read_function, prompt):
         value = read_function(prompt)
 
     return value
-

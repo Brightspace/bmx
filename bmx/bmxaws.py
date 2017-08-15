@@ -4,22 +4,27 @@ import contextlib
 import io
 import re
 import sys
+import argparse
 
 import awscli.clidriver
 
-from . import bmxrenew
+from . import bmxwrite
 from . import prompt
 
-def main():
+def cmd(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--username',
+        help='specify username instead of being prompted')
+    [known_args, unknown_args] = parser.parse_known_args(args)
     while True:
         try:
             out = io.StringIO()
             err = io.StringIO()
             with contextlib.redirect_stdout(out):
                 with contextlib.redirect_stderr(err):
-                    ret = awscli.clidriver.main()
-        except SystemExit as e:
-            ret = e.code
+                    ret = awscli.clidriver.create_clidriver().main(unknown_args)
+        except SystemExit as ex:
+            ret = ex.code
 
         if ret == 255 and (
             re.search('ExpiredToken', err.getvalue()) or
@@ -27,7 +32,7 @@ def main():
         ):
             print("Your AWS STS token has expired.  Renewing...")
 
-            bmxrenew.renew_credentials()
+            bmxwrite.renew_credentials(known_args.username)
         else:
             break
 
@@ -41,6 +46,5 @@ def main():
 
     return ret
 
-if __name__ == "__main__":
-    sys.exit(main())
-
+def main():
+    sys.exit(cmd(sys.argv))

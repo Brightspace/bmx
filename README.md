@@ -7,7 +7,6 @@ BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI. 
 3. writes the new AWS credentials to your AWS .credentials file, and
 4. reruns the AWS CLI command.
 
-See usage below for an example.
 
 ## Development
 
@@ -21,14 +20,23 @@ BMX is written in Python, like the AWS CLI.
 * It introduces no new language dependencies.
 * BMX can easily run in the same process as the AWS CLI, reducing overhead.
 
-## Current development
+### Developer Setup
+
+```bash
+git clone git@github.com:Brightspace/bmx.git
+cd bmx
+pip install -e .
+bmx -h
+```
+
+### Current development
 
 An active PR will add two things:
 
 1. Support for specifying your Okta username as an option.
 1. A new command that prints your AWS credentials to the screen.
 
-## Slated development
+### Slated development
 
 There is lots of work still to do on BMX:
 
@@ -58,12 +66,29 @@ PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url ht
 
 ## Usage
 
-To use BMX, just prepend your AWS CLI calls with 'bmx '.  An example usage in Cygwin is below.
+To use BMX, just prepend your AWS CLI calls with 'bmx '.  Example usage in Cygwin is below.
 
 ```bash
 $ python3 --version
 Python 3.6.2
 
+$ bmx -h
+
+usage: bmx {aws,write,print} ...
+
+Okta time-out helper for AWS CLI
+
+commands:
+  {aws,write,print}
+    aws                awscli with automatic STS token renewal
+    write              create new AWS credentials and write them to ~/.aws/credentials
+    print              create new AWS credentials and print them to stdout
+
+Copyright 2017 D2L Corporation
+```
+
+## Example
+```
 $ bmx aws cloudformation describe-stacks
 {
     "Stacks": [
