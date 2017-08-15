@@ -67,11 +67,17 @@ PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url ht
 
 ## Usage
 
-To use BMX, just prepend your AWS CLI calls with 'bmx '.  An example usage in Cygwin is below.
+To use BMX, just prepend your AWS CLI calls with 'bmx '.  Example usage in Cygwin is below.
 
 ```bash
 $ python3 --version
 Python 3.6.2
+
+$ bmx -h
+
+usage: bmx {aws,write,print} ...
+
+Okta time-out helper for AWS CLI
 
 commands:
   {aws,write,print}
