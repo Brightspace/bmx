@@ -20,7 +20,8 @@ setup(
         'console_scripts': [
             'bmx=bmx.bmx:main',
             'bmx-aws=bmx.bmxaws:main',
-            'bmx-renew=bmx.bmxrenew:main'
+            'bmx-write=bmx.bmxwrite:main',
+            'bmx-print=bmx.bmxprint:main'
         ]
     },
     install_requires=[

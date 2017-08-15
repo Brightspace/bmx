@@ -3,8 +3,10 @@
 import base64
 import configparser
 import getpass
+import sys
 import os
 import re
+import argparse
 
 import boto3
 import lxml
@@ -38,7 +40,7 @@ def get_credentials(default_username, duration_seconds):
             )
 
             saml_assertion = oktautil.connect_to_app(
-                applink.linkUrl, 
+                applink.linkUrl,
                 authentication.sessionToken
             )
 
@@ -56,10 +58,10 @@ def get_credentials(default_username, duration_seconds):
             )
 
             break
-        except OktaError as e:
-            print(e)
-        except HTTPError as e:
-            print(e)
+        except OktaError as ex:
+            print(ex)
+        except HTTPError as ex:
+            print(ex)
 
     return credentials
 
@@ -92,7 +94,11 @@ def get_role_selection(app_name, roles):
 
 def get_app_roles(saml_assertion):
     return lxml.etree.fromstring(saml_assertion).xpath(
-        '//x:AttributeStatement/x:Attribute[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/x:AttributeValue/text()',
+        ''.join([
+            '//x:AttributeStatement',
+            '/x:Attribute',
+            '[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/x:AttributeValue/text()'
+        ]),
         namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
     )
 
@@ -108,7 +114,7 @@ def sts_assume_role(saml_assertion, principal, role, duration_seconds):
 
 def write_credentials(credentials):
     config = configparser.ConfigParser()
-    filename = os.path.expanduser('~/.aws/credentials');
+    filename = os.path.expanduser('~/.aws/credentials')
 
     config.read(filename)
     config['default'] = {
@@ -120,7 +126,15 @@ def write_credentials(credentials):
     with open(os.path.expanduser('~/.aws/credentials'), 'w') as config_file:
         config.write(config_file)
 
-def main(args):
-    renew_credentials(args.username)
+def cmd(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--username',
+        help='specify username instead of being prompted')
+
+    [known_args, unknown_args] = parser.parse_known_args(args)
+    renew_credentials(known_args.username)
 
     return 0
+
+def main():
+    sys.exit(cmd(sys.argv))
