@@ -9,6 +9,34 @@ BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI. 
 
 See usage below for an example.
 
+## Development
+
+BMX is designed to be extensible and easily rolled out.
+
+* It's a command-driven utility (think of Git, or the AWS CLI) where new commands can be added to the base system.
+* It's on our private Artifactory repo and can be easily installed.
+
+BMX is written in Python, like the AWS CLI.
+
+* It introduces no new language dependencies.
+* BMX can easily run in the same process as the AWS CLI, reducing overhead.
+
+## Current development
+
+An active PR will add two things:
+
+1. Support for specifying your Okta username as an option.
+1. A new command that prints your AWS credentials to the screen.
+
+## Slated development
+
+There is lots of work still to do on BMX:
+
+1. Support for a (CLI option) -> (Environment Variable) -> (RC File) -> (Prompt) configuration chain for all Okta options.
+1. Okta MFA support. (BMX currently only supports primary username/password authentication.)
+1. SSO support.
+1. Support for using an existing AWS STS token to request a new AWS STS token.
+
 ## System Requirements
 
 * [Python 3.5+](https://www.python.org/downloads/windows/) (BMX uses [contextlib.redirect_stderr](https://docs.python.org/3/library/contextlib.html), which was introduced in version 3.5.)
