@@ -39,12 +39,7 @@ An active PR will add two things:
 
 ### Slated development
 
-There is lots of work still to do on BMX:
-
-1. Support for a (CLI option) -> (Environment Variable) -> (RC File) -> (Prompt) configuration chain for all Okta options.
-1. Okta MFA support. (BMX currently only supports primary username/password authentication.)
-1. SSO support.
-1. Support for using an existing AWS STS token to request a new AWS STS token.
+There is still [lots of work to do on BMX](https://github.com/Brightspace/bmx/issues)!
 
 ## System Requirements
 
