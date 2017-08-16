@@ -7,6 +7,7 @@ BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI. 
 3. writes the new AWS credentials to your AWS .credentials file, and
 4. reruns the AWS CLI command.
 
+[A BMX demo](https://internal.desire2learncapture.com/1/Watch/126176213250197203083009125230093245081043106145.aspx) is on Capture.
 
 ## Development
 
@@ -44,8 +45,6 @@ There is lots of work still to do on BMX:
 1. Okta MFA support. (BMX currently only supports primary username/password authentication.)
 1. SSO support.
 1. Support for using an existing AWS STS token to request a new AWS STS token.
-
-[A BMX demo](https://internal.desire2learncapture.com/1/Watch/126176213250197203083009125230093245081043106145.aspx) is on Capture.
 
 ## System Requirements
 
