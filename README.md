@@ -45,6 +45,8 @@ There is lots of work still to do on BMX:
 1. SSO support.
 1. Support for using an existing AWS STS token to request a new AWS STS token.
 
+[A BMX demo](https://internal.desire2learncapture.com/1/Watch/126176213250197203083009125230093245081043106145.aspx) is on Capture.
+
 ## System Requirements
 
 * [Python 3.5+](https://www.python.org/downloads/windows/) (BMX uses [contextlib.redirect_stderr](https://docs.python.org/3/library/contextlib.html), which was introduced in version 3.5.)
