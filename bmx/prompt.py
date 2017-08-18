@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
 class MinMenu:
-    def __init__(self, title, items, prompt):
+    def __init__(self, title, items, prompt, read_function = input):
         self.title = title
         self.items = items
         self.prompt = prompt
+        self.read_function = read_function
 
     def get_selection(self):
         if len(self.items) > 1:
@@ -25,7 +26,7 @@ class MinMenu:
                 print('{:>2}: {}'.format(i, item))
 
             try:
-                choice = int(input(self.prompt))
+                choice = int(self.read_function(self.prompt))
             except ValueError:
                 pass
 
