@@ -30,6 +30,14 @@ pip install -e .
 bmx -h
 ```
 
+### Pylint
+
+BMX uses [Pylint](https://www.pylint.org/) to enforce styling and run quality checkers.
+
+**Install**: `pip install pylint`
+
+**Lint**: `pylint bmx`
+
 ### Current development
 
 An active PR will add two things:
