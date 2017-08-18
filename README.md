@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/Brightspace/bmx.svg?token=XBuHJueJZM92zaxjesN6&branch=master)](https://travis-ci.com/Brightspace/bmx)
+
 # BMX
 
 BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI.  As you run AWS CLI commands, BMX watches each one.  When BMX sees a command fail due to an expired (or a missing) token,
