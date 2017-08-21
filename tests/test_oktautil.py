@@ -51,7 +51,7 @@ class OktaUtilTests(unittest.TestCase):
         )
         print(dir(mock_response))
         print(dir(mock_response.raise_for_status))
-        mock_response.raise_for_status.assert_called_once()
+        mock_response.raise_for_status.assert_called_with()
 
 if __name__ == '__main__':
     unittest.main();
