@@ -131,7 +131,7 @@ def cmd(args):
     parser.add_argument('--username',
         help='specify username instead of being prompted')
 
-    [known_args, unknown_args] = parser.parse_known_args(args)
+    known_args = parser.parse_known_args(args)[0]
     renew_credentials(known_args.username)
 
     return 0

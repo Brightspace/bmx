@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 class MinMenu:
-    def __init__(self, title, items, prompt, read_function = input):
+    def __init__(self, title, items, prompt, read_function=input):
         self.title = title
         self.items = items
         self.prompt = prompt

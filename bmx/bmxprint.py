@@ -13,7 +13,7 @@ def cmd(args):
     parser.add_argument('--duration', required=False, default=3600,
             help='Expiry duration in seconds')
 
-    [known_args, unknown_args] = parser.parse_known_args(args)
+    known_args = parser.parse_known_args(args)[0]
     credentials = bmxwrite.get_credentials(known_args.username, known_args.duration)
 
     out = json.dumps({
