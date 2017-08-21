@@ -19,7 +19,7 @@ SESSION_TOKEN = 'token'
 
 class AwsPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
-    def test_create_argsparser_should_create_expected_argsparser_always(self, mock_arg_parser):
+    def test_create_parser_should_create_expected_parser_always(self, mock_arg_parser):
         parser = bmx.bmxprint.create_parser()
 
         calls = parser.add_argument.call_args_list
