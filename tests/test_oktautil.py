@@ -49,6 +49,8 @@ class OktaUtilTests(unittest.TestCase):
             APP_URL,
             params={'onetimetoken': SESSION_TOKEN}
         )
+        print(dir(mock_response))
+        print(dir(mock_response.raise_for_status))
         mock_response.raise_for_status.assert_called_once()
 
 if __name__ == '__main__':
