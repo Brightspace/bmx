@@ -1,4 +1,5 @@
-import context
+import contextlib
+import io
 import unittest
 from unittest.mock import Mock
 
@@ -56,7 +57,9 @@ class PromptTests(unittest.TestCase):
             read_function
         )
 
-        self.assertEqual(return_value - 1, menu.prompt_for_choice())
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(return_value - 1, menu.prompt_for_choice())
 
         read_function.assert_called_with(PROMPT)
 
