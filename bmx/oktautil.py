@@ -35,7 +35,7 @@ def create_users_client(session_id):
 def connect_to_app(app_url, session_token):
     response = requests.get(
         app_url,
-        params = {'onetimetoken': session_token}
+        params={'onetimetoken': session_token}
     )
     response.raise_for_status()
 

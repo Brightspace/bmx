@@ -24,3 +24,5 @@ requests == 2.18.3
 
 # setup.py: 1
 setuptools == 20.7.0
+
+pylint == 1.7.2
