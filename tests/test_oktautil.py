@@ -31,7 +31,6 @@ class OktaUtilTests(unittest.TestCase):
     def test_connect_to_app_should_return_saml_response_when_one_exists(self, mock_response):
         requests.get = Mock(return_value=mock_response)
 
-        mock_response.raise_for_status.return_value = None
         mock_response.content = """
             <html>
                 <head/>
@@ -49,8 +48,7 @@ class OktaUtilTests(unittest.TestCase):
             APP_URL,
             params={'onetimetoken': SESSION_TOKEN}
         )
-
-        mock_response.raise_for_status.assert_called_with()
+        mock_response.raise_for_status.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main();
