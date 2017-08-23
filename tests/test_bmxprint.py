@@ -8,14 +8,10 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import bmx.bmxprint
-import bmx.bmxwrite
 
-USERNAME = 'username'
-DURATION = 3
 ACCESS_KEY_ID = 'id'
 SECRET_ACCESS_KEY = 'secret'
 SESSION_TOKEN = 'token'
-
 
 class BmxPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
