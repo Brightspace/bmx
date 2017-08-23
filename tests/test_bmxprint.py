@@ -17,7 +17,7 @@ SECRET_ACCESS_KEY = 'secret'
 SESSION_TOKEN = 'token'
 
 
-class AwsPrintTests(unittest.TestCase):
+class BmxPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
     def test_create_parser_should_create_expected_parser_always(self, mock_arg_parser):
         parser = bmx.bmxprint.create_parser()
@@ -34,12 +34,14 @@ class AwsPrintTests(unittest.TestCase):
 
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_credentials_always(self, mock_arg_parser):
+        return_value = {
+            'AccessKeyId': ACCESS_KEY_ID,
+            'SecretAccessKey': SECRET_ACCESS_KEY,
+            'SessionToken': SESSION_TOKEN
+        }
+
         bmx.bmxwrite.get_credentials = Mock(
-            return_value={
-                'AccessKeyId': ACCESS_KEY_ID,
-                'SecretAccessKey': SECRET_ACCESS_KEY,
-                'SessionToken': SESSION_TOKEN
-            }
+            return_value=return_value
         )
 
         out = io.StringIO()
@@ -48,9 +50,7 @@ class AwsPrintTests(unittest.TestCase):
         out.seek(0)
         printed = json.load(out)
 
-        self.assertEqual(printed['AccessKeyId'], ACCESS_KEY_ID)
-        self.assertEqual(printed['SecretAccessKey'], SECRET_ACCESS_KEY)
-        self.assertEqual(printed['SessionToken'], SESSION_TOKEN)
+        self.assertEqual(return_value, printed)
 
 if __name__ == '__main__':
     unittest.main();
