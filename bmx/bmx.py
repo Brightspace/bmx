@@ -17,7 +17,7 @@ class Parser:
 
         subparsers = parser.add_subparsers(title='commands')
         aws_parser = subparsers.add_parser('aws',
-            help='awscli with automatic STS token renewal',
+            help='delegate to the AWS CLI, with automatic STS token renewal',
             add_help=False)
         aws_parser.set_defaults(func=self.aws)
 
