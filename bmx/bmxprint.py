@@ -6,14 +6,17 @@ import argparse
 
 from . import bmxwrite
 
-def cmd(args):
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--username',
         help='specify username instead of being prompted')
-    parser.add_argument('--duration', required=False, default=3600,
+    parser.add_argument('--duration', default=3600,
             help='Expiry duration in seconds')
 
-    known_args = parser.parse_known_args(args)[0]
+    return parser
+
+def cmd(args):
+    known_args = create_parser().parse_known_args(args)[0]
     credentials = bmxwrite.get_credentials(known_args.username, known_args.duration)
 
     out = json.dumps({
@@ -24,7 +27,7 @@ def cmd(args):
 
     print(out)
 
-    sys.exit(0)
+    return 0
 
 def main():
     sys.exit(cmd(sys.argv))

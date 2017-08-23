@@ -126,12 +126,15 @@ def write_credentials(credentials):
     with open(os.path.expanduser('~/.aws/credentials'), 'w') as config_file:
         config.write(config_file)
 
-def cmd(args):
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--username',
         help='specify username instead of being prompted')
 
-    known_args = parser.parse_known_args(args)[0]
+    return parser
+
+def cmd(args):
+    known_args = create_parser().parse_known_args(args)[0]
     renew_credentials(known_args.username)
 
     return 0

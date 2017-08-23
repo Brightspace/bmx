@@ -1,6 +1,7 @@
-import context
+import contextlib
+import io
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 
 import bmx.prompt
 
@@ -33,7 +34,7 @@ class PromptTests(unittest.TestCase):
         for i in [[], ['foo']]:
             with self.subTest(i=i):
                 menu = bmx.prompt.MinMenu(TITLE, i, PROMPT)
-                menu.prompt_for_choice = MagicMock()
+                menu.prompt_for_choice = Mock()
 
                 self.assertEqual(0, menu.get_selection())
 
@@ -42,13 +43,13 @@ class PromptTests(unittest.TestCase):
     def test_get_selection_should_prompt_when_items_has_items(self):
         items = ['foo', 'bar']
         menu = bmx.prompt.MinMenu(TITLE, items, PROMPT)
-        menu.prompt_for_choice = MagicMock(return_value=1)
+        menu.prompt_for_choice = Mock(return_value=1)
 
         self.assertEqual(1, menu.get_selection())
 
     def test_prompt_for_choice_should_prompt_for_index_always(self):
         return_value = 2
-        read_function = MagicMock(return_value = return_value);
+        read_function = Mock(return_value = return_value);
         menu = bmx.prompt.MinMenu(
             TITLE,
             ['one', 'two', 'three'],
@@ -56,7 +57,9 @@ class PromptTests(unittest.TestCase):
             read_function
         )
 
-        self.assertEqual(return_value - 1, menu.prompt_for_choice())
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(return_value - 1, menu.prompt_for_choice())
 
         read_function.assert_called_with(PROMPT)
 
