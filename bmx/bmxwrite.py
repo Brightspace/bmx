@@ -134,7 +134,7 @@ def create_parser():
     return parser
 
 def cmd(args):
-    known_args = create_arg_parser().parse_known_args(args)[0]
+    known_args = create_parser().parse_known_args(args)[0]
     renew_credentials(known_args.username)
 
     return 0
