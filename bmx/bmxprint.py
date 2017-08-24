@@ -9,7 +9,15 @@ import configparser
 from . import bmxwrite
 
 def create_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='bmx-print',
+        usage='''
+        
+bmx-print -h
+bmx-print [--username USERNAME] [--duration DURATION] [-j | -b | -p]
+bmx-print [--profile PROFILE] [-j | -b | -p]'''
+    )
+
     parser.add_argument('--username', help='the Okta username')
     parser.add_argument(
         '--duration',

@@ -12,7 +12,13 @@ from . import bmxwrite
 from . import prompt
 
 def create_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='bmx-aws',
+        usage='''
+
+bmx-aws -h
+bmx-aws [--username USERNAME] CLICOMMAND CLISUBCOMMAND ...'''
+)
     parser.add_argument('--username',
         help='specify username instead of being prompted')
 
