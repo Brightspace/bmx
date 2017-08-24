@@ -36,7 +36,8 @@ def create_parser():
 
     parser.add_argument(
         '--profile',
-        help='reads an existing profile from the credentials file'
+        help='reads an existing profile from the credentials file',
+        default=''
     )
 
     return parser

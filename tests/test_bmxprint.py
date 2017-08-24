@@ -91,8 +91,8 @@ export AWS_SESSION_TOKEN='{}'
             self.assertEqual(0, bmx.bmxprint.cmd([]))
         printed = out.getvalue()
 
-        self.assertEqual("""$env:AWS_ACCESS_KEY_ID = '{}'
-$env:AWS_SECRET_ACCESS_KEY = '{}'
+        self.assertEqual("""$env:AWS_ACCESS_KEY_ID = '{}';
+$env:AWS_SECRET_ACCESS_KEY = '{}';
 $env:AWS_SESSION_TOKEN = '{}'
 """.format(
     ACCESS_KEY_ID,
@@ -115,6 +115,7 @@ $env:AWS_SESSION_TOKEN = '{}'
         mock.j = json
         mock.b = bash
         mock.p = powershell
+        mock.profile = ''
 
         return mock
 
