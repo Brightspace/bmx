@@ -17,30 +17,21 @@ class Parser:
 
         subparsers = parser.add_subparsers(title='commands')
         aws_parser = subparsers.add_parser('aws',
-            help='awscli with automatic STS token renewal',
+            help='delegate to the AWS CLI, with automatic STS token renewal',
             add_help=False)
-        aws_parser.set_defaults(func=self.aws)
+        aws_parser.set_defaults(func=bmxaws.cmd)
 
         write_parser = subparsers.add_parser('write',
             help='create new AWS credentials and write them to ~/.aws/credentials',
             add_help=False)
-        write_parser.set_defaults(func=self.write)
+        write_parser.set_defaults(func=bmxwrite.cmd)
 
         print_parser = subparsers.add_parser('print',
             help='create new AWS credentials and print them to stdout',
             add_help=False)
-        print_parser.set_defaults(func=self.print)
+        print_parser.set_defaults(func=bmxprint.cmd)
 
         self._parser = parser
-
-    def aws(self, unknown_args):
-        return bmxaws.cmd(unknown_args)
-
-    def write(self, unknown_args):
-        return bmxwrite.cmd(unknown_args)
-
-    def print(self, unknown_args):
-        return bmxprint.cmd(unknown_args)
 
     def parse_args(self, args):
         return self._parser.parse_known_args(args)

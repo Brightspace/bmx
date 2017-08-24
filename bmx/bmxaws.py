@@ -11,11 +11,22 @@ import awscli.clidriver
 from . import bmxwrite
 from . import prompt
 
-def cmd(args):
-    parser = argparse.ArgumentParser()
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog='bmx-aws',
+        usage='''
+
+bmx-aws -h
+bmx-aws [--username USERNAME] CLICOMMAND CLISUBCOMMAND ...'''
+)
     parser.add_argument('--username',
         help='specify username instead of being prompted')
-    [known_args, unknown_args] = parser.parse_known_args(args)
+
+    return parser
+
+def cmd(args):
+    [known_args, unknown_args] = create_parser().parse_known_args(args)
+
     while True:
         try:
             out = io.StringIO()

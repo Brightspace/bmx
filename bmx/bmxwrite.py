@@ -17,8 +17,8 @@ from requests import HTTPError
 from . import prompt
 from . import oktautil
 
-def renew_credentials(username=None, duration_seconds=3600):
-    write_credentials(get_credentials(username, duration_seconds))
+def renew_credentials(username=None, profile='default', duration_seconds=3600):
+    write_credentials(get_credentials(username, duration_seconds), profile)
 
 def get_credentials(username, duration_seconds):
     auth_client = oktautil.create_auth_client()
@@ -112,12 +112,12 @@ def sts_assume_role(saml_assertion, principal, role, duration_seconds):
 
     return response['Credentials']
 
-def write_credentials(credentials):
+def write_credentials(credentials, profile):
     config = configparser.ConfigParser()
     filename = os.path.expanduser('~/.aws/credentials')
 
     config.read(filename)
-    config['default'] = {
+    config[profile] = {
         'aws_access_key_id': credentials['AccessKeyId'],
         'aws_secret_access_key': credentials['SecretAccessKey'],
         'aws_session_token': credentials['SessionToken']
@@ -126,13 +126,27 @@ def write_credentials(credentials):
     with open(os.path.expanduser('~/.aws/credentials'), 'w') as config_file:
         config.write(config_file)
 
-def cmd(args):
-    parser = argparse.ArgumentParser()
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog='bmx-write',
+        usage='''
+        
+bmx-write -h
+bmx-write [--username USERNAME] [--duration DURATION]'''
+)
     parser.add_argument('--username',
         help='specify username instead of being prompted')
 
-    [known_args, unknown_args] = parser.parse_known_args(args)
-    renew_credentials(known_args.username)
+    parser.add_argument(
+        '--profile',
+        default='default',
+        help='the profile to write to the AWS crdentials file')
+
+    return parser
+
+def cmd(args):
+    known_args = create_parser().parse_known_args(args)[0]
+    renew_credentials(known_args.username, known_args.profile)
 
     return 0
 
