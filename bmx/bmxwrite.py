@@ -127,7 +127,13 @@ def write_credentials(credentials, profile):
         config.write(config_file)
 
 def create_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        prog='bmx-write',
+        usage='''
+        
+bmx-write -h
+bmx-write [--username USERNAME] [--duration DURATION]'''
+)
     parser.add_argument('--username',
         help='specify username instead of being prompted')
 
