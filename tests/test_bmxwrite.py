@@ -24,9 +24,10 @@ class BmxWriteTests(unittest.TestCase):
         parser = bmx.bmxwrite.create_parser()
 
         calls = parser.add_argument.call_args_list
-        self.assertEqual(1, len(calls))
+        self.assertEqual(2, len(calls))
 
         self.assertEqual('--username', calls[0][0][0])
+        self.assertEqual('--profile', calls[1][0][0])
         self.assertTrue('help' in calls[0][1])
 
     @patch('boto3.client')
