@@ -29,14 +29,15 @@ class BmxPrintTests(unittest.TestCase):
         bmx.bmxprint.create_parser()
 
         calls = mock_parser.return_value.add_argument.call_args_list
-        self.assertEqual(2, len(calls))
-
         self.assertEqual('--username', calls[0][0][0])
         self.assertTrue('help' in calls[0][1])
 
         self.assertEqual('--duration', calls[1][0][0])
         self.assertEqual(3600, calls[1][1]['default'])
         self.assertTrue('help' in calls[1][1])
+
+        self.assertEqual('--profile', calls[2][0][0])
+        self.assertTrue('help' in calls[2][1])
 
         calls = mock_group.add_argument.call_args_list
         self.assertEqual('-j', calls[0][0][0])
@@ -47,6 +48,7 @@ class BmxPrintTests(unittest.TestCase):
 
         self.assertEqual('-p', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
+
 
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_json_credentials_by_default(self, mock_parser):

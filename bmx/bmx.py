@@ -6,7 +6,6 @@ import argparse
 from . import bmxaws
 from . import bmxwrite
 from . import bmxprint
-from . import bmxread
 
 class Parser:
     def __init__(self):
@@ -32,11 +31,6 @@ class Parser:
             add_help=False)
         print_parser.set_defaults(func=self.print)
 
-        read_parser = subparsers.add_parser('read',
-                                            help='read a profile from the credentials file',
-                                            add_help=False)
-        read_parser.set_defaults(func=self.read)
-
         self._parser = parser
 
     def aws(self, unknown_args):
@@ -47,9 +41,6 @@ class Parser:
 
     def print(self, unknown_args):
         return bmxprint.cmd(unknown_args)
-
-    def read(self, unknown_args):
-        return bmxread.cmd(unknown_args)
 
     def parse_args(self, args):
         return self._parser.parse_known_args(args)

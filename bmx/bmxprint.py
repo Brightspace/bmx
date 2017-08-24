@@ -3,6 +3,8 @@
 import sys
 import json
 import argparse
+import os
+import configparser
 
 from . import bmxwrite
 
@@ -32,6 +34,11 @@ def create_parser():
         action='store_true'
     )
 
+    parser.add_argument(
+        '--profile',
+        help='reads an existing profile from the credentials file'
+    )
+
     return parser
 
 def json_format_credentials(credentials):
@@ -54,8 +61,8 @@ export AWS_SESSION_TOKEN='{}'""".format(
 )
 
 def powershell_format_credentials(credentials):
-    return """$env:AWS_ACCESS_KEY_ID = '{}'
-$env:AWS_SECRET_ACCESS_KEY = '{}'
+    return """$env:AWS_ACCESS_KEY_ID = '{}';
+$env:AWS_SECRET_ACCESS_KEY = '{}';
 $env:AWS_SESSION_TOKEN = '{}'""".format(
     credentials['AccessKeyId'],
     credentials['SecretAccessKey'],
@@ -74,13 +81,31 @@ def format_credentials(args, credentials):
 
     return formatted_credentials
 
+def read_config(profile):
+    config = configparser.ConfigParser()
+    filename = os.path.expanduser('~/.aws/credentials')
+
+    config.read(filename)
+    access_key_id = config.get(profile, 'aws_access_key_id')
+    secret_access_key = config.get(profile, 'aws_secret_access_key')
+    session_token = config.get(profile, 'aws_session_token')
+
+    return {
+        'AccessKeyId': access_key_id,
+        'SecretAccessKey': secret_access_key,
+        'SessionToken': session_token
+    }
+
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
 
-    credentials = bmxwrite.get_credentials(
-        known_args.username,
-        known_args.duration
-    )
+    if known_args.profile:
+        credentials = read_config(known_args.profile)
+    else:
+        credentials = bmxwrite.get_credentials(
+            known_args.username,
+            known_args.duration
+        )
 
     print(format_credentials(known_args, credentials))
 
