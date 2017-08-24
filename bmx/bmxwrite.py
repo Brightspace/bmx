@@ -140,7 +140,7 @@ bmx-write [--username USERNAME] [--duration DURATION] [--profile PROFILE]'''
     parser.add_argument(
         '--profile',
         default='default',
-        help='the profile to write to the crwdentials file')
+        help='the profile to write to the credentials file')
 
     return parser
 
