@@ -48,7 +48,7 @@ class Parser:
     def print(self, unknown_args):
         return bmxprint.cmd(unknown_args)
 
-    def read(selfself, unknown_args):
+    def read(self, unknown_args):
         return bmxread.cmd(unknown_args)
 
     def parse_args(self, args):

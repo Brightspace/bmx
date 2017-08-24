@@ -5,9 +5,6 @@ import os
 import argparse
 import configparser
 
-# from . import bmxwrite
-from subprocess import call
-
 def cmd(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--profile',
@@ -17,7 +14,7 @@ def cmd(args):
                         default='powershell',
                         help='the export format')
 
-    [known_args, unknown_args] = parser.parse_known_args(args)
+    known_args = parser.parse_known_args(args)[0]
     config = configparser.ConfigParser()
     filename = os.path.expanduser('~/.aws/credentials')
 
