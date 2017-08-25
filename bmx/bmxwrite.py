@@ -132,7 +132,7 @@ def create_parser():
         usage='''
         
 bmx-write -h
-bmx-write [--username USERNAME] [--duration DURATION]'''
+bmx-write [--username USERNAME] [--duration DURATION] [--profile PROFILE]'''
 )
     parser.add_argument('--username',
         help='specify username instead of being prompted')
@@ -140,7 +140,7 @@ bmx-write [--username USERNAME] [--duration DURATION]'''
     parser.add_argument(
         '--profile',
         default='default',
-        help='the profile to write to the AWS crdentials file')
+        help='the profile to write to the credentials file')
 
     return parser
 
