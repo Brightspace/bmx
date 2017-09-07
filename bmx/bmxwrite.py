@@ -2,7 +2,6 @@
 
 import base64
 import configparser
-import getpass
 import sys
 import os
 import re
@@ -26,11 +25,8 @@ def get_credentials(username, duration_seconds):
 
     while True:
         try:
-            username = username or prompt.prompt_for_value(input, 'Okta username: ')
-            password = prompt.prompt_for_value(getpass.getpass, 'Okta password: ')
-
-            authentication = auth_client.authenticate(username, password)
-            session = sessions_client.create_session(username, password)
+            authentication = oktautil.authenticate(auth_client, username)
+            session = sessions_client.create_session_by_session_token(authentication.sessionToken)
 
             applink = get_app_selection(
                 filter_applinks(
@@ -41,7 +37,7 @@ def get_credentials(username, duration_seconds):
 
             saml_assertion = oktautil.connect_to_app(
                 applink.linkUrl,
-                authentication.sessionToken
+                session.id
             )
 
             role = get_role_selection(
