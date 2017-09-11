@@ -4,6 +4,7 @@ import configparser
 import contextlib
 import io
 import json
+import os
 import unittest
 
 from unittest.mock import Mock, MagicMock
@@ -88,6 +89,7 @@ class BmxWriteTests(unittest.TestCase):
             namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
         )
 
+    @patch('builtins.open')
     @patch('boto3.client')
     @patch('configparser.ConfigParser', return_value=MagicMock())
     @patch('bmx.bmxwrite.get_app_roles')
@@ -98,7 +100,8 @@ class BmxWriteTests(unittest.TestCase):
                                                                    mock_oktautil,
                                                                    mock_get_app_roles,
                                                                    mock_configparser,
-                                                                   mock_boto3):
+                                                                   mock_boto3,
+                                                                   mock_open):
         def getAppLink(props):
             applink = okta.models.user.AppLinks()
             for key, value in props.items():
@@ -119,19 +122,20 @@ class BmxWriteTests(unittest.TestCase):
 
         mock_boto3.return_value.assume_role_with_saml.return_value = {"Credentials":
                                                                           {"AccessKeyId": "my-access-key",
-                                                                            "SecretAccessKey": "my-secret-access-key",
-                                                                            "SessionToken": "my-session-token"}
+                                                                           "SecretAccessKey": "my-secret-access-key",
+                                                                           "SessionToken": "my-session-token"}
                                                                       }
 
         bmxwrite.cmd(['--profile', 'my-profile',
-                          '--account', 'my-account',
-                          '--username', 'my-user',
-                          '--role', 'my-role'])
+                      '--account', 'my-account',
+                      '--username', 'my-user',
+                      '--role', 'my-role'])
 
         mock_configparser.return_value.__setitem__.assert_called_with('my-profile', {'aws_access_key_id': 'my-access-key',
                                                                                     'aws_secret_access_key': 'my-secret-access-key',
                                                                                     'aws_session_token': 'my-session-token'})
         mock_configparser.return_value.write.assert_called()
+        mock_open.assert_called_with(os.path.expanduser('~/.aws/credentials'), 'w')
 
     #@patch('bmx.bmxprint.create_parser')
     #def test_cmd_should_print_credentials_always(self, mock_arg_parser):
