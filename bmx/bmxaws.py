@@ -8,8 +8,8 @@ import argparse
 
 import awscli.clidriver
 
-from . import bmxwrite
-from . import prompt
+import bmx.bmxwrite as bmxwrite
+import bmx.prompt as prompt
 
 def create_parser():
     parser = argparse.ArgumentParser(

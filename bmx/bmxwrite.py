@@ -13,13 +13,13 @@ import lxml
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
 
-from . import prompt
-from . import oktautil
+import bmx.prompt as prompt
+import bmx.oktautil as oktautil
 
-def renew_credentials(username=None, profile='default', duration_seconds=3600):
-    write_credentials(get_credentials(username, duration_seconds), profile)
+def renew_credentials(username=None, profile='default', duration_seconds=3600, app=None, role=None):
+    write_credentials(get_credentials(username, duration_seconds, app=app, role=role), profile)
 
-def get_credentials(username, duration_seconds):
+def get_credentials(username, duration_seconds, app=None, role=None):
     auth_client = oktautil.create_auth_client()
     sessions_client = oktautil.create_sessions_client()
 
@@ -28,11 +28,11 @@ def get_credentials(username, duration_seconds):
             authentication = oktautil.authenticate(auth_client, username)
             session = sessions_client.create_session_by_session_token(authentication.sessionToken)
 
+
             applink = get_app_selection(
-                filter_applinks(
-                    oktautil.create_users_client(session.id).
-                        get_user_applinks(session.userId)
-                )
+                filter_applinks(oktautil.create_users_client(session.id)
+                                .get_user_applinks(session.userId)),
+                app
             )
 
             saml_assertion = oktautil.connect_to_app(
@@ -42,7 +42,8 @@ def get_credentials(username, duration_seconds):
 
             role = get_role_selection(
                 applink.label,
-                get_app_roles(base64.b64decode(saml_assertion))
+                get_app_roles(base64.b64decode(saml_assertion)),
+                role
             )
             split_role = role.split(',')
 
@@ -70,7 +71,12 @@ def filter_applinks(applinks):
         key=lambda x: x.label
     )
 
-def get_app_selection(applinks):
+def get_app_selection(applinks, app=None):
+    if app:
+        found_app = next((x for x in applinks if x.label.lower() == app.lower()), None)
+        if found_app:
+            return found_app
+
     return applinks[
         prompt.MinMenu(
             '\nAvailable AWS Accounts: ',
@@ -79,7 +85,13 @@ def get_app_selection(applinks):
         ).get_selection()
     ]
 
-def get_role_selection(app_name, roles):
+def get_role_selection(app_name, roles, role=None):
+    if role:
+        found_role = next((x for x in roles if re.sub('.*role/', '',
+                            x.split(',')[1]).lower() == role.lower()), None)
+        if found_role:
+            return found_role
+
     return roles[
         prompt.MinMenu(
             '\nAvailable Roles in {}:'.format(app_name),
@@ -128,7 +140,11 @@ def create_parser():
         usage='''
         
 bmx-write -h
-bmx-write [--username USERNAME] [--duration DURATION] [--profile PROFILE]'''
+bmx-write [--username USERNAME]
+          [--duration DURATION]
+          [--profile PROFILE] 
+          [--account ACCOUNT] 
+          [--role ROLE]'''
 )
     parser.add_argument('--username',
         help='specify username instead of being prompted')
@@ -138,11 +154,16 @@ bmx-write [--username USERNAME] [--duration DURATION] [--profile PROFILE]'''
         default='default',
         help='the profile to write to the credentials file')
 
+    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+
+    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+
     return parser
 
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-    renew_credentials(known_args.username, known_args.profile)
+    renew_credentials(known_args.username, known_args.profile,
+                      app=known_args.account, role=known_args.role)
 
     return 0
 

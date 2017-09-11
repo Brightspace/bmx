@@ -6,7 +6,7 @@ import argparse
 import os
 import configparser
 
-from . import bmxwrite
+import bmx.bmxwrite as bmxwrite
 
 def create_parser():
     parser = argparse.ArgumentParser(

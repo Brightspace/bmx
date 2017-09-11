@@ -8,6 +8,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import bmx.bmxprint
+import bmx.bmxwrite
 
 ACCESS_KEY_ID = 'id'
 SECRET_ACCESS_KEY = 'secret'
@@ -49,12 +50,12 @@ class BmxPrintTests(unittest.TestCase):
         self.assertEqual('-p', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
 
-
+    @patch('bmx.bmxprint.bmxwrite')
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_json_credentials_by_default(self, mock_parser):
+    def test_cmd_should_print_json_credentials_by_default(self, mock_parser, mock_bmxwrite):
         for i in [(True, False, False), (False, False, False)]:
             with self.subTest(i=i):
-                self.setup_print_mocks(mock_parser, i[0], i[1], i[2])
+                self.setup_print_mocks(mock_parser, i[0], i[1], i[2], mock_bmxwrite)
 
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out):
@@ -64,9 +65,10 @@ class BmxPrintTests(unittest.TestCase):
 
                 self.assertEqual(RETURN_VALUE, printed)
 
+    @patch('bmx.bmxprint.bmxwrite')
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser):
-        self.setup_print_mocks(mock_parser, False, True, False)
+    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser, mock_bmxwrite):
+        self.setup_print_mocks(mock_parser, False, True, False, mock_bmxwrite)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -82,9 +84,10 @@ export AWS_SESSION_TOKEN='{}'
     SESSION_TOKEN
 ), printed)
 
+    @patch('bmx.bmxprint.bmxwrite')
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_powershell_credentials_when_powershell_option_specified(self, mock_parser):
-        self.setup_print_mocks(mock_parser, False, False, True)
+    def test_cmd_should_print_powershell_credentials_when_powershell_option_specified(self, mock_parser, mock_bmxwrite):
+        self.setup_print_mocks(mock_parser, False, False, True, mock_bmxwrite)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -100,11 +103,11 @@ $env:AWS_SESSION_TOKEN = '{}'
     SESSION_TOKEN
 ), printed)
 
-    def setup_print_mocks(self, mock_parser, json, bash, powershell):
+    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_bmxwrite):
         mock_parser.return_value.parse_known_args.return_value = \
             [self.create_args(json, bash, powershell)]
 
-        bmx.bmxwrite.get_credentials = Mock(
+        mock_bmxwrite.get_credentials = Mock(
             return_value=RETURN_VALUE
         )
 
