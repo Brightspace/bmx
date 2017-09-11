@@ -13,8 +13,8 @@ import lxml
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
 
-from . import prompt
-from . import oktautil
+import prompt
+import oktautil
 
 def renew_credentials(username=None, profile='default', duration_seconds=3600, app=None, role=None):
     write_credentials(get_credentials(username, duration_seconds, app=app, role=role), profile)

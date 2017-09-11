@@ -1,14 +1,19 @@
 import argparse
+import base64
+import configparser
 import contextlib
 import io
 import json
 import unittest
 
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 
 import bmx.bmxprint
 import bmx.bmxwrite
+import oktautil
+import okta.models.user
+import prompt
 
 CREDENTIALS = 'credentials'
 SAML_ASSERTION = 'saml assertion'
@@ -75,7 +80,49 @@ class BmxWriteTests(unittest.TestCase):
             namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
         )
 
-    
+    @patch('configparser.ConfigParser', return_value=MagicMock())
+    @patch('bmx.bmxwrite.sts_assume_role')
+    @patch('bmx.bmxwrite.get_app_roles')
+    @patch('bmx.bmxwrite.oktautil')
+    @patch('prompt.prompt_for_value', return_value="password")
+    def test_write_with_account_arg_should_return_expected_account(self,
+                                                                   mock_prompt,
+                                                                   mock_oktautil,
+                                                                   mock_get_app_roles,
+                                                                   mock_sts_assume_role,
+                                                                   mock_configparser):
+        def getAppLink(props):
+            applink = okta.models.user.AppLinks()
+            for key, value in props.items():
+                applink.__setattr__(key, value)
+            return applink
+
+        mock_oktautil.create_users_client.return_value.get_user_applinks.return_value = [
+            getAppLink({"appName": "amazon_aws", "label": "not-my-account"}),
+            getAppLink({"appName": "amazon_aws", "label": "my-account"})
+        ]
+
+        mock_oktautil.connect_to_app.return_value = base64.b64encode(b"skip_me")
+
+        mock_get_app_roles.return_value = [
+            "arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/my-role",
+            "arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/not-my-role"
+        ]
+
+        mock_sts_assume_role.return_value = {"AccessKeyId": "my-access-key",
+                                             "SecretAccessKey": "my-secret-access-key",
+                                             "SessionToken": "my-session-token"}
+
+
+        bmx.bmxwrite.cmd(['--profile', 'my-profile',
+                          '--account', 'my-account',
+                          '--username', 'my-user',
+                          '--role', 'my-role'])
+
+        mock_configparser.return_value.__setitem__.assert_called_with('my-profile', {'aws_access_key_id': 'my-access-key',
+                                                                                    'aws_secret_access_key': 'my-secret-access-key',
+                                                                                    'aws_session_token': 'my-session-token'})
+        mock_configparser.return_value.write.assert_called()
 
     #@patch('bmx.bmxprint.create_parser')
     #def test_cmd_should_print_credentials_always(self, mock_arg_parser):
