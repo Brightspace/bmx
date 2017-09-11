@@ -1,4 +1,5 @@
 import argparse
+import configparser
 import contextlib
 import io
 import json
@@ -104,9 +105,11 @@ $env:AWS_SESSION_TOKEN = '{}'
 ), printed)
 
     @patch('configparser.ConfigParser')
-    def test_read_config_should_error_on_invalid_profile(self, mock_config_parser):
-        mock_config_parser.return_value.has_section.return_value = False
-        self.assertRaises(SystemExit, bmx.bmxprint.read_config, 'profile')
+    @patch('bmx.bmxprint.create_parser')
+    def test_cmd_should_error_on_invalid_profile(self, mock_parser, mock_config_parser):
+        self.setup_print_mocks(mock_parser, True, False, False, profile='profile')
+        mock_config_parser.return_value.get.side_effect = configparser.NoSectionError('profile')
+        self.assertEqual('Profile not found', bmx.bmxprint.cmd([]))
 
     @patch('configparser.ConfigParser')
     def test_read_config_should_return_expected_value(self, mock_config_parser):
@@ -117,22 +120,23 @@ $env:AWS_SESSION_TOKEN = '{}'
         }[key]
         self.assertEqual(bmx.bmxprint.read_config('profile'), RETURN_VALUE)
 
-    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_bmxwrite):
+    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_bmxwrite=None, profile=''):
         mock_parser.return_value.parse_known_args.return_value = \
-            [self.create_args(json, bash, powershell)]
+            [self.create_args(json, bash, powershell, profile)]
 
-        mock_bmxwrite.get_credentials = Mock(
-            return_value=RETURN_VALUE
-        )
+        if mock_bmxwrite:
+            mock_bmxwrite.get_credentials = Mock(
+                return_value=RETURN_VALUE
+            )
 
-    def create_args(self, json, bash, powershell):
+    def create_args(self, json, bash, powershell, profile):
         mock = Mock()
         mock.username = USERNAME
         mock.duration = DURATION
         mock.j = json
         mock.b = bash
         mock.p = powershell
-        mock.profile = ''
+        mock.profile = profile
 
         return mock
 
