@@ -109,7 +109,10 @@ def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
 
     if known_args.profile:
-        credentials = read_config(known_args.profile)
+        try:
+            credentials = read_config(known_args.profile)
+        except configparser.NoSectionError:
+            return 'Profile not found'
     else:
         credentials = bmxwrite.get_credentials(
             known_args.username,
