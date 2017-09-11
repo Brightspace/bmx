@@ -134,7 +134,7 @@ class BmxWriteTests(unittest.TestCase):
         mock_configparser.return_value.__setitem__.assert_called_with('my-profile', {'aws_access_key_id': 'my-access-key',
                                                                                     'aws_secret_access_key': 'my-secret-access-key',
                                                                                     'aws_session_token': 'my-session-token'})
-        mock_configparser.return_value.write.assert_called()
+        assert mock_configparser.return_value.write.called
         mock_open.assert_called_with(os.path.expanduser('~/.aws/credentials'), 'w')
 
     #@patch('bmx.bmxprint.create_parser')
