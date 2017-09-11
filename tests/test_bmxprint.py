@@ -103,6 +103,20 @@ $env:AWS_SESSION_TOKEN = '{}'
     SESSION_TOKEN
 ), printed)
 
+    @patch('configparser.ConfigParser')
+    def test_read_config_should_error_on_invalid_profile(self, mock_config_parser):
+        mock_config_parser.return_value.has_section.return_value = False
+        self.assertRaises(SystemExit, bmx.bmxprint.read_config, 'profile')
+
+    @patch('configparser.ConfigParser')
+    def test_read_config_should_return_expected_value(self, mock_config_parser):
+        mock_config_parser.return_value.get.side_effect = lambda profile, key: {
+            'aws_access_key_id': ACCESS_KEY_ID,
+            'aws_secret_access_key': SECRET_ACCESS_KEY,
+            'aws_session_token': SESSION_TOKEN
+        }[key]
+        self.assertEqual(bmx.bmxprint.read_config('profile'), RETURN_VALUE)
+
     def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_bmxwrite):
         mock_parser.return_value.parse_known_args.return_value = \
             [self.create_args(json, bash, powershell)]

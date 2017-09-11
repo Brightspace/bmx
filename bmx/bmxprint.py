@@ -95,6 +95,8 @@ def read_config(profile):
     filename = os.path.expanduser('~/.aws/credentials')
 
     config.read(filename)
+    if not config.has_section(profile):
+        sys.exit('Profile not found')
     access_key_id = config.get(profile, 'aws_access_key_id')
     secret_access_key = config.get(profile, 'aws_secret_access_key')
     session_token = config.get(profile, 'aws_session_token')
