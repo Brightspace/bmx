@@ -26,3 +26,5 @@ requests == 2.18.3
 setuptools == 20.7.0
 
 pylint == 1.7.2
+
+awscli == 1.11.149
