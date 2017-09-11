@@ -154,13 +154,9 @@ bmx-write [--username USERNAME]
         default='default',
         help='the profile to write to the credentials file')
 
-    parser.add_argument('--account',
-                        default=None,
-                        help='the aws account name to auth against')
+    parser.add_argument('--account', default=None, help='the aws account name to auth against')
 
-    parser.add_argument('--role',
-                        default=None,
-                        help='the aws role name to auth as')
+    parser.add_argument('--role', default=None, help='the aws role name to auth as')
 
     return parser
 
