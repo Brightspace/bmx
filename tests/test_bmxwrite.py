@@ -109,21 +109,21 @@ class BmxWriteTests(unittest.TestCase):
             return applink
 
         mock_oktautil.create_users_client.return_value.get_user_applinks.return_value = [
-            getAppLink({"appName": "amazon_aws", "label": "not-my-account"}),
-            getAppLink({"appName": "amazon_aws", "label": "my-account"})
+            getAppLink({'appName': 'amazon_aws', 'label': 'not-my-account'}),
+            getAppLink({'appName': 'amazon_aws', 'label': 'my-account'})
         ]
 
-        mock_oktautil.connect_to_app.return_value = base64.b64encode(b"skip_me")
+        mock_oktautil.connect_to_app.return_value = base64.b64encode(b'skip_me')
 
         mock_get_app_roles.return_value = [
-            "arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/my-role",
-            "arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/not-my-role"
+            'arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/my-role',
+            'arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/not-my-role'
         ]
 
-        mock_boto3.return_value.assume_role_with_saml.return_value = {"Credentials":
-                                                                          {"AccessKeyId": "my-access-key",
-                                                                           "SecretAccessKey": "my-secret-access-key",
-                                                                           "SessionToken": "my-session-token"}
+        mock_boto3.return_value.assume_role_with_saml.return_value = {'Credentials':
+                                                                          {'AccessKeyId': 'my-access-key',
+                                                                           'SecretAccessKey': 'my-secret-access-key',
+                                                                           'SessionToken': 'my-session-token'}
                                                                       }
 
         bmxwrite.cmd(['--profile', 'my-profile',
