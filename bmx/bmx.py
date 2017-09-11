@@ -3,9 +3,9 @@
 import sys
 import argparse
 
-from . import bmxaws
-from . import bmxwrite
-from . import bmxprint
+import bmx.bmxaws as bmxaws
+import bmx.bmxwrite as bmxwrite
+import bmx.bmxprint as bmxprint
 
 class Parser:
     def __init__(self):
