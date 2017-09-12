@@ -9,12 +9,8 @@ from unittest.mock import patch
 
 import awscli.clidriver
 
-import bmx.bmxaws
+import bmx.bmxaws as bmxaws
 import bmx.bmxwrite
-
-ARGS = ['arg']
-KNOWN_ARGS = 'known args'
-UNKNOWN_ARGS = 'unknown args'
 
 class BmxAwsTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -36,6 +32,10 @@ class BmxAwsTests(unittest.TestCase):
     @patch('bmx.bmxaws.create_parser')
     @patch('awscli.clidriver.create_clidriver')
     def test_cmd_should_delegate_to_aws_always(self, mock_clidriver, mock_arg_parser):
+        ARGS = ['arg']
+        KNOWN_ARGS = 'known args'
+        UNKNOWN_ARGS = 'unknown args'
+
         mock_arg_parser.return_value.parse_known_args.return_value = [KNOWN_ARGS,UNKNOWN_ARGS]
         mock_clidriver.return_value.main.return_value = 0
 
@@ -44,7 +44,16 @@ class BmxAwsTests(unittest.TestCase):
         mock_arg_parser.return_value.parse_known_args.assert_called_with(ARGS)
         mock_clidriver.return_value.main.assert_called_with(UNKNOWN_ARGS)
 
+    @patch('awscli.clidriver')
+    def test_cmd_with_account_and_role_should_pass_correct_args_to_awscli(self, mock_awscli):
+        known_args = ['--account', 'my-account',
+                      '--username', 'my-user',
+                      '--role', 'my-role']
+        unknown_args = ['aws_command', 'sub_command']
 
+        bmxaws.cmd(known_args + unknown_args)
+
+        mock_awscli.create_clidriver.return_value.main.assert_called_with(unknown_args)
 
 if __name__ == '__main__':
     unittest.main();
