@@ -8,7 +8,10 @@ import argparse
 import bmx.stsutil as stsutil
 
 def renew_credentials(username=None, profile='default', duration_seconds=3600, app=None, role=None):
-    write_credentials(stsutil.get_credentials(username, duration_seconds, app=app, role=role), profile)
+    write_credentials(stsutil.get_credentials(username,
+                                              duration_seconds,
+                                              app=app,
+                                              role=role), profile)
 
 def write_credentials(credentials, profile):
     config = configparser.ConfigParser()

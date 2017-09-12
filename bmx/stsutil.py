@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 
 import base64
+import re
+
 import boto3
 import lxml
-import re
 
 from okta.framework.OktaError import OktaError
 from requests import HTTPError
