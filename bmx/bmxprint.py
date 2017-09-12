@@ -6,7 +6,7 @@ import argparse
 import os
 import configparser
 
-import bmx.bmxwrite as bmxwrite
+import bmx.stsutil as stsutil
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -114,7 +114,7 @@ def cmd(args):
         except configparser.NoSectionError:
             return 'Profile not found'
     else:
-        credentials = bmxwrite.get_credentials(
+        credentials = stsutil.get_credentials(
             known_args.username,
             known_args.duration
         )
