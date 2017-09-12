@@ -1,6 +1,4 @@
-import argparse
 import base64
-import configparser
 import contextlib
 import io
 import json
@@ -12,17 +10,8 @@ from unittest.mock import patch
 
 import bmx.bmxprint as bmxprint
 import bmx.bmxwrite as bmxwrite
-import bmx.oktautil as oktautil
 import okta.models.user
 import bmx.prompt as prompt
-
-CREDENTIALS = 'credentials'
-SAML_ASSERTION = 'saml assertion'
-PRINCIPAL = 'principal'
-ROLE = 'role'
-DURATION_SECONDS = 'duration seconds'
-XPATH_RESULTS = 'xpath results'
-
 
 class BmxWriteTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -45,55 +34,11 @@ class BmxWriteTests(unittest.TestCase):
         self.assertTrue('help' in calls[3][1])
 
 
-
-    @patch('boto3.client')
-    def test_sts_assume_role_should_request_token_always(self, mock_sts_client):
-        mock_sts_client.return_value.assume_role_with_saml.return_value = {
-            'Credentials': CREDENTIALS
-        }
-
-        self.assertEqual(
-            CREDENTIALS,
-            bmxwrite.sts_assume_role(
-                SAML_ASSERTION,
-                PRINCIPAL,
-                ROLE,
-                DURATION_SECONDS
-            )
-        )
-
-        mock_sts_client.assert_called_with('sts')
-        mock_sts_client.return_value.assume_role_with_saml.assert_called_with(
-            SAMLAssertion=SAML_ASSERTION,
-            PrincipalArn=PRINCIPAL,
-            RoleArn=ROLE,
-            DurationSeconds=DURATION_SECONDS
-        )
-
-    @patch('lxml.etree.fromstring')
-    def test_get_app_roles_should_search_saml_for_roles_always(self, mock_etree):
-        mock_etree.return_value.xpath.return_value=XPATH_RESULTS
-
-        self.assertEqual(
-            XPATH_RESULTS,
-            bmxwrite.get_app_roles(SAML_ASSERTION)
-        )
-
-        mock_etree.assert_called_with(SAML_ASSERTION)
-        mock_etree.return_value.xpath.assert_called_with(
-            ''.join([
-                '//x:AttributeStatement',
-                '/x:Attribute',
-                '[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/x:AttributeValue/text()'
-            ]),
-            namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
-        )
-
     @patch('builtins.open')
     @patch('boto3.client')
     @patch('configparser.ConfigParser', return_value=MagicMock())
-    @patch('bmx.bmxwrite.get_app_roles')
-    @patch('bmx.bmxwrite.oktautil')
+    @patch('bmx.stsutil.get_app_roles')
+    @patch('bmx.stsutil.oktautil')
     @patch('bmx.prompt.prompt_for_value', return_value="password")
     def test_write_with_account_and_role_should_write_correct_data(self,
                                                                    mock_prompt,
