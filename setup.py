@@ -18,10 +18,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'bmx=bmx.bmx:main',
-            'bmx-aws=bmx.bmxaws:main',
-            'bmx-write=bmx.bmxwrite:main',
-            'bmx-print=bmx.bmxprint:main'
+            'bmx=bmx.bmx:main'
         ]
     },
     install_requires=[

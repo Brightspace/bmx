@@ -10,12 +10,12 @@ import bmx.stsutil as stsutil
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog='bmx-print',
+        prog='bmx print',
         usage='''
         
-bmx-print -h
-bmx-print [--username USERNAME] [--duration DURATION] [-j | -b | -p]
-bmx-print [--profile PROFILE] [-j | -b | -p]'''
+bmx print -h
+bmx print [--username USERNAME] [--duration DURATION] [-j | -b | -p]
+bmx print [--profile PROFILE] [-j | -b | -p]'''
     )
 
     parser.add_argument('--username', help='the Okta username')
