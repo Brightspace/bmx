@@ -32,7 +32,6 @@ setup(
         'pies2overrides>=2.6.7',
         'prompt>=0.4.1',
         'requests>=2.18.3',
-        'setuptools>=20.7.0',
         'awscli>=1.11.0'
     ],
     author='Chris Redekop',

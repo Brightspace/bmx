@@ -53,7 +53,7 @@ There is still [lots of work to do on BMX](https://github.com/Brightspace/bmx/is
 
 ## System Requirements
 
-* [Python 3.6+](https://www.python.org/downloads/windows/)
+* [Python 3.6+](https://www.python.org/downloads/)
 * pip, the Python installer.
 
 ## Installation
