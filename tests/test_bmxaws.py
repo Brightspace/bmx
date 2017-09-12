@@ -22,10 +22,16 @@ class BmxAwsTests(unittest.TestCase):
         parser = bmx.bmxaws.create_parser()
 
         calls = parser.add_argument.call_args_list
-        self.assertEqual(1, len(calls))
+        self.assertEqual(3, len(calls))
 
         self.assertEqual('--username', calls[0][0][0])
         self.assertTrue('help' in calls[0][1])
+
+        self.assertEqual('--account', calls[1][0][0])
+        self.assertTrue('help' in calls[1][1])
+
+        self.assertEqual('--role', calls[2][0][0])
+        self.assertTrue('help' in calls[2][1])
 
     @patch('bmx.bmxaws.create_parser')
     @patch('awscli.clidriver.create_clidriver')

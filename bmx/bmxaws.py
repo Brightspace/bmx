@@ -17,10 +17,14 @@ def create_parser():
         usage='''
 
 bmx-aws -h
-bmx-aws [--username USERNAME] CLICOMMAND CLISUBCOMMAND ...'''
+bmx-aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISUBCOMMAND ...'''
 )
     parser.add_argument('--username',
         help='specify username instead of being prompted')
+
+    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+
+    parser.add_argument('--role', default=None, help='the aws role name to auth as')
 
     return parser
 
@@ -43,7 +47,9 @@ def cmd(args):
         ):
             print("Your AWS STS token has expired.  Renewing...")
 
-            bmxwrite.renew_credentials(known_args.username)
+            bmxwrite.renew_credentials(known_args.username,
+                                       app=known_args.account,
+                                       role=known_args.role)
         else:
             break
 
