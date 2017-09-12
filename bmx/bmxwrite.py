@@ -29,11 +29,11 @@ def write_credentials(credentials, profile):
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog='bmx-write',
+        prog='bmx write',
         usage='''
         
-bmx-write -h
-bmx-write [--username USERNAME]
+bmx write -h
+bmx write [--username USERNAME]
           [--duration DURATION]
           [--profile PROFILE] 
           [--account ACCOUNT] 
