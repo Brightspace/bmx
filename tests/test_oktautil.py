@@ -1,7 +1,10 @@
 import context
 import okta
+import os
+import pickle
 import requests
 import unittest
+import tempfile
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -24,6 +27,12 @@ class MockCookie():
         self.cookies = cookies
     def get_dict(self):
         return self.cookies
+
+class MockSession():
+    def __init__(self):
+        pass
+    def validate_session(self, x):
+        return x
 
 class OktaUtilTests(unittest.TestCase):
     @patch('getpass.getpass', return_value=PASSWORD)
@@ -99,6 +108,42 @@ class OktaUtilTests(unittest.TestCase):
         )
 
         mock_response.raise_for_status.assert_called_with()
+
+    @patch('os.path.expanduser')
+    def test_cached_session_serializes(self, mock_user):
+        expected_cached_object = 'expected_cached_object'
+        temp_dir = tempfile.mkdtemp()
+        mock_user.return_value = temp_dir
+
+        bmx.oktautil.set_cached_session(expected_cached_object)
+        with open(os.path.join(temp_dir, 'cookies.state'), 'rb') as test_cookie_state:
+            cached_object = pickle.load(test_cookie_state)
+            self.assertEqual(expected_cached_object, cached_object)
+
+    @patch('os.path.expanduser')
+    @patch('bmx.oktautil.create_sessions_client', return_value=MockSession())
+    @patch('pickle.load', return_value=MockCookie({'sid': 'expectedSession'}))
+    def test_get_cache_session_exists(self, mock_pickle, mock_session_client, mock_user):
+        temp_file = tempfile.mkstemp()[1]
+        mock_user.return_value = temp_file
+
+        session, cookies = bmx.oktautil.get_cached_session()
+        self.assertTrue(mock_pickle.called)
+        self.assertTrue(mock_session_client.called)
+        self.assertEqual('expectedSession', session)
+        self.assertEqual(cookies.cookies, {'sid': 'expectedSession'})
+
+    def test_cookies_to_string_when_none(self):
+        cookie_string = bmx.oktautil.cookie_string(None)
+        self.assertEqual('', cookie_string)
+
+    def test_cookies_to_string_when_present(self):
+        cookie_string = bmx.oktautil.cookie_string(
+            MockCookie({'first': 'first', 'second': 'second'}))
+        cookie_parts = cookie_string.split(';')
+        self.assertEqual(2, len(cookie_parts))
+        self.assertIn('first=first', cookie_parts)
+        self.assertIn('second=second', cookie_parts)
 
 if __name__ == '__main__':
     unittest.main()
