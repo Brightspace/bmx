@@ -28,12 +28,12 @@ def get_credentials(username, duration_seconds, app=None, role=None):
         get_app_roles(base64.b64decode(saml_assertion)),
         role
     )
-    split_role = role.split(',')
 
+    first_role, second_role = role.split(',')
     credentials = sts_assume_role(
         saml_assertion,
-        split_role[0],
-        split_role[1],
+        first_role,
+        second_role,
         duration_seconds=duration_seconds
     )
 

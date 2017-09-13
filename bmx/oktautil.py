@@ -15,7 +15,7 @@ BASE_URL = 'https://d2l.okta.com/'
 API_TOKEN = 'apitoken'
 
 def set_cached_session(cookies):
-    local_settings_dir = os.path.expanduser('~/.bmx')
+    local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
     if not os.path.exists(local_settings_dir):
         os.makedirs(local_settings_dir)
     with open(os.path.join(local_settings_dir, 'cookies.state'), 'wb') as cookie_state:
@@ -23,13 +23,13 @@ def set_cached_session(cookies):
 
 def get_cached_session():
     try:
-        with open(os.path.expanduser('~/.bmx/cookies.state'), 'rb') as cookie_state:
+        local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
+        with open(os.path.join(local_settings_dir, 'cookies.state'), 'rb') as cookie_state:
             cookies = pickle.load(cookie_state)
         sessions_client = create_sessions_client(cookies)
         session = sessions_client.validate_session(cookies.get_dict()['sid'])
     except Exception:
-        cookies = None
-        session = None
+        session = cookies = None
     return session, cookies
 
 def get_new_session(username):
@@ -67,22 +67,22 @@ def get_new_session(username):
             cookies = requests.get(session.cookieTokenUrl).cookies
 
             return session, cookies
-        except OktaError as ex:
-            print(ex)
-        except requests.HTTPError as ex:
+        except (OktaError, requests.HTTPError) as ex:
             print(ex)
 
 def get_okta_session(username):
     session, cookies = get_cached_session()
-    if session is None or cookies is None:
+    if None in (session, cookies):
         session, cookies = get_new_session(username)
         set_cached_session(cookies)
     return session, cookies
 
 def cookie_string(cookies):
-    return \
-        '' if cookies is None \
-        else ';'.join(['%s=%s' % (key, value) for (key, value) in cookies.get_dict().items()])
+    cookie_header = ''
+    if cookies:
+        cookie_header = ';'.join(
+            ['%s=%s' % (key, value) for (key, value) in cookies.get_dict().items()])
+    return cookie_header
 
 def create_auth_client():
     return okta.AuthClient(
