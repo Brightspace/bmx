@@ -14,7 +14,7 @@ def create_parser():
         usage='''
         
 bmx print -h
-bmx print [--username USERNAME] [--duration DURATION] [-j | -b | -p]
+bmx print [--username USERNAME] [--duration DURATION] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
 bmx print [--profile PROFILE] [-j | -b | -p]'''
     )
 
@@ -24,6 +24,8 @@ bmx print [--profile PROFILE] [-j | -b | -p]'''
         default=3600,
         help='the requested STS-token lease duration'
     )
+    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+    parser.add_argument('--role', default=None, help='the aws role name to auth as')
 
     formatting_group = parser.add_mutually_exclusive_group()
     formatting_group.add_argument(
@@ -116,7 +118,9 @@ def cmd(args):
     else:
         credentials = stsutil.get_credentials(
             known_args.username,
-            known_args.duration
+            known_args.duration,
+            app=known_args.account,
+            role=known_args.role
         )
 
     print(format_credentials(known_args, credentials))

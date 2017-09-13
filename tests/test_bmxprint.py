@@ -38,8 +38,14 @@ class BmxPrintTests(unittest.TestCase):
         self.assertEqual(3600, calls[1][1]['default'])
         self.assertTrue('help' in calls[1][1])
 
-        self.assertEqual('--profile', calls[2][0][0])
+        self.assertEqual('--account', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
+
+        self.assertEqual('--role', calls[3][0][0])
+        self.assertTrue('help' in calls[3][1])
+
+        self.assertEqual('--profile', calls[4][0][0])
+        self.assertTrue('help' in calls[4][1])
 
         calls = mock_group.add_argument.call_args_list
         self.assertEqual('-j', calls[0][0][0])
@@ -119,6 +125,19 @@ $env:AWS_SESSION_TOKEN = '{}'
             'aws_session_token': SESSION_TOKEN
         }[key]
         self.assertEqual(bmx.bmxprint.read_config('profile'), RETURN_VALUE)
+
+    @patch('builtins.print')
+    @patch('bmx.bmxprint.format_credentials')
+    @patch('bmx.bmxprint.stsutil.get_credentials')
+    def test_cmd_with_account_and_role_should_pass_correct_args_to_awscli(self, mock_stsutil, mock_format, mock_print):
+        username, duration, account, role = 'my-user', '123', 'my-account', 'my-role'
+        known_args = ['--username', username,
+                      '--duration', duration,
+                      '--account', account,
+                      '--role', role]
+
+        bmx.bmxprint.cmd(known_args)
+        bmx.bmxprint.stsutil.get_credentials.assert_called_with(username, duration, app=account, role=role)
 
     def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_stsutil=None, profile=''):
         mock_parser.return_value.parse_known_args.return_value = \
