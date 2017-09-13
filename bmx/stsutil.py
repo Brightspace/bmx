@@ -6,52 +6,37 @@ import re
 import boto3
 import lxml
 
-from okta.framework.OktaError import OktaError
-from requests import HTTPError
-
 import bmx.oktautil as oktautil
 import bmx.prompt as prompt
 
 def get_credentials(username, duration_seconds, app=None, role=None):
-    auth_client = oktautil.create_auth_client()
-    sessions_client = oktautil.create_sessions_client()
+    session, cookies = oktautil.get_okta_session(username)
 
-    while True:
-        try:
-            authentication = oktautil.authenticate(auth_client, username)
-            session = sessions_client.create_session_by_session_token(authentication.sessionToken)
+    applink = get_app_selection(
+        filter_applinks(oktautil.create_users_client(cookies)
+                        .get_user_applinks(session.userId)),
+        app
+    )
 
+    saml_assertion = oktautil.connect_to_app(
+        applink.linkUrl,
+        cookies
+    )
 
-            applink = get_app_selection(
-                filter_applinks(oktautil.create_users_client(session.id)
-                                .get_user_applinks(session.userId)),
-                app
-            )
+    role = get_role_selection(
+        applink.label,
+        get_app_roles(base64.b64decode(saml_assertion)),
+        role
+    )
+    split_role = role.split(',')
 
-            saml_assertion = oktautil.connect_to_app(
-                applink.linkUrl,
-                session.id
-            )
+    credentials = sts_assume_role(
+        saml_assertion,
+        split_role[0],
+        split_role[1],
+        duration_seconds=duration_seconds
+    )
 
-            role = get_role_selection(
-                applink.label,
-                get_app_roles(base64.b64decode(saml_assertion)),
-                role
-            )
-            split_role = role.split(',')
-
-            credentials = sts_assume_role(
-                saml_assertion,
-                split_role[0],
-                split_role[1],
-                duration_seconds=duration_seconds
-            )
-
-            break
-        except OktaError as ex:
-            print(ex)
-        except HTTPError as ex:
-            print(ex)
 
     return credentials
 
