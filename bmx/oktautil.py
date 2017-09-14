@@ -13,6 +13,7 @@ from . import prompt
 
 BASE_URL = 'https://d2l.okta.com/'
 API_TOKEN = 'apitoken'
+SUPPORTED_FACTORS = ['sms', 'token:software:totp']
 
 # TODO: Create directories and files with correct permissions, central method will be available
 def set_cached_session(cookies):
@@ -47,20 +48,22 @@ def get_new_session(username):
                 state = authentication.stateToken
                 factors = authentication.embedded.factors
 
-                # This could likely support SMS, but haven't tested that as I don't use it
+                available_factors = [f for f in factors if f.factorType in SUPPORTED_FACTORS]
+                if available_factors:
+                    factor = get_factor_selection(available_factors)
+                    if factor.factorType == 'sms':
+                        # Send the SMS message by sending an empty passcode
+                        auth_client.auth_with_factor(state, factor.id, None)
+                    code = prompt.prompt_for_value(input, 'Okta MFA code: ')
 
-                totp_factors = [f for f in factors if f.factorType == 'token:software:totp']
-                if totp_factors:
-                    factor_id = totp_factors[0].id
-                    totp_code = prompt.prompt_for_value(input, 'Okta TOTP code: ')
-                    authentication = auth_client.auth_with_factor(state, factor_id, totp_code)
+                    authentication = auth_client.auth_with_factor(state, factor.id, code)
                 else:
                     factor_types = [f.factorType for f in factors]
                     message = (
                         'MFA required by Okta, but no supported factors available.'
-                        '\n   Supported: [\'token:software:totp\']'
-                        '\n   Available: {0}'
-                    ).format(factor_types)
+                        '\n   Supported: {0}'
+                        '\n   Available: {1}'
+                    ).format(SUPPORTED_FACTORS, factor_types)
                     raise NotImplementedError(message)
 
             session = sessions_client.create_session_by_session_token(
@@ -111,6 +114,20 @@ def create_users_client(cookies):
             'Cookie': cookie_string(cookies)
         }
     )
+
+def get_factor_selection(factors):
+    factor_labels = {
+        ('sms', 'OKTA'): 'SMS',
+        ('token:software:totp', 'GOOGLE'): 'Google Authenticator Mobile App',
+        ('token:software:totp', 'OKTA'): 'Okta Verify Mobile App'
+    }
+    return factors[
+        prompt.MinMenu(
+            '\nAvailable Authentication Methods: ',
+            [factor_labels.get((f.factorType, f.provider), f.factorType) for f in factors],
+            'Index: '
+        ).get_selection()
+    ]
 
 def connect_to_app(app_url, cookies):
     response = requests.get(

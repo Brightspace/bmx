@@ -5,8 +5,7 @@ import pickle
 import requests
 import unittest
 import tempfile
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import call, Mock, patch
 
 import bmx.oktautil
 
@@ -19,7 +18,6 @@ PASSWORD = 'cats'
 STATE = 'this is the state'
 FACTOR_ID = 'factor id'
 TOTP_CODE = 'totp code'
-
 
 class MockCookie():
     def __init__(self, cookies=None):
@@ -35,28 +33,22 @@ class MockSession():
     def validate_session(self, x):
         return x
 
+def create_auth_response_mock(factor_type):
+    props = {
+        'stateToken': STATE,
+        'status': 'MFA_REQUIRED',
+        'embedded.factors': [Mock(id = FACTOR_ID, factorType = factor_type)]
+    }
+    return Mock(**props)
+
 class OktaUtilTests(unittest.TestCase):
     @patch('getpass.getpass', return_value=PASSWORD)
     @patch('builtins.input', return_value=TOTP_CODE)
     @patch('requests.get')
     @patch('bmx.oktautil.create_sessions_client')
     @patch('bmx.oktautil.create_auth_client')
-    def test_authenticate_should_follow_full_mfa_flow(self, mock_auth_client, *args):
-        class PretendClassDict(dict):
-            __getattr__ = dict.get
-
-        mock_auth_client.return_value.authenticate.return_value = PretendClassDict({
-            'stateToken': STATE,
-            'status': 'MFA_REQUIRED',
-            'embedded': PretendClassDict({
-                'factors': [
-                    PretendClassDict({
-                        'id': FACTOR_ID,
-                        'factorType': 'token:software:totp'
-                    })
-                ]
-            })
-        })
+    def test_authenticate_should_follow_full_totp_mfa_flow(self, mock_auth_client, *args):
+        mock_auth_client.return_value.authenticate.return_value = create_auth_response_mock('token:software:totp')
 
         bmx.oktautil.get_new_session(USERNAME)
 
@@ -69,6 +61,26 @@ class OktaUtilTests(unittest.TestCase):
             FACTOR_ID,
             TOTP_CODE
         )
+
+    @patch('getpass.getpass', return_value=PASSWORD)
+    @patch('builtins.input', return_value=TOTP_CODE)
+    @patch('requests.get')
+    @patch('bmx.oktautil.create_sessions_client')
+    @patch('bmx.oktautil.create_auth_client')
+    def test_authenticate_should_follow_full_sms_mfa_flow(self, mock_auth_client, *args):
+        mock_auth_client.return_value.authenticate.return_value = create_auth_response_mock('sms')
+
+        bmx.oktautil.get_new_session(USERNAME)
+
+        mock_auth_client.return_value.authenticate.assert_called_once_with(
+            USERNAME,
+            PASSWORD
+        )
+        self.assertEqual(mock_auth_client.return_value.auth_with_factor.call_count, 2)
+        mock_auth_client.return_value.auth_with_factor.assert_has_calls([
+            call(STATE, FACTOR_ID, None),
+            call(STATE, FACTOR_ID, TOTP_CODE)
+        ])
 
     def test_create_users_client_should_pass_session_id_always(self):
         okta.UsersClient.__init__ = Mock(return_value=None)
