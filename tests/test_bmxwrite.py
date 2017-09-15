@@ -13,6 +13,14 @@ import bmx.bmxwrite as bmxwrite
 import okta.models.user
 import bmx.prompt as prompt
 
+class MockSession():
+    def __init__(self):
+        pass
+    def userId(self):
+        return ''
+    def validate_session(self, x):
+        return x
+
 class BmxWriteTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
     def test_create_parser_should_create_expected_parser_always(self, mock_arg_parser):
@@ -52,6 +60,8 @@ class BmxWriteTests(unittest.TestCase):
             for key, value in props.items():
                 applink.__setattr__(key, value)
             return applink
+
+        mock_oktautil.get_okta_session.return_value = MockSession(), 'someCookieObject'
 
         mock_oktautil.create_users_client.return_value.get_user_applinks.return_value = [
             getAppLink({'appName': 'amazon_aws', 'label': 'not-my-account'}),
