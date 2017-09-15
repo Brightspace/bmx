@@ -2,14 +2,16 @@
 
 import contextlib
 import io
+import os
 import re
 import sys
 import argparse
 
 import awscli.clidriver
 
-import bmx.bmxwrite as bmxwrite
+import bmx.credentialsutil as credentialsutil
 import bmx.prompt as prompt
+import bmx.stsutil as stsutil
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -30,8 +32,15 @@ bmx aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISU
 
 def cmd(args):
     [known_args, unknown_args] = create_parser().parse_known_args(args)
+    credentials = credentialsutil.fetch_credentials(
+        username=known_args.username
+    )
 
     while True:
+        os.environ['AWS_ACCESS_KEY_ID'] = credentials['AccessKeyId']
+        os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['SecretAccessKey']
+        os.environ['AWS_SESSION_TOKEN'] = credentials['SessionToken']
+
         try:
             out = io.StringIO()
             err = io.StringIO()
@@ -47,10 +56,16 @@ def cmd(args):
         ):
             print("Your AWS STS token has expired.  Renewing...")
 
-            bmxwrite.renew_credentials(known_args.username,
-                                       app=known_args.account,
-                                       role=known_args.role)
+            credentials = stsutil.get_credentials(
+                known_args.username,
+                3600,
+                app=known_args.account,
+                role=known_args.role
+            )
         else:
+            if ret == 0:
+                credentialsutil.write_credentials(credentials)
+
             break
 
     errstring = err.getvalue()
