@@ -12,6 +12,7 @@ import awscli.clidriver
 import bmx.bmxwrite as bmxwrite
 import bmx.credentialsutil as credentialsutil
 import bmx.prompt as prompt
+import bmx.stsutil as stsutil
 
 def create_parser():
     parser = argparse.ArgumentParser(
@@ -33,9 +34,7 @@ bmx aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISU
 def cmd(args):
     [known_args, unknown_args] = create_parser().parse_known_args(args)
     credentials = credentialsutil.fetch_credentials(
-        username=known_args.username,
-        app=known_args.account,
-        role=known_args.role
+        username=known_args.username
     )
 
     while True:
@@ -60,10 +59,13 @@ def cmd(args):
 
             credentials = stsutil.get_credentials(
                 known_args.username,
-                3600
+                3600,
+                app=known_args.account,
+                role=known_args.role
             )
         else:
-            credentialsutil.write_credentials(credentials)
+            if ret == 0:
+                credentialsutil.write_credentials(credentials)
 
             break
 
