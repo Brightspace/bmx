@@ -4,7 +4,6 @@ import io
 import json
 import unittest
 
-from munch import Munch
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -34,8 +33,8 @@ class BmxAwsTests(unittest.TestCase):
     @patch('awscli.clidriver.create_clidriver')
     def test_cmd_should_delegate_to_aws_always(self, mock_clidriver, mock_arg_parser):
         ARGS = ['arg']
-        KNOWN_ARGS = Munch(
-            {
+        KNOWN_ARGS = Mock(
+            **{
                 'username': 'username',
                 'account': 'account',
                 'role': 'role'

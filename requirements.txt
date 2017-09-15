@@ -7,6 +7,3 @@ requests >= 2.18.3
 pylint >= 1.7.2
 awscli >= 1.11.149
 boto3 >= 1.4.7
-
-# test dependencies
-munch >= 2.2.0

@@ -21,9 +21,6 @@ setup(
             'bmx=bmx.bmx:main'
         ]
     },
-    tests_require = [
-        'munch>=2.2.0'
-    ],
     install_requires=[
         'future>=0.16.0',
         'lxml>=3.7.3',
