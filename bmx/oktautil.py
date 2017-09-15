@@ -14,6 +14,7 @@ from . import prompt
 BASE_URL = 'https://d2l.okta.com/'
 API_TOKEN = 'apitoken'
 
+# TODO: Create directories and files with correct permissions, central method will be available
 def set_cached_session(cookies):
     local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
     if not os.path.exists(local_settings_dir):
@@ -21,6 +22,7 @@ def set_cached_session(cookies):
     with open(os.path.join(local_settings_dir, 'cookies.state'), 'wb') as cookie_state:
         pickle.dump(cookies, cookie_state)
 
+# TODO: Use common get_dir method that will be available
 def get_cached_session():
     try:
         local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
@@ -47,14 +49,13 @@ def get_new_session(username):
 
                 # This could likely support SMS, but haven't tested that as I don't use it
 
-                totp_factors = list(
-                    filter(lambda f: f.factorType == 'token:software:totp', factors))
+                totp_factors = [f for f in factors if f.factorType == 'token:software:totp']
                 if totp_factors:
                     factor_id = totp_factors[0].id
                     totp_code = prompt.prompt_for_value(input, 'Okta TOTP code: ')
                     authentication = auth_client.auth_with_factor(state, factor_id, totp_code)
                 else:
-                    factor_types = list(map(lambda f: f.factorType, factors))
+                    factor_types = [f.factorType for f in factors]
                     message = (
                         'MFA required by Okta, but no supported factors available.'
                         '\n   Supported: [\'token:software:totp\']'
