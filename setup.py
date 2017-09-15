@@ -28,7 +28,8 @@ setup(
         'pies2overrides>=2.6.7',
         'prompt>=0.4.1',
         'requests>=2.18.3',
-        'awscli>=1.11.0'
+        'awscli>=1.11.0',
+        'boto3>=1.4.7'
     ],
     author='Chris Redekop',
     author_email='chris.redekop@d2l.com'
