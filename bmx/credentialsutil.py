@@ -39,7 +39,7 @@ def write_credentials(credentials):
         credentials_file.seek(0)
         credentials_file.truncate()
         yaml.dump(credentials_object, credentials_file)
-        
+
 
 def fetch_credentials(username=None, duration_seconds=3600):
     return read_credentials() or stsutil.get_credentials(

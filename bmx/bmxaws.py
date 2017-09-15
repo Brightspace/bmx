@@ -9,7 +9,6 @@ import argparse
 
 import awscli.clidriver
 
-import bmx.bmxwrite as bmxwrite
 import bmx.credentialsutil as credentialsutil
 import bmx.prompt as prompt
 import bmx.stsutil as stsutil
