@@ -123,14 +123,14 @@ class OktaUtilTests(unittest.TestCase):
 
         mock_response.raise_for_status.assert_called_with()
 
-    @patch('os.path.expanduser')
+    @patch('bmx.credentialsutil.get_bmx_path')
     def test_cached_session_serializes(self, mock_expanduser):
         expected_cached_object = 'expected_cached_object'
         temp_dir = tempfile.mkdtemp()
         mock_expanduser.return_value = temp_dir
 
         bmx.oktautil.set_cached_session(expected_cached_object)
-        with open(os.path.join(temp_dir, '.bmx', 'cookies.state'), 'rb') as test_cookie_state:
+        with open(bmx.credentialsutil.get_cookie_session_path(), 'rb') as test_cookie_state:
             cached_object = pickle.load(test_cookie_state)
             self.assertEqual(expected_cached_object, cached_object)
 
@@ -139,8 +139,8 @@ class OktaUtilTests(unittest.TestCase):
     @patch('pickle.load', return_value=MockCookie({'sid': 'expectedSession'}))
     def test_get_cache_session_exists(self, mock_pickle, mock_session_client):
         temp_file = tempfile.mkstemp()[1]
-        with patch('os.path.join', return_value = temp_file) as mock_join:
-            mock_join.return_value = temp_file
+        with patch('bmx.credentialsutil.get_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
+            mock_cookie_session_path.return_value = temp_file
 
             session, cookies = bmx.oktautil.get_cached_session()
             self.assertTrue(mock_pickle.called)

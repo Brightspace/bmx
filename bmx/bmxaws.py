@@ -10,7 +10,6 @@ import argparse
 import awscli.clidriver
 
 import bmx.credentialsutil as credentialsutil
-import bmx.prompt as prompt
 import bmx.stsutil as stsutil
 
 def create_parser():
@@ -33,13 +32,15 @@ bmx aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISU
 def cmd(args):
     [known_args, unknown_args] = create_parser().parse_known_args(args)
     credentials = credentialsutil.fetch_credentials(
-        username=known_args.username
+        username=known_args.username,
+        app=known_args.account,
+        role=known_args.role
     )
 
     while True:
-        os.environ['AWS_ACCESS_KEY_ID'] = credentials['AccessKeyId']
-        os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['SecretAccessKey']
-        os.environ['AWS_SESSION_TOKEN'] = credentials['SessionToken']
+        os.environ['AWS_ACCESS_KEY_ID'] = credentials.keys['AccessKeyId']
+        os.environ['AWS_SECRET_ACCESS_KEY'] = credentials.keys['SecretAccessKey']
+        os.environ['AWS_SESSION_TOKEN'] = credentials.keys['SessionToken']
 
         try:
             out = io.StringIO()
@@ -69,11 +70,11 @@ def cmd(args):
             break
 
     errstring = err.getvalue()
-    if not prompt.is_empty(errstring):
+    if errstring.strip():
         print(errstring, file=sys.stderr)
 
     outstring = out.getvalue()
-    if not prompt.is_empty(outstring):
+    if outstring.strip():
         print(outstring)
 
     return ret
