@@ -47,6 +47,13 @@ class PromptTests(unittest.TestCase):
 
         self.assertEqual(1, menu.get_selection())
 
+    def test_get_selection_should_prompt_when_forced(self):
+        items = ['foo']
+        menu = bmx.prompt.MinMenu(TITLE, items, PROMPT)
+        menu.prompt_for_choice = Mock(return_value=1)
+
+        self.assertEqual(1, menu.get_selection(force_prompt=True))
+
     def test_prompt_for_choice_should_prompt_for_index_always(self):
         return_value = 2
         read_function = Mock(return_value = return_value);
