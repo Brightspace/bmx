@@ -67,7 +67,7 @@ def write_credentials(credentials):
 
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
-        credentials_object[VERSION_KEY] = VERSION
+        credentials_doc[VERSION_KEY] = VERSION
 
         setdefault(
             credentials_doc,
