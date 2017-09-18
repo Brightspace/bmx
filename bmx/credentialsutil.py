@@ -5,6 +5,8 @@ import yaml
 import bmx.stsutil as stsutil
 from bmx.aws_credentials import AwsCredentials
 
+VERSION_KEY = 'version'
+VERSION = '1.0.0'
 META_KEY = 'meta'
 CREDENTIALS_KEY = 'credentials'
 DEFAULT_KEY = 'default'
@@ -30,6 +32,14 @@ def read_credentials(app=None, role=None):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
 
+        version = credentials_doc.get(VERSION_KEY, None)
+        if version is not None and version != VERSION:
+            message = (
+                'Invalid credentials version.'
+                '\n   Supported: {0}'
+                '\n   Current: {1}'
+            ).format(VERSION, version)
+            raise ValueError(message)
         if not app and not role:
             default_ref = credentials_doc.get(META_KEY, {}).get(DEFAULT_KEY, {})
             app = default_ref.get(app, None)
@@ -50,6 +60,7 @@ def write_credentials(credentials):
 
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_object = yaml.load(credentials_file) or {}
+        credentials_object[VERSION_KEY] = VERSION
         credentials_object.setdefault(META_KEY, {})
         credentials_object[META_KEY][DEFAULT_KEY] = dict(credentials.keys)
         credentials_object[CREDENTIALS_KEY] = credentials.get_dict()
