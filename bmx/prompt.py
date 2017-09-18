@@ -7,8 +7,8 @@ class MinMenu:
         self.prompt = prompt
         self.read_function = read_function
 
-    def get_selection(self):
-        if len(self.items) > 1:
+    def get_selection(self, force_prompt=False):
+        if len(self.items) > 1 or force_prompt:
             index = self.prompt_for_choice()
         else:
             index = 0
