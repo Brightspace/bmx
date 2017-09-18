@@ -30,7 +30,7 @@ def read_credentials(app=None, role=None):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
 
-        if not app:
+        if not app and not role:
             default_ref = credentials_doc.get(META_KEY, {}).get(DEFAULT_KEY, {})
             app = default_ref.get(app, None)
             role = default_ref.get(role, None)
