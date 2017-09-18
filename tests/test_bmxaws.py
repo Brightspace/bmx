@@ -11,6 +11,7 @@ import awscli.clidriver
 
 import bmx.bmxaws as bmxaws
 import bmx.credentialsutil as credentialsutil
+from bmx.aws_credentials import AwsCredentials
 
 class BmxAwsTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -43,11 +44,11 @@ class BmxAwsTests(unittest.TestCase):
         UNKNOWN_ARGS = 'unknown args'
 
         mock_arg_parser.return_value.parse_known_args.return_value = [KNOWN_ARGS,UNKNOWN_ARGS]
-        credentialsutil.fetch_credentials = Mock(return_value = {
+        credentialsutil.fetch_credentials = Mock(return_value = AwsCredentials({
             'AccessKeyId': 'access key id',
             'SecretAccessKey': 'secret access key',
             'SessionToken': 'session token'
-        })
+        }, '', ''))
         mock_clidriver.return_value.main.return_value = 0
 
         self.assertEqual(0, bmxaws.cmd(ARGS))

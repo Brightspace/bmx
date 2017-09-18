@@ -12,6 +12,7 @@ import bmx.bmxprint as bmxprint
 import bmx.bmxwrite as bmxwrite
 import okta.models.user
 import bmx.prompt as prompt
+from bmx.aws_credentials import AwsCredentials
 
 class MockSession():
     def __init__(self):

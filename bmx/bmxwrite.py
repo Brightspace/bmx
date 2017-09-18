@@ -19,9 +19,9 @@ def write_credentials(credentials, profile):
 
     config.read(filename)
     config[profile] = {
-        'aws_access_key_id': credentials['AccessKeyId'],
-        'aws_secret_access_key': credentials['SecretAccessKey'],
-        'aws_session_token': credentials['SessionToken']
+        'aws_access_key_id': credentials.keys['AccessKeyId'],
+        'aws_secret_access_key': credentials.keys['SecretAccessKey'],
+        'aws_session_token': credentials.keys['SessionToken']
     }
 
     with open(os.path.expanduser('~/.aws/credentials'), 'w') as config_file:
@@ -31,12 +31,12 @@ def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx write',
         usage='''
-        
+
 bmx write -h
 bmx write [--username USERNAME]
           [--duration DURATION]
-          [--profile PROFILE] 
-          [--account ACCOUNT] 
+          [--profile PROFILE]
+          [--account ACCOUNT]
           [--role ROLE]'''
 )
     parser.add_argument('--username',
