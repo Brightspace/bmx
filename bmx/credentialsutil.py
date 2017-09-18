@@ -44,14 +44,17 @@ def read_credentials(app=None, role=None):
             raise ValueError(message)
 
         if not app and not role:
-            default_ref = (credentials_doc.get(META_KEY) or {}).get(DEFAULT_KEY, {})
+            default_ref = setdefault(
+                setdefault(credentials_doc, META_KEY), DEFAULT_KEY)
             app = default_ref.get(ACCOUNT_KEY)
             role = default_ref.get(ROLE_KEY)
 
-        credentials = credentials_doc.get(CREDENTIALS_KEY) or {}
-        credentials = (credentials.get(app) or {}).get(role)
+        credentials = setdefault(
+            setdefault(credentials_doc, CREDENTIALS_KEY), app).get(role)
 
         return AwsCredentials(credentials, app, role) if credentials else None
+    else:
+        return None
 
 def write_credentials(credentials):
     create_bmx_path()
