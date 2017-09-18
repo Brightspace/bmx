@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import re
-
+import datetime
 
 class AwsCredentials:
     @staticmethod
@@ -9,9 +9,11 @@ class AwsCredentials:
 
     @staticmethod
     def normalize_keys(keys):
-        norm_keys = dict(keys)
-        norm_keys['Expiration'] = str(norm_keys.get('Expiration'))
-        return norm_keys
+        normalized_keys = dict(keys)
+        if isinstance(normalized_keys.get('Expiration'), datetime.datetime):
+            normalized_keys['Expiration'] = normalized_keys.get('Expiration').isoformat() or None
+
+        return normalized_keys
 
     def __init__(self, keys, account, role_arn):
         self.keys = self.normalize_keys(keys)
