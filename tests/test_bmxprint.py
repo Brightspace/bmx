@@ -10,17 +10,18 @@ from unittest.mock import patch
 
 import bmx.bmxprint
 import bmx.stsutil
+from bmx.aws_credentials import AwsCredentials
 
 ACCESS_KEY_ID = 'id'
 SECRET_ACCESS_KEY = 'secret'
 SESSION_TOKEN = 'token'
 USERNAME = 'username'
 DURATION = 'duration'
-RETURN_VALUE = {
+RETURN_VALUE = AwsCredentials ({
     'AccessKeyId': ACCESS_KEY_ID,
     'SecretAccessKey': SECRET_ACCESS_KEY,
     'SessionToken': SESSION_TOKEN
-}
+}, 'expected_account', 'expected_role')
 
 class BmxPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -70,7 +71,7 @@ class BmxPrintTests(unittest.TestCase):
                 out.seek(0)
                 printed = json.load(out)
 
-                self.assertEqual(RETURN_VALUE, printed)
+                self.assertEqual(RETURN_VALUE.keys, printed)
 
     @patch('bmx.bmxprint.stsutil')
     @patch('bmx.bmxprint.create_parser')
@@ -124,7 +125,7 @@ $env:AWS_SESSION_TOKEN = '{}'
             'aws_secret_access_key': SECRET_ACCESS_KEY,
             'aws_session_token': SESSION_TOKEN
         }[key]
-        self.assertEqual(bmx.bmxprint.read_config('profile'), RETURN_VALUE)
+        self.assertEqual(bmx.bmxprint.read_config('profile'), RETURN_VALUE.keys)
 
     @patch('builtins.print')
     @patch('bmx.bmxprint.format_credentials')

@@ -81,14 +81,14 @@ $env:AWS_SESSION_TOKEN = '{}'""".format(
 )
 
 def format_credentials(args, credentials):
-    formatted_credentials = None
+    aws_keys = credentials.keys
 
     if args.b:
-        formatted_credentials = bash_format_credentials(credentials)
+        formatted_credentials = bash_format_credentials(aws_keys)
     elif args.p:
-        formatted_credentials = powershell_format_credentials(credentials)
+        formatted_credentials = powershell_format_credentials(aws_keys)
     else:
-        formatted_credentials = json_format_credentials(credentials)
+        formatted_credentials = json_format_credentials(aws_keys)
 
     return formatted_credentials
 
