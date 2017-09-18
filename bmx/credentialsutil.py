@@ -84,14 +84,10 @@ def write_credentials(credentials):
         yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
 
 def setdefault(dictionary, key):
-    value = dictionary.get(key)
+    if not isinstance(dictionary.get(key, {}), dict):
+        dictionary[key] = {}
 
-    if not isinstance(value, dict):
-        value = {}
-        dictionary[key] = value
-
-    return value
-
+    return dictionary[key]
 
 def fetch_credentials(username=None, duration_seconds=3600, app=None, role=None):
     return read_credentials(app, role) or stsutil.get_credentials(
