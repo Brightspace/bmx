@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import getpass
-import os
 import pickle
 
 import okta
@@ -10,24 +9,20 @@ from lxml import html
 import requests
 
 from . import prompt
+from . import credentialsutil
 
 BASE_URL = 'https://d2l.okta.com/'
 API_TOKEN = 'apitoken'
 SUPPORTED_FACTORS = ['sms', 'token:software:totp']
 
-# TODO: Create directories and files with correct permissions, central method will be available
 def set_cached_session(cookies):
-    local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
-    if not os.path.exists(local_settings_dir):
-        os.makedirs(local_settings_dir)
-    with open(os.path.join(local_settings_dir, 'cookies.state'), 'wb') as cookie_state:
+    credentialsutil.create_bmx_path()
+    with open(credentialsutil.get_cookie_session_path(), 'wb') as cookie_state:
         pickle.dump(cookies, cookie_state)
 
-# TODO: Use common get_dir method that will be available
 def get_cached_session():
     try:
-        local_settings_dir = os.path.join(os.path.expanduser('~'), '.bmx')
-        with open(os.path.join(local_settings_dir, 'cookies.state'), 'rb') as cookie_state:
+        with open(credentialsutil.get_cookie_session_path(), 'rb') as cookie_state:
             cookies = pickle.load(cookie_state)
         sessions_client = create_sessions_client(cookies)
         session = sessions_client.validate_session(cookies.get_dict()['sid'])

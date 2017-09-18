@@ -7,11 +7,18 @@ import bmx.stsutil as stsutil
 CREDENTIALS_KEY = 'credentials'
 DEFAULT_KEY = 'default'
 
+def create_bmx_path():
+    if not os.path.exists(get_bmx_path()):
+        os.makedirs(get_bmx_path(), mode=0o770)
+
 def get_bmx_path():
     return os.path.join(os.path.expanduser('~'), '.bmx')
 
 def get_credentials_path():
     return os.path.join(get_bmx_path(), 'credentials')
+
+def get_cookie_session_path():
+    return os.path.join(get_bmx_path(), 'cookies.state')
 
 def read_credentials():
     if os.path.exists(get_credentials_path()):
@@ -22,8 +29,7 @@ def read_credentials():
             return credentials_dict.get(DEFAULT_KEY)
 
 def write_credentials(credentials):
-    if not os.path.exists(get_bmx_path()):
-        os.makedirs(get_bmx_path(), mode=0o770)
+    create_bmx_path()
 
     file_descriptor = os.open(
         get_credentials_path(),
