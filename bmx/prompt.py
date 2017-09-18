@@ -32,12 +32,9 @@ class MinMenu:
 
         return choice - 1
 
-def is_empty(string):
-    return not string or string.isspace()
-
 def prompt_for_value(read_function, prompt):
-    value = None
-    while is_empty(value):
+    while True:
         value = read_function(prompt)
-
+        if value.strip():
+            break
     return value
