@@ -8,6 +8,7 @@ import lxml
 
 import bmx.oktautil as oktautil
 import bmx.prompt as prompt
+from bmx.aws_credentials import AwsCredentials
 
 def get_credentials(username, duration_seconds, app=None, role=None):
     session, cookies = oktautil.get_okta_session(username)
@@ -37,8 +38,7 @@ def get_credentials(username, duration_seconds, app=None, role=None):
         duration_seconds=duration_seconds
     )
 
-
-    return credentials
+    return AwsCredentials(credentials, applink.label, second_role)
 
 def filter_applinks(applinks):
     return sorted(

@@ -12,7 +12,7 @@ def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx print',
         usage='''
-        
+
 bmx print -h
 bmx print [--username USERNAME] [--duration DURATION] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
 bmx print [--profile PROFILE] [-j | -b | -p]'''
@@ -109,7 +109,6 @@ def read_config(profile):
 
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-
     if known_args.profile:
         try:
             credentials = read_config(known_args.profile)
