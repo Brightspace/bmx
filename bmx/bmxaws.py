@@ -10,7 +10,6 @@ import argparse
 import awscli.clidriver
 
 import bmx.credentialsutil as credentialsutil
-import bmx.prompt as prompt
 import bmx.stsutil as stsutil
 
 def create_parser():
@@ -69,11 +68,11 @@ def cmd(args):
             break
 
     errstring = err.getvalue()
-    if not prompt.is_empty(errstring):
+    if errstring.strip():
         print(errstring, file=sys.stderr)
 
     outstring = out.getvalue()
-    if not prompt.is_empty(outstring):
+    if outstring.strip():
         print(outstring)
 
     return ret

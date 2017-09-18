@@ -11,14 +11,6 @@ VALUE = 'value'
 
 
 class PromptTests(unittest.TestCase):
-    def test_is_empty_should_return_true_when_string_is_empty(self):
-        for i in [None, '', "\t  \t  ", "  \n  "]:
-            with self.subTest(i=i):
-                self.assertTrue(bmx.prompt.is_empty(i))
-
-    def test_is_empty_should_return_false_when_string_is_not_empty(self):
-        self.assertFalse(bmx.prompt.is_empty('foo'))
-
     def test_prompt_for_value_should_return_value_always(self):
         def read_function(prompt):
             self.assertEqual(PROMPT, prompt)
