@@ -60,7 +60,7 @@ def get_app_selection(applinks, app=None):
             '\nAvailable AWS Accounts: ',
             list(map(lambda x: '{}'.format(x.label), applinks)),
             'AWS Account Index: '
-        ).get_selection()
+        ).get_selection(force_prompt=app)
     ]
 
 def get_role_selection(app_name, roles, role=None):
@@ -75,7 +75,7 @@ def get_role_selection(app_name, roles, role=None):
             '\nAvailable Roles in {}:'.format(app_name),
             list(map(lambda x: re.sub('.*role/', '', x.split(',')[1]), roles)),
             'Role Index: '
-        ).get_selection()
+        ).get_selection(force_prompt=role)
     ]
 
 def get_app_roles(saml_assertion):
