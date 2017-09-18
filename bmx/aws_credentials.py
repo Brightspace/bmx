@@ -21,4 +21,10 @@ class AwsCredentials:
         self.role = self.extract_role_name(role_arn)
 
     def get_dict(self):
-        return vars(self)
+        return {
+            self.account: {
+                self.role:
+                    {k: v for k, v in self.keys.items()}
+
+            }
+        }

@@ -26,3 +26,16 @@ class AwsCredentialsTest(unittest.TestCase):
         normalized_keys = \
             AwsCredentials.normalize_keys({'Expiration': expected_expiration})
         self.assertEqual(expected_expiration, normalized_keys['Expiration'])
+
+    def test_get_dict_from_credentials(self):
+        credentials = AwsCredentials(
+            {'expected_key': 'expected_value'},
+            'expected_account',
+            'expected_role')
+        self.assertDictEqual({
+            'expected_account': {
+                'expected_role': {
+                    'expected_key': 'expected_value'
+                }
+            }
+        }, credentials.get_dict())
