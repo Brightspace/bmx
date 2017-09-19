@@ -84,7 +84,7 @@ def write_credentials(credentials):
         yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
 
 def setdefault(dictionary, key):
-    if not isinstance(dictionary.get(key, {}), dict):
+    if not isinstance(dictionary.setdefault(key, {}), dict):
         dictionary[key] = {}
 
     return dictionary[key]
