@@ -137,6 +137,34 @@ def validate_credentials(credentials):
         return True
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
+def remove_default_credentials(credentials_doc):
+    default_settings = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
+    app = default_settings.get(AWS_ACCOUNT_KEY)
+    role = default_settings.get(AWS_ROLE_KEY)
+
+    credentials_doc_no_default = dict(credentials_doc)
+    del credentials_doc_no_default[BMX_META_KEY]
+
+    return credentials_doc_no_default, app, role
+
+def remove_named_credentials(credentials_doc, app, role):
+    credentials_doc_removed = dict(credentials_doc)
+    number_of_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
+
+    if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
+        role in credentials_doc[BMX_CREDENTIALS_KEY][app]):
+        number_of_roles_in_app = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
+
+        if number_of_credentials > 1:
+            if number_of_roles_in_app > 1:
+                del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
+            else:
+                del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
+        else:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY]
+
+    return credentials_doc_removed
+
 def remove_credentials(app=None, role=None):
     if (not app and role or app and not role ) or \
        (not os.path.exists(get_credentials_path())):
@@ -146,9 +174,13 @@ def remove_credentials(app=None, role=None):
         credentials_doc = yaml.load(credentials_file) or {}
 
         if not app and not role:
-            del credentials_doc[BMX_META_KEY]
-            credentials_file.seek(0)
-            credentials_file.truncate()
-        yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
+            removed_defaults_doc, app, role = remove_default_credentials(credentials_doc)
+            removed_credentials_doc = remove_named_credentials(removed_defaults_doc, app, role)
+        else:
+            removed_credentials_doc = remove_named_credentials(credentials_doc, app, role)
+
+        credentials_file.seek(0)
+        credentials_file.truncate()
+        yaml.dump(removed_credentials_doc, credentials_file, default_flow_style=False)
 
     return True
