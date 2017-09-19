@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import unittest
+import tempfile
 
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -15,11 +16,14 @@ SECRET_ACCESS_KEY = 'secret'
 SESSION_TOKEN = 'token'
 USERNAME = 'username'
 DURATION = 'duration'
+ACCOUNT = 'expected_account'
+ROLE = 'expected_role'
+
 RETURN_VALUE = AwsCredentials ({
     'AccessKeyId': ACCESS_KEY_ID,
     'SecretAccessKey': SECRET_ACCESS_KEY,
     'SessionToken': SESSION_TOKEN
-}, 'expected_account', 'expected_role')
+}, ACCOUNT, ROLE)
 
 class BmxPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -53,12 +57,12 @@ class BmxPrintTests(unittest.TestCase):
         self.assertEqual('-p', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.credentialsutil.get_bmx_path')
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_json_credentials_by_default(self, mock_parser, mock_fetch_credentials):
+    def test_cmd_should_print_json_credentials_by_default(self, mock_parser, mock_get_bmx_path):
         for i in [(True, False, False), (False, False, False)]:
             with self.subTest(i=i):
-                self.setup_print_mocks(mock_parser, i[0], i[1], i[2], mock_fetch_credentials)
+                self.setup_print_mocks(mock_parser, i[0], i[1], i[2], mock_get_bmx_path)
 
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out):
@@ -68,10 +72,10 @@ class BmxPrintTests(unittest.TestCase):
 
                 self.assertEqual(RETURN_VALUE.keys, printed)
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.credentialsutil.get_bmx_path')
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser, mock_fetch_credentials):
-        self.setup_print_mocks(mock_parser, False, True, False, mock_fetch_credentials)
+    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser, mock_get_bmx_path):
+        self.setup_print_mocks(mock_parser, False, True, False, mock_get_bmx_path)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -87,11 +91,11 @@ export AWS_SESSION_TOKEN='{}'
             SESSION_TOKEN
         ), printed)
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.credentialsutil.get_bmx_path')
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_powershell_credentials_when_powershell_option_specified(self, mock_parser,
-                                                                                      mock_fetch_credentials):
-        self.setup_print_mocks(mock_parser, False, False, True, mock_fetch_credentials)
+                                                                                      mock_get_bmx_path):
+        self.setup_print_mocks(mock_parser, False, False, True, mock_get_bmx_path)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -126,12 +130,13 @@ $env:AWS_SESSION_TOKEN = '{}'
         mock_fetch_credentials.assert_called_with(username=username, duration_seconds=duration, app=account, role=role)
         mock_write_credentials.assert_called_with(RETURN_VALUE)
 
-    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_fetch_credentials=None):
+    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_bmx_path):
         mock_parser.return_value.parse_known_args.return_value = \
             [self.create_args(json, bash, powershell)]
 
-        if mock_fetch_credentials:
-            mock_fetch_credentials.return_value = RETURN_VALUE
+        temp_dir = tempfile.mkdtemp()
+        mock_bmx_path.return_value = temp_dir
+        bmx.credentialsutil.write_credentials(RETURN_VALUE)
 
     def create_args(self, json, bash, powershell):
         mock = Mock()
@@ -140,6 +145,8 @@ $env:AWS_SESSION_TOKEN = '{}'
         mock.j = json
         mock.b = bash
         mock.p = powershell
+        mock.account = ACCOUNT
+        mock.role = ROLE
 
         return mock
 
