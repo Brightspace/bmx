@@ -10,6 +10,8 @@ VERSION = '1.0.0'
 META_KEY = 'meta'
 CREDENTIALS_KEY = 'credentials'
 DEFAULT_KEY = 'default'
+ACCOUNT_KEY = 'account'
+ROLE_KEY = 'role'
 
 def create_bmx_path():
     if not os.path.exists(get_bmx_path()):
@@ -32,22 +34,27 @@ def read_credentials(app=None, role=None):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
 
-        version = credentials_doc.get(VERSION_KEY, None)
-        if version is not None and version != VERSION:
+        version = credentials_doc.get(VERSION_KEY)
+        if version and version != VERSION:
             message = (
                 'Invalid credentials version.'
                 '\n   Supported: {0}'
                 '\n   Current: {1}'
             ).format(VERSION, version)
             raise ValueError(message)
-        if not app and not role:
-            default_ref = credentials_doc.get(META_KEY, {}).get(DEFAULT_KEY, {})
-            app = default_ref.get(app, None)
-            role = default_ref.get(role, None)
 
-        credentials = credentials_doc.get(CREDENTIALS_KEY, {}).get(app, {}).get(role, None)
+        if not app and not role:
+            default_ref = setdefault(
+                setdefault(credentials_doc, META_KEY), DEFAULT_KEY)
+            app = default_ref.get(ACCOUNT_KEY)
+            role = default_ref.get(ROLE_KEY)
+
+        credentials = setdefault(
+            setdefault(credentials_doc, CREDENTIALS_KEY), app).get(role)
 
         return AwsCredentials(credentials, app, role) if credentials else None
+    else:
+        return None
 
 def write_credentials(credentials):
     create_bmx_path()
@@ -59,16 +66,28 @@ def write_credentials(credentials):
     )
 
     with open(file_descriptor, 'r+') as credentials_file:
-        credentials_object = yaml.load(credentials_file) or {}
-        credentials_object[VERSION_KEY] = VERSION
-        credentials_object.setdefault(META_KEY, {})
-        credentials_object[META_KEY][DEFAULT_KEY] = dict(credentials.keys)
-        credentials_object[CREDENTIALS_KEY] = credentials.get_dict()
+        credentials_doc = yaml.load(credentials_file) or {}
+        credentials_doc[VERSION_KEY] = VERSION
+
+        setdefault(
+            credentials_doc,
+            META_KEY)[DEFAULT_KEY] = credentials.get_principal_dict()
+
+        setdefault(
+            setdefault(
+                credentials_doc,
+                CREDENTIALS_KEY),
+            credentials.account)[credentials.role] = credentials.keys
 
         credentials_file.seek(0)
         credentials_file.truncate()
-        yaml.dump(credentials_object, credentials_file, default_flow_style=False)
+        yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
 
+def setdefault(dictionary, key):
+    if not isinstance(dictionary.get(key, {}), dict):
+        dictionary[key] = {}
+
+    return dictionary[key]
 
 def fetch_credentials(username=None, duration_seconds=3600, app=None, role=None):
     return read_credentials(app, role) or stsutil.get_credentials(

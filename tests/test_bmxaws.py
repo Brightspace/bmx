@@ -50,6 +50,7 @@ class BmxAwsTests(unittest.TestCase):
             'SessionToken': 'session token'
         }, '', ''))
         mock_clidriver.return_value.main.return_value = 0
+        credentialsutil.write_credentials = Mock()
 
         self.assertEqual(0, bmxaws.cmd(ARGS))
 
@@ -62,6 +63,8 @@ class BmxAwsTests(unittest.TestCase):
                       '--username', 'my-user',
                       '--role', 'my-role']
         unknown_args = ['aws_command', 'sub_command']
+
+        credentialsutil.write_credentials = Mock()
 
         bmxaws.cmd(known_args + unknown_args)
 

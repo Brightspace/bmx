@@ -1,6 +1,8 @@
-#!/usr/bin/python3
 import re
 import datetime
+
+ACCOUNT_KEY = 'account'
+ROLE_KEY = 'role'
 
 class AwsCredentials:
     @staticmethod
@@ -27,4 +29,10 @@ class AwsCredentials:
                     {k: v for k, v in self.keys.items()}
 
             }
+        }
+
+    def get_principal_dict(self):
+        return {
+            ACCOUNT_KEY: self.account,
+            ROLE_KEY: self.role
         }
