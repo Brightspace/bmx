@@ -2,7 +2,6 @@ import argparse
 import contextlib
 import io
 import json
-import os, sys
 import unittest
 
 from unittest.mock import Mock
