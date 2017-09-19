@@ -30,12 +30,12 @@ def read_credentials(app=None, role=None):
             credentials_doc = yaml.load(credentials_file) or {}
 
         version = credentials_doc.get(BMX_VERSION_KEY)
-        if version and version != BMX_VERSION:
+        if version and version != BMX_CREDENTIALS_VERSION:
             message = (
                 'Invalid version in {0}.'
                 '\n   Supported: {1}'
                 '\n   Current: {2}'
-            ).format(get_credentials_path(), BMX_VERSION, version)
+            ).format(get_credentials_path(), BMX_CREDENTIALS_VERSION, version)
             raise ValueError(message)
 
         if not app and not role:
@@ -62,7 +62,7 @@ def write_credentials(credentials):
 
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
-        credentials_doc[BMX_VERSION_KEY] = BMX_VERSION
+        credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
         setdefault(
             credentials_doc,
