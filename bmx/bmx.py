@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import sys
 import argparse
 
@@ -63,6 +61,3 @@ def main():
         print(parser.usage())
 
     return ret
-
-if __name__ == "__main__":
-    sys.exit(main())
