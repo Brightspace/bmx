@@ -211,5 +211,15 @@ class BmxWriteTests(unittest.TestCase):
         result = credentialsutil.remove_named_credentials(initial_credentials, 'a1', 'r1a' )
         self.assertDictEqual(result, expected_result)
 
+    def test_verify_version_error(self):
+        with self.assertRaises(ValueError):
+            credentialsutil.verify_version({BMX_VERSION_KEY: 'not-a-version'})
+
+    def test_verify_version_pass(self):
+        try:
+            credentialsutil.verify_version({BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION})
+        except Exception:
+            self.fail(f'Unexpected exception when testing verify_version({BMX_VERSION_KEY}, {BMX_CREDENTIALS_VERSION})')
+
 if __name__ == '__main__':
     unittest.main()
