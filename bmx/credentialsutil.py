@@ -26,8 +26,6 @@ def read_credentials(app=None, role=None):
     if not app and role or app and not role:
         return None
 
-    print('Were not mocked')
-
     if os.path.exists(get_credentials_path()):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
@@ -57,6 +55,7 @@ def write_credentials(credentials):
 
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
+        validate_credentials(credentials_doc)
         credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
         setdefault(
