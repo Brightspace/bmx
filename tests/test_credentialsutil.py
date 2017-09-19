@@ -1,25 +1,26 @@
 import unittest
 
 import bmx.credentialsutil as credentialsutil
-from bmx.constants import BMX_CREDENTIALS_VERSION
+from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY,
+                           BMX_DEFAULT_KEY, BMX_META_KEY, BMX_VERSION_KEY)
 
 class CredentialsUtilTests(unittest.TestCase):
     def test_validate_credentials_success(self):
         test_cases = [
             {},
             {
-                'version': BMX_CREDENTIALS_VERSION
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION
             },
             {
-                'meta': {
-                    'default': {
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
                         'account': 'testAccount',
                         'role': 'testRole'
                     }
                 }
             },
             {
-                'credentials': {
+                BMX_CREDENTIALS_KEY: {
                     'testAccount': {
                         'testRole': {
                             'AccessKeyId': '123',
@@ -30,14 +31,14 @@ class CredentialsUtilTests(unittest.TestCase):
                 }
             },
             {
-                'version': BMX_CREDENTIALS_VERSION,
-                'meta': {
-                    'default': {
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
                         'account': 'testAccount',
                         'role': 'testRole'
                     }
                 },
-                'credentials': {
+                BMX_CREDENTIALS_KEY: {
                     'testAccount': {
                         'testRole': {
                             'AccessKeyId': 'accessKey',
@@ -56,17 +57,17 @@ class CredentialsUtilTests(unittest.TestCase):
     def test_validate_credentials_failure(self):
         test_cases = [
             {
-                'version': 'bad-version'
+                BMX_VERSION_KEY: 'bad-version'
             },
             {
-                'meta': {
-                    'default': {
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
                         'account': 'missing-role'
                     }
                 }
             },
             {
-                'credentials': {
+                BMX_CREDENTIALS_KEY: {
                     'testAccount': {
                         'testRole': {
                             'AccessKeyId': '123',
@@ -76,14 +77,14 @@ class CredentialsUtilTests(unittest.TestCase):
                 }
             },
             {
-                'version': BMX_CREDENTIALS_VERSION,
-                'meta': {
-                    'default': {
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
                         'account': 'testAccount',
                         'role': 'empty-creds'
                     }
                 },
-                'credentials': {
+                BMX_CREDENTIALS_KEY: {
                     'testAccount': {
                         'empty-creds': {}
                     }

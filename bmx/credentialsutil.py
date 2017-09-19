@@ -80,14 +80,14 @@ def setdefault(dictionary, key):
 
 def validate_credentials(credentials):
     schema = {
-        'version': {
+        BMX_VERSION_KEY: {
             'type': 'string',
             'allowed': [BMX_CREDENTIALS_VERSION]
         },
-        'meta': {
+        BMX_META_KEY: {
             'type': 'dict',
             'schema': {
-                'default': {
+                BMX_DEFAULT_KEY: {
                     'type': 'dict',
                     'required': True,
                     'schema': {
@@ -97,7 +97,7 @@ def validate_credentials(credentials):
                 }
             }
         },
-        'credentials': {
+        BMX_CREDENTIALS_KEY: {
             'type': 'dict',
             'minlength': 1,
             'valueschema': {
