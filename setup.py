@@ -11,7 +11,7 @@ _REQUIRES = [
         'requests>=2.18.3',
         'awscli>=1.11.0',
         'boto3>=1.4.7',
-        'cerberus>=1.1''
+        'cerberus>=1.1'
 ]
 
 setup(

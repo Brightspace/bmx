@@ -115,7 +115,7 @@ def validate_credentials(credentials):
             }
         }
     }
-    v = Validator(schema)
-    if v.validate(credentials):
+    validator = Validator(schema)
+    if validator.validate(credentials):
         return True
-    raise ValueError(v.errors)
+    raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
