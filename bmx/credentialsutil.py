@@ -138,6 +138,9 @@ def validate_credentials(credentials):
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
 def remove_default_credentials(credentials_doc):
+    if BMX_META_KEY not in credentials_doc:
+        return credentials_doc, None, None
+
     default_settings = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
     app = default_settings.get(AWS_ACCOUNT_KEY)
     role = default_settings.get(AWS_ROLE_KEY)
@@ -160,13 +163,15 @@ def remove_named_credentials(credentials_doc, app, role):
                 del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
             else:
                 del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
+        elif number_of_roles_in_app > 1:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
         else:
             del credentials_doc_removed[BMX_CREDENTIALS_KEY]
 
     return credentials_doc_removed
 
 def remove_credentials(app=None, role=None):
-    if (not app and role or app and not role ):
+    if ((not app and role) or (app and not role)):
         message = f'Failed to remove credentials.\n' \
                   f'Must specify both account and role or neither.\n' \
                   f'Account: {app}\n' \
