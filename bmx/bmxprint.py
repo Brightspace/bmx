@@ -93,6 +93,7 @@ def cmd(args):
     )
 
     print(format_credentials(known_args, credentials))
+    credentialsutil.write_credentials(credentials)
 
     return 0
 

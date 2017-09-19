@@ -109,16 +109,22 @@ $env:AWS_SESSION_TOKEN = '{}'
 
     @patch('builtins.print')
     @patch('bmx.bmxprint.format_credentials')
+    @patch('bmx.credentialsutil.write_credentials')
     @patch('bmx.credentialsutil.fetch_credentials')
-    def test_cmd_with_account_and_role_should_pass_correct_args_to_awscli(self, mock_fetch_credentials, *mocks):
+    def test_cmd_with_account_and_role_should_pass_correct_args_to_awscli(self,
+                                                                          mock_fetch_credentials,
+                                                                          mock_write_credentials,
+                                                                          *mocks):
         username, duration, account, role = 'my-user', '123', 'my-account', 'my-role'
         known_args = ['--username', username,
                       '--duration', duration,
                       '--account', account,
                       '--role', role]
+        mock_fetch_credentials.return_value = RETURN_VALUE
 
         bmx.bmxprint.cmd(known_args)
         mock_fetch_credentials.assert_called_with(username=username, duration_seconds=duration, app=account, role=role)
+        mock_write_credentials.assert_called_with(RETURN_VALUE)
 
     def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_fetch_credentials=None):
         mock_parser.return_value.parse_known_args.return_value = \
