@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import awscli.clidriver
 
-import bmx
+from .context import bmx
 from bmx.aws_credentials import AwsCredentials
 import bmx.bmxaws as bmxaws
 import bmx.credentialsutil as credentialsutil

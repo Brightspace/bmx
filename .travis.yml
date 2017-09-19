@@ -8,4 +8,4 @@ install:
 
 script:
 - pylint --errors-only bmx
-- python -m unittest discover -s tests/
+- tox

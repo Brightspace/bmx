@@ -3,4 +3,5 @@ dist/
 bmx.egg-info/
 .idea/
 .tox
+.cache
 build
