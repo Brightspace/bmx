@@ -3,6 +3,7 @@
 # AWS key constants used by bmx_credentials, credentialsutil
 AWS_ACCOUNT_KEY = 'account'
 AWS_ROLE_KEY = 'role'
+AWS_EXPIRATION_KEY = 'Expiration'
 
 # BMX credentials config constants used by credentialsutil
 BMX_CREDENTIALS_VERSION = '1.0.0'
