@@ -166,9 +166,15 @@ def remove_named_credentials(credentials_doc, app, role):
     return credentials_doc_removed
 
 def remove_credentials(app=None, role=None):
-    if (not app and role or app and not role ) or \
-       (not os.path.exists(get_credentials_path())):
-        return None
+    if (not app and role or app and not role ):
+        message = f'Failed to remove credentials.\n' \
+                  f'Must specify both account and role or neither.\n' \
+                  f'Account: {app}\n' \
+                  f'Role: {role}'
+        raise ValueError(message)
+
+    if not os.path.exists(get_credentials_path()):
+        return
 
     with open(get_credentials_path(), 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
@@ -182,5 +188,3 @@ def remove_credentials(app=None, role=None):
         credentials_file.seek(0)
         credentials_file.truncate()
         yaml.dump(removed_credentials_doc, credentials_file, default_flow_style=False)
-
-    return True
