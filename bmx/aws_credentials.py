@@ -1,7 +1,8 @@
 import re
-import datetime
+from datetime import datetime, timezone
+import dateutil
 
-from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY
+from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY, AWS_EXPIRATION_KEY
 
 class AwsCredentials:
     @staticmethod
@@ -11,8 +12,8 @@ class AwsCredentials:
     @staticmethod
     def normalize_keys(keys):
         normalized_keys = dict(keys)
-        if isinstance(normalized_keys.get('Expiration'), datetime.datetime):
-            normalized_keys['Expiration'] = normalized_keys.get('Expiration').isoformat() or None
+        if isinstance(normalized_keys.get(AWS_EXPIRATION_KEY), datetime):
+            normalized_keys[AWS_EXPIRATION_KEY] = normalized_keys[AWS_EXPIRATION_KEY].isoformat()
 
         return normalized_keys
 
@@ -35,3 +36,8 @@ class AwsCredentials:
             AWS_ACCOUNT_KEY: self.account,
             AWS_ROLE_KEY: self.role
         }
+
+    def are_expired(self):
+        return AWS_EXPIRATION_KEY in self.keys and \
+            dateutil.parser.parse(self.keys[AWS_EXPIRATION_KEY]) <= \
+            datetime.now(timezone.utc)
