@@ -8,6 +8,7 @@ import tempfile
 
 from unittest.mock import call, Mock, patch
 
+from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL
 import bmx.oktautil
 
 SESSION_ID = 'session id'
@@ -89,8 +90,8 @@ class OktaUtilTests(unittest.TestCase):
         bmx.oktautil.create_users_client(MockCookie({'sid': SESSION_ID}))
 
         okta.UsersClient.__init__.assert_called_once_with(
-            bmx.oktautil.BASE_URL,
-            bmx.oktautil.API_TOKEN,
+            OKTA_BASE_URL,
+            OKTA_API_TOKEN,
             headers={
                 'Authorization': None,
                 'Cookie': 'sid={0}'.format(SESSION_ID)
