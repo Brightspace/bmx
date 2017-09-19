@@ -4,6 +4,7 @@ import sys
 import json
 import argparse
 
+import bmx
 import bmx.credentialsutil as credentialsutil
 
 def create_parser():
@@ -85,7 +86,7 @@ def format_credentials(args, credentials):
 
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-    credentials = credentialsutil.fetch_credentials(
+    credentials = bmx.fetch_credentials(
         username=known_args.username,
         duration_seconds=known_args.duration,
         app=known_args.account,

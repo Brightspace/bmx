@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import Mock
 from unittest.mock import patch
 
+import bmx
 import bmx.bmxprint
 import bmx.stsutil
 from bmx.aws_credentials import AwsCredentials
@@ -20,6 +21,13 @@ RETURN_VALUE = AwsCredentials ({
     'SecretAccessKey': SECRET_ACCESS_KEY,
     'SessionToken': SESSION_TOKEN
 }, 'expected_account', 'expected_role')
+
+
+def mock_fetchcreds(*args, **kwargs):
+    return RETURN_VALUE
+
+def mock_writecreds(*args, **kwargs):
+    return Mock()
 
 class BmxPrintTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -53,12 +61,12 @@ class BmxPrintTests(unittest.TestCase):
         self.assertEqual('-p', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_json_credentials_by_default(self, mock_parser, mock_fetch_credentials):
         for i in [(True, False, False), (False, False, False)]:
             with self.subTest(i=i):
-                self.setup_print_mocks(mock_parser, i[0], i[1], i[2], mock_fetch_credentials)
+                self.setup_print_mocks(mock_parser, i[0], i[1], i[2])
 
                 out = io.StringIO()
                 with contextlib.redirect_stdout(out):
@@ -68,10 +76,10 @@ class BmxPrintTests(unittest.TestCase):
 
                 self.assertEqual(RETURN_VALUE.keys, printed)
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser, mock_fetch_credentials):
-        self.setup_print_mocks(mock_parser, False, True, False, mock_fetch_credentials)
+        self.setup_print_mocks(mock_parser, False, True, False)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -87,11 +95,11 @@ export AWS_SESSION_TOKEN='{}'
             SESSION_TOKEN
         ), printed)
 
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_powershell_credentials_when_powershell_option_specified(self, mock_parser,
                                                                                       mock_fetch_credentials):
-        self.setup_print_mocks(mock_parser, False, False, True, mock_fetch_credentials)
+        self.setup_print_mocks(mock_parser, False, False, True)
 
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
@@ -109,8 +117,8 @@ $env:AWS_SESSION_TOKEN = '{}'
 
     @patch('builtins.print')
     @patch('bmx.bmxprint.format_credentials')
-    @patch('bmx.credentialsutil.write_credentials')
-    @patch('bmx.credentialsutil.fetch_credentials')
+    @patch('bmx.credentialsutil.write_credentials', side_effect=mock_writecreds)
+    @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     def test_cmd_with_account_and_role_should_pass_correct_args_to_awscli(self,
                                                                           mock_fetch_credentials,
                                                                           mock_write_credentials,
@@ -120,18 +128,14 @@ $env:AWS_SESSION_TOKEN = '{}'
                       '--duration', duration,
                       '--account', account,
                       '--role', role]
-        mock_fetch_credentials.return_value = RETURN_VALUE
 
         bmx.bmxprint.cmd(known_args)
         mock_fetch_credentials.assert_called_with(username=username, duration_seconds=duration, app=account, role=role)
         mock_write_credentials.assert_called_with(RETURN_VALUE)
 
-    def setup_print_mocks(self, mock_parser, json, bash, powershell, mock_fetch_credentials=None):
+    def setup_print_mocks(self, mock_parser, json, bash, powershell):
         mock_parser.return_value.parse_known_args.return_value = \
             [self.create_args(json, bash, powershell)]
-
-        if mock_fetch_credentials:
-            mock_fetch_credentials.return_value = RETURN_VALUE
 
     def create_args(self, json, bash, powershell):
         mock = Mock()

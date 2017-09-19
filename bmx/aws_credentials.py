@@ -1,8 +1,7 @@
 import re
 import datetime
 
-ACCOUNT_KEY = 'account'
-ROLE_KEY = 'role'
+from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY
 
 class AwsCredentials:
     @staticmethod
@@ -33,6 +32,6 @@ class AwsCredentials:
 
     def get_principal_dict(self):
         return {
-            ACCOUNT_KEY: self.account,
-            ROLE_KEY: self.role
+            AWS_ACCOUNT_KEY: self.account,
+            AWS_ROLE_KEY: self.role
         }
