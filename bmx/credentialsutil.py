@@ -37,10 +37,10 @@ def read_credentials(app=None, role=None):
         version = credentials_doc.get(VERSION_KEY)
         if version and version != VERSION:
             message = (
-                'Invalid credentials version.'
-                '\n   Supported: {0}'
-                '\n   Current: {1}'
-            ).format(VERSION, version)
+                'Invalid version in {0}.'
+                '\n   Supported: {1}'
+                '\n   Current: {2}'
+            ).format(get_credentials_path(), VERSION, version)
             raise ValueError(message)
 
         if not app and not role:

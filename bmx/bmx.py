@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import sys
 import argparse
 
@@ -40,18 +38,26 @@ class Parser:
         return self._parser.format_help()
 
 def main():
-    argv = sys.argv
-    parser = Parser()
-    if len(argv) == 1:
+    ret = 1
+
+    try:
+        argv = sys.argv
+        parser = Parser()
+
+        if len(argv) == 1:
+            ret = 2
+            print(parser.usage())
+        else:
+            [known_args, unknown_args] = parser.parse_args(argv[1:])
+
+            if 'func' in known_args:
+                ret = known_args.func(unknown_args)
+            else:
+                ret = 2
+                print(parser.usage())
+    except Exception as exception:
+        print(exception)
+        print()
         print(parser.usage())
-        return 1
 
-    [known_args, unknown_args] = parser.parse_args(argv[1:])
-    if 'func' in known_args:
-        return known_args.func(unknown_args)
-
-    print(parser.usage())
-    return 1
-
-if __name__ == "__main__":
-    sys.exit(main())
+    return ret
