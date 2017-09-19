@@ -32,17 +32,18 @@ def read_credentials(app=None, role=None):
 
         validate_credentials(credentials_doc)
         if not app and not role:
-            default_ref = setdefault(
-                setdefault(credentials_doc, BMX_META_KEY), BMX_DEFAULT_KEY)
+            default_ref = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
             app = default_ref.get(AWS_ACCOUNT_KEY)
             role = default_ref.get(AWS_ROLE_KEY)
 
-        credentials = setdefault(
-            setdefault(credentials_doc, BMX_CREDENTIALS_KEY), app).get(role)
+        return_value = None
+        credentials_dict = credentials_doc.get(CREDENTIALS_KEY, {}).get(app, {}).get(role)
+        if credentials_dict:
+            aws_credentials = AwsCredentials(credentials, app, role)
+            if not aws_credentials.are_expired():
+                return_value = aws_credentials
 
-        return AwsCredentials(credentials, app, role) if credentials else None
-    else:
-        return None
+        return return_value
 
 def write_credentials(credentials):
     create_bmx_path()
