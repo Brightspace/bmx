@@ -4,6 +4,7 @@ import argparse
 import bmx.bmxaws as bmxaws
 import bmx.bmxwrite as bmxwrite
 import bmx.bmxprint as bmxprint
+import bmx.bmxrenew as bmxrenew
 
 class Parser:
     def __init__(self):
@@ -15,19 +16,24 @@ class Parser:
 
         subparsers = parser.add_subparsers(title='commands')
         aws_parser = subparsers.add_parser('aws',
-            help='delegate to the AWS CLI, with automatic STS token renewal',
+            help='run the AWS CLI, with automatic renewal of AWS credentials',
             add_help=False)
         aws_parser.set_defaults(func=bmxaws.cmd)
 
         write_parser = subparsers.add_parser('write',
-            help='create new AWS credentials and write them to ~/.aws/credentials',
+            help='write AWS credentials to ~/.aws/credentials',
             add_help=False)
         write_parser.set_defaults(func=bmxwrite.cmd)
 
         print_parser = subparsers.add_parser('print',
-            help='create new AWS credentials and print them to stdout',
+            help='print AWS credentials to stdout',
             add_help=False)
         print_parser.set_defaults(func=bmxprint.cmd)
+
+        renew_parser = subparsers.add_parser('renew',
+            help='renew AWS credentials',
+            add_help=False)
+        renew_parser.set_defaults(func=bmxrenew.cmd)
 
         self._parser = parser
 
