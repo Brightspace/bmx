@@ -3,6 +3,7 @@ import sys
 import os
 import argparse
 
+import bmx
 import bmx.credentialsutil as credentialsutil
 
 def create_parser():
@@ -52,11 +53,11 @@ def write_credentials(credentials, profile):
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
 
-    credentials = credentialsutil.fetch_credentials(
+    credentials = bmx.fetch_credentials(
             known_args.username, app=known_args.account, role=known_args.role)
 
     write_credentials(credentials, known_args.profile)
 
     credentialsutil.write_credentials(credentials)
-     
+
     return 0
