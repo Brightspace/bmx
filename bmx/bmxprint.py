@@ -3,19 +3,16 @@
 import sys
 import json
 import argparse
-import os
-import configparser
 
-import bmx.stsutil as stsutil
+import bmx.credentialsutil as credentialsutil
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx print',
         usage='''
-
 bmx print -h
 bmx print [--username USERNAME] [--duration DURATION] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
-bmx print [--profile PROFILE] [-j | -b | -p]'''
+'''
     )
 
     parser.add_argument('--username', help='the Okta username')
@@ -42,12 +39,6 @@ bmx print [--profile PROFILE] [-j | -b | -p]'''
         '-p',
         help='format the credentials for PowerShell',
         action='store_true'
-    )
-
-    parser.add_argument(
-        '--profile',
-        help='reads an existing profile from the credentials file',
-        default=''
     )
 
     return parser
@@ -92,35 +83,14 @@ def format_credentials(args, credentials):
 
     return formatted_credentials
 
-def read_config(profile):
-    config = configparser.ConfigParser()
-    filename = os.path.expanduser('~/.aws/credentials')
-
-    config.read(filename)
-    access_key_id = config.get(profile, 'aws_access_key_id')
-    secret_access_key = config.get(profile, 'aws_secret_access_key')
-    session_token = config.get(profile, 'aws_session_token')
-
-    return {
-        'AccessKeyId': access_key_id,
-        'SecretAccessKey': secret_access_key,
-        'SessionToken': session_token
-    }
-
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-    if known_args.profile:
-        try:
-            credentials = read_config(known_args.profile)
-        except configparser.NoSectionError:
-            return 'Profile not found'
-    else:
-        credentials = stsutil.get_credentials(
-            known_args.username,
-            known_args.duration,
-            app=known_args.account,
-            role=known_args.role
-        )
+    credentials = credentialsutil.fetch_credentials(
+        username=known_args.username,
+        duration_seconds=known_args.duration,
+        app=known_args.account,
+        role=known_args.role
+    )
 
     print(format_credentials(known_args, credentials))
 
