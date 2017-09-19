@@ -1,6 +1,7 @@
 import os
 
 import yaml
+from cerberus import Validator
 
 from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY, BMX_DEFAULT_KEY,
@@ -25,21 +26,11 @@ def read_credentials(app=None, role=None):
     if not app and role or app and not role:
         return None
 
-    print('Were not mocked')
-
     if os.path.exists(get_credentials_path()):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
 
-        version = credentials_doc.get(BMX_VERSION_KEY)
-        if version and version != BMX_CREDENTIALS_VERSION:
-            message = (
-                'Invalid version in {0}.'
-                '\n   Supported: {1}'
-                '\n   Current: {2}'
-            ).format(get_credentials_path(), BMX_CREDENTIALS_VERSION, version)
-            raise ValueError(message)
-
+        validate_credentials(credentials_doc)
         if not app and not role:
             default_ref = setdefault(
                 setdefault(credentials_doc, BMX_META_KEY), BMX_DEFAULT_KEY)
@@ -64,6 +55,7 @@ def write_credentials(credentials):
 
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
+        validate_credentials(credentials_doc)
         credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
         setdefault(
@@ -85,3 +77,45 @@ def setdefault(dictionary, key):
         dictionary[key] = {}
 
     return dictionary[key]
+
+def validate_credentials(credentials):
+    schema = {
+        BMX_VERSION_KEY: {
+            'type': 'string',
+            'allowed': [BMX_CREDENTIALS_VERSION]
+        },
+        BMX_META_KEY: {
+            'type': 'dict',
+            'schema': {
+                BMX_DEFAULT_KEY: {
+                    'type': 'dict',
+                    'required': True,
+                    'schema': {
+                        'account': {'type': 'string', 'required': True},
+                        'role': {'type': 'string', 'required': True}
+                    }
+                }
+            }
+        },
+        BMX_CREDENTIALS_KEY: {
+            'type': 'dict',
+            'minlength': 1,
+            'valueschema': {
+                'type': 'dict',
+                'minlength': 1,
+                'valueschema': {
+                    'type': 'dict',
+                    'schema': {
+                        'AccessKeyId': {'type': 'string', 'required': True},
+                        'SecretAccessKey': {'type': 'string', 'required': True},
+                        'SessionToken': {'type': 'string', 'required': True},
+                        'Expiration': {'type': 'string'}
+                    }
+                }
+            }
+        }
+    }
+    validator = Validator(schema)
+    if validator.validate(credentials):
+        return True
+    raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
