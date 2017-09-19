@@ -136,3 +136,6 @@ def validate_credentials(credentials):
     if validator.validate(credentials):
         return True
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
+
+def remove_credentials(app=None, role=None):
+    pass
