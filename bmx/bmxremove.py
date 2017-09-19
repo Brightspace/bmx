@@ -1,6 +1,8 @@
 import sys
 import argparse
 
+import bmx.credentialsutil as credentialsutil
+
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx remove',
@@ -17,7 +19,7 @@ bmx remove [--account ACCOUNT] [--role ROLE] CLICOMMAND
 
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-    print("Not Implemented")
+    credentialsutil.remove_credentials(known_args.account, known_args.role)
 
     return 0
 

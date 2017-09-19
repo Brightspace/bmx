@@ -138,4 +138,17 @@ def validate_credentials(credentials):
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
 def remove_credentials(app=None, role=None):
-    pass
+    if (not app and role or app and not role ) or \
+       (not os.path.exists(get_credentials_path())):
+        return None
+
+    with open(get_credentials_path(), 'r+') as credentials_file:
+        credentials_doc = yaml.load(credentials_file) or {}
+
+        if not app and not role:
+            del credentials_doc[BMX_META_KEY]
+            credentials_file.seek(0)
+            credentials_file.truncate()
+        yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
+
+    return True
