@@ -3,6 +3,7 @@ import io
 import unittest
 from unittest.mock import Mock
 
+from .context import bmx
 import bmx.prompt
 
 TITLE = 'title'

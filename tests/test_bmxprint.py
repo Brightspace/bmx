@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import Mock
 from unittest.mock import patch
 
-import bmx
+from .context import bmx
 import bmx.bmxprint
 import bmx.stsutil
 from bmx.aws_credentials import AwsCredentials

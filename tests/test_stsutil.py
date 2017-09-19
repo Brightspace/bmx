@@ -2,6 +2,7 @@ import unittest
 
 from unittest.mock import patch
 
+from .context import bmx
 import bmx.stsutil as stsutil
 
 CREDENTIALS = 'credentials'

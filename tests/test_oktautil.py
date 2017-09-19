@@ -1,4 +1,3 @@
-import context
 import okta
 import os
 import pickle
@@ -8,6 +7,7 @@ import tempfile
 
 from unittest.mock import call, Mock, patch
 
+from .context import bmx
 from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL
 import bmx.oktautil
 

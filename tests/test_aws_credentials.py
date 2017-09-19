@@ -2,6 +2,7 @@ import unittest
 import datetime
 from dateutil.tz import tzutc
 
+from .context import bmx
 from bmx.aws_credentials import AwsCredentials
 
 class AwsCredentialsTest(unittest.TestCase):

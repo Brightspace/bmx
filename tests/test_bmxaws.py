@@ -2,6 +2,7 @@ import argparse
 import contextlib
 import io
 import json
+import os, sys
 import unittest
 
 from unittest.mock import Mock
@@ -9,7 +10,7 @@ from unittest.mock import patch
 
 import awscli.clidriver
 
-import bmx
+from .context import bmx
 from bmx.aws_credentials import AwsCredentials
 import bmx.bmxaws as bmxaws
 import bmx.credentialsutil as credentialsutil

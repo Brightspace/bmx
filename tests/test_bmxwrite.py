@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 
+from .context import bmx
 import bmx.bmxprint as bmxprint
 import bmx.bmxwrite as bmxwrite
 import okta.models.user
