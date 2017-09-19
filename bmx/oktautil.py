@@ -8,12 +8,10 @@ from okta.framework.OktaError import OktaError
 from lxml import html
 import requests
 
-from . import prompt
-from . import credentialsutil
+import bmx.prompt as prompt
+import bmx.credentialsutil as credentialsutil
 
-BASE_URL = 'https://d2l.okta.com/'
-API_TOKEN = 'apitoken'
-SUPPORTED_FACTORS = ['sms', 'token:software:totp']
+from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL, OKTA_SUPPORTED_FACTORS
 
 def set_cached_session(cookies):
     credentialsutil.create_bmx_path()
@@ -43,7 +41,7 @@ def get_new_session(username):
                 state = authentication.stateToken
                 factors = authentication.embedded.factors
 
-                available_factors = [f for f in factors if f.factorType in SUPPORTED_FACTORS]
+                available_factors = [f for f in factors if f.factorType in OKTA_SUPPORTED_FACTORS]
                 if available_factors:
                     factor = get_factor_selection(available_factors)
                     if factor.factorType == 'sms':
@@ -58,7 +56,7 @@ def get_new_session(username):
                         'MFA required by Okta, but no supported factors available.'
                         '\n   Supported: {0}'
                         '\n   Available: {1}'
-                    ).format(SUPPORTED_FACTORS, factor_types)
+                    ).format(OKTA_SUPPORTED_FACTORS, factor_types)
                     raise NotImplementedError(message)
 
             session = sessions_client.create_session_by_session_token(
@@ -85,15 +83,15 @@ def cookie_string(cookies):
 
 def create_auth_client():
     return okta.AuthClient(
-        BASE_URL,
-        API_TOKEN,
+        OKTA_BASE_URL,
+        OKTA_API_TOKEN,
         headers={'Authorization': None}
     )
 
 def create_sessions_client(cookies=None):
     return okta.SessionsClient(
-        BASE_URL,
-        API_TOKEN,
+        OKTA_BASE_URL,
+        OKTA_API_TOKEN,
         headers={
             'Authorization': None,
             'Cookie': cookie_string(cookies)
@@ -102,8 +100,8 @@ def create_sessions_client(cookies=None):
 
 def create_users_client(cookies):
     return okta.UsersClient(
-        BASE_URL,
-        API_TOKEN,
+        OKTA_BASE_URL,
+        OKTA_API_TOKEN,
         headers={
             'Authorization': None,
             'Cookie': cookie_string(cookies)
