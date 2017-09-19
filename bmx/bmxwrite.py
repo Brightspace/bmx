@@ -52,8 +52,6 @@ def write_credentials(credentials, profile):
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
 
-    print('9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999')
-
     credentials = credentialsutil.fetch_credentials(
             known_args.username, app=known_args.account, role=known_args.role)
 
