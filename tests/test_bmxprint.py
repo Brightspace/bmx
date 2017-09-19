@@ -61,9 +61,12 @@ class BmxPrintTests(unittest.TestCase):
         self.assertEqual('-p', calls[2][0][0])
         self.assertTrue('help' in calls[2][1])
 
+    @patch('bmx.bmxprint.credentialsutil.write_credentials')
     @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_json_credentials_by_default(self, mock_parser, mock_fetch_credentials):
+    def test_cmd_should_print_json_credentials_by_default(self, mock_parser,
+                                                          mock_fetch_credentials,
+                                                          mock_write_credentials):
         for i in [(True, False, False), (False, False, False)]:
             with self.subTest(i=i):
                 self.setup_print_mocks(mock_parser, i[0], i[1], i[2])
@@ -76,9 +79,12 @@ class BmxPrintTests(unittest.TestCase):
 
                 self.assertEqual(RETURN_VALUE.keys, printed)
 
+    @patch('bmx.bmxprint.credentialsutil.write_credentials')
     @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
-    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser, mock_fetch_credentials):
+    def test_cmd_should_print_bash_credentials_when_bash_option_specified(self, mock_parser,
+                                                                          mock_fetch_credentials,
+                                                                          mock_write_credentials):
         self.setup_print_mocks(mock_parser, False, True, False)
 
         out = io.StringIO()
@@ -95,10 +101,12 @@ export AWS_SESSION_TOKEN='{}'
             SESSION_TOKEN
         ), printed)
 
+    @patch('bmx.bmxprint.credentialsutil.write_credentials')
     @patch('bmx.fetch_credentials', side_effect=mock_fetchcreds)
     @patch('bmx.bmxprint.create_parser')
     def test_cmd_should_print_powershell_credentials_when_powershell_option_specified(self, mock_parser,
-                                                                                      mock_fetch_credentials):
+                                                                                      mock_fetch_credentials,
+                                                                                      mock_write_credentials):
         self.setup_print_mocks(mock_parser, False, False, True)
 
         out = io.StringIO()

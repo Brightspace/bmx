@@ -8,5 +8,6 @@ requests >= 2.18.3
 pylint >= 1.7.2
 awscli >= 1.11.149
 boto3 >= 1.4.7
+cerberus >= 1.1
 # tox can be used as testrunner
 tox >= 2.8.2
