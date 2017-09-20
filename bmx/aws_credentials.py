@@ -22,22 +22,14 @@ class AwsCredentials:
         self.account = account
         self.role = self.extract_role_name(role_arn)
 
-    def get_dict(self):
-        return {
-            self.account: {
-                self.role:
-                    {k: v for k, v in self.keys.items()}
-
-            }
-        }
-
     def get_principal_dict(self):
         return {
             AWS_ACCOUNT_KEY: self.account,
             AWS_ROLE_KEY: self.role
         }
 
-    def are_expired(self):
+    def have_expired(self):
         return AWS_EXPIRATION_KEY in self.keys and \
-            dateutil.parser.parse(self.keys[AWS_EXPIRATION_KEY]) <= \
-            datetime.now(timezone.utc)
+                dateutil.parser.parse(self.keys[AWS_EXPIRATION_KEY]) <= \
+                datetime.now(timezone.utc)
+
