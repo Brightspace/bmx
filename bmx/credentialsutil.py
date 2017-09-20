@@ -22,16 +22,6 @@ def get_credentials_path():
 def get_cookie_session_path():
     return os.path.join(get_bmx_path(), 'cookies.state')
 
-def verify_version(credentials_doc):
-    version = credentials_doc.get(BMX_VERSION_KEY)
-    if version and version != BMX_CREDENTIALS_VERSION:
-        message = (
-            'Invalid version in {0}.'
-            '\n   Supported: {1}'
-            '\n   Current: {2}'
-        ).format(get_credentials_path(), BMX_CREDENTIALS_VERSION, version)
-        raise ValueError(message)
-
 def read_credentials(app=None, role=None):
     if not app and role or app and not role:
         return None
@@ -193,7 +183,7 @@ def remove_credentials(app=None, role=None):
 
     with open(get_credentials_path(), 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
-        verify_version(credentials_doc)
+        validate_credentials(credentials_doc)
 
         if not app and not role:
             removed_defaults_doc, app, role = remove_default_credentials(credentials_doc)

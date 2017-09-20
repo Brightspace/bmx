@@ -37,10 +37,10 @@ class Parser:
             add_help=False)
         renew_parser.set_defaults(func=bmxrenew.cmd)
 
-        renew_parser = subparsers.add_parser('remove',
+        remove_parser = subparsers.add_parser('remove',
             help='remove AWS credentials',
             add_help=False)
-        renew_parser.set_defaults(func=bmxremove.cmd)
+        remove_parser.set_defaults(func=bmxremove.cmd)
 
         self._parser = parser
 
