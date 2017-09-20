@@ -154,19 +154,16 @@ def remove_default_credentials(credentials_doc):
 
 def remove_named_credentials(credentials_doc, app, role):
     credentials_doc_removed = copy.deepcopy(credentials_doc)
-    number_of_account_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
+    num_account_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
 
     if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
         role in credentials_doc[BMX_CREDENTIALS_KEY][app]):
-        number_of_roles_in_account_of_interest = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
+        num_roles_in_interested_account = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
 
-        if number_of_account_credentials > 1:
-            if number_of_roles_in_account_of_interest > 1:
-                del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
-            else:
-                del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
-        elif number_of_roles_in_account_of_interest > 1:
+        if num_roles_in_interested_account > 1:
             del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
+        elif num_account_credentials > 1:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
         else:
             del credentials_doc_removed[BMX_CREDENTIALS_KEY]
 
