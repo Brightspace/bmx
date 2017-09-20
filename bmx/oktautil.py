@@ -22,7 +22,7 @@ def get_cached_session(username):
     try:
         with open(credentialsutil.get_cookie_session_path(), 'rb') as cookie_state:
             cookies_dict = pickle.load(cookie_state)
-        if cookies_dict['username'] != username:
+        if username and cookies_dict['username'] != username:
             raise ValueError()
         cookies = cookies_dict['cookies']
         sessions_client = create_sessions_client(cookies)

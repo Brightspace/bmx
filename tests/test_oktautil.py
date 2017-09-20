@@ -142,15 +142,17 @@ class OktaUtilTests(unittest.TestCase):
     @patch('bmx.oktautil.create_sessions_client', return_value=MockSession())
     @patch('pickle.load', return_value=create_state_mock('username', MockCookie({'sid': 'expectedSession'})))
     def test_get_cache_session_exists(self, mock_pickle, mock_session_client):
-        temp_file = tempfile.mkstemp()[1]
-        with patch('bmx.credentialsutil.get_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
-            mock_cookie_session_path.return_value = temp_file
+        for username in ['username', None]:
+            with self.subTest(username=username):
+                temp_file = tempfile.mkstemp()[1]
+                with patch('bmx.credentialsutil.get_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
+                    mock_cookie_session_path.return_value = temp_file
 
-            session, cookies = bmx.oktautil.get_cached_session('username')
-            self.assertTrue(mock_pickle.called)
-            self.assertTrue(mock_session_client.called)
-            self.assertEqual('expectedSession', session)
-            self.assertEqual(cookies.cookies, {'sid': 'expectedSession'})
+                    session, cookies = bmx.oktautil.get_cached_session(username)
+                    self.assertTrue(mock_pickle.called)
+                    self.assertTrue(mock_session_client.called)
+                    self.assertEqual('expectedSession', session)
+                    self.assertEqual(cookies.cookies, {'sid': 'expectedSession'})
 
     @patch('pickle.load', return_value=create_state_mock('username', MockCookie({'sid': 'expectedSession'})))
     def test_get_cache_session_wrong_username(self, mock_pickle):
