@@ -1,4 +1,5 @@
 import os
+import copy
 
 import yaml
 from cerberus import Validator
@@ -29,8 +30,8 @@ def read_credentials(app=None, role=None):
     if os.path.exists(get_credentials_path()):
         with open(get_credentials_path(), 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
-
         validate_credentials(credentials_doc)
+
 
         if not app and not role:
             app, role = get_default_reference(credentials_doc)
@@ -136,3 +137,59 @@ def validate_credentials(credentials):
     if validator.validate(credentials):
         return True
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
+
+def remove_default_credentials(credentials_doc):
+    app = role = None
+    if BMX_META_KEY not in credentials_doc:
+        return credentials_doc, app, role
+
+    default_settings = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
+    app = default_settings.get(AWS_ACCOUNT_KEY)
+    role = default_settings.get(AWS_ROLE_KEY)
+
+    credentials_doc_no_default = copy.deepcopy(credentials_doc)
+    del credentials_doc_no_default[BMX_META_KEY]
+
+    return credentials_doc_no_default, app, role
+
+def remove_named_credentials(credentials_doc, app, role):
+    credentials_doc_removed = copy.deepcopy(credentials_doc)
+    num_account_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
+
+    if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
+        role in credentials_doc[BMX_CREDENTIALS_KEY][app]):
+        num_roles_in_interested_account = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
+
+        if num_roles_in_interested_account > 1:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
+        elif num_account_credentials > 1:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
+        else:
+            del credentials_doc_removed[BMX_CREDENTIALS_KEY]
+
+    return credentials_doc_removed
+
+def remove_credentials(app=None, role=None):
+    if (not app and role) or (app and not role):
+        message = f'Failed to remove credentials.\n' \
+                  f'Must specify both account and role or neither.\n' \
+                  f'Account: {app}\n' \
+                  f'Role: {role}'
+        raise ValueError(message)
+
+    if not os.path.exists(get_credentials_path()):
+        return
+
+    with open(get_credentials_path(), 'r+') as credentials_file:
+        credentials_doc = yaml.load(credentials_file) or {}
+        validate_credentials(credentials_doc)
+
+        if not app and not role:
+            removed_defaults_doc, app, role = remove_default_credentials(credentials_doc)
+            removed_credentials_doc = remove_named_credentials(removed_defaults_doc, app, role)
+        else:
+            removed_credentials_doc = remove_named_credentials(credentials_doc, app, role)
+
+        credentials_file.seek(0)
+        credentials_file.truncate()
+        yaml.dump(removed_credentials_doc, credentials_file, default_flow_style=False)

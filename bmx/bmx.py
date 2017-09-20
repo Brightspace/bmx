@@ -5,8 +5,10 @@ import bmx.bmxaws as bmxaws
 import bmx.bmxwrite as bmxwrite
 import bmx.bmxprint as bmxprint
 import bmx.bmxrenew as bmxrenew
+import bmx.bmxremove as bmxremove
 from bmx.locale.options import (BMX_COPYRIGHT, BMX_DESCRIPTION,
-                                BMX_AWS_HELP, BMX_PRINT_HELP, BMX_RENEW_HELP, BMX_WRITE_HELP)
+                                BMX_AWS_HELP, BMX_PRINT_HELP, BMX_REMOVE_HELP,
+                                BMX_RENEW_HELP, BMX_WRITE_HELP)
 
 class Parser:
     def __init__(self):
@@ -35,6 +37,11 @@ class Parser:
             help=BMX_RENEW_HELP,
             add_help=False)
         renew_parser.set_defaults(func=bmxrenew.cmd)
+
+        remove_parser = subparsers.add_parser('remove',
+            help=BMX_REMOVE_HELP,
+            add_help=False)
+        remove_parser.set_defaults(func=bmxremove.cmd)
 
         self._parser = parser
 
