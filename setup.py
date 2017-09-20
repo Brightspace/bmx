@@ -4,7 +4,7 @@ _PACKAGES = ['bmx']
 
 _REQUIRES = [
         'future>=0.16.0',
-        'lxml>=3.7.3',
+        'lxml==4.0.0',
         'okta>=0.0.4',
         'pies2overrides>=2.6.7',
         'prompt>=0.4.1',
