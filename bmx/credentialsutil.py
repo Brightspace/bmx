@@ -1,4 +1,5 @@
 import os
+import copy
 
 import yaml
 from cerberus import Validator
@@ -145,13 +146,13 @@ def remove_default_credentials(credentials_doc):
     app = default_settings.get(AWS_ACCOUNT_KEY)
     role = default_settings.get(AWS_ROLE_KEY)
 
-    credentials_doc_no_default = dict(credentials_doc)
+    credentials_doc_no_default = copy.deepcopy(credentials_doc)
     del credentials_doc_no_default[BMX_META_KEY]
 
     return credentials_doc_no_default, app, role
 
 def remove_named_credentials(credentials_doc, app, role):
-    credentials_doc_removed = dict(credentials_doc)
+    credentials_doc_removed = copy.deepcopy(credentials_doc)
     number_of_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
 
     if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
