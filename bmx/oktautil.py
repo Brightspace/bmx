@@ -15,16 +15,16 @@ from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL, OKTA_SUPPORTED_FACTORS
 
 def set_cached_session(username, cookies):
     credentialsutil.create_bmx_path()
-    with open(credentialsutil.get_cookie_session_path(), 'wb') as cookie_state:
-        pickle.dump({'cookies': cookies, 'username': username}, cookie_state)
+    with open(credentialsutil.get_cookie_session_path(), 'wb') as session_state:
+        pickle.dump({'cookies': cookies, 'username': username}, session_state)
 
 def get_cached_session(username):
     try:
-        with open(credentialsutil.get_cookie_session_path(), 'rb') as cookie_state:
-            cookies_dict = pickle.load(cookie_state)
-        if username and cookies_dict['username'] != username:
+        with open(credentialsutil.get_cookie_session_path(), 'rb') as session_state:
+            session_dict = pickle.load(session_state)
+        if username and session_dict['username'] != username:
             raise ValueError()
-        cookies = cookies_dict['cookies']
+        cookies = session_dict['cookies']
         sessions_client = create_sessions_client(cookies)
         session = sessions_client.validate_session(cookies.get_dict()['sid'])
     except Exception:
