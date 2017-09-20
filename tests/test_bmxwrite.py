@@ -1,19 +1,10 @@
-import base64
-import contextlib
-import io
-import json
 import os
 import unittest
+from unittest.mock import MagicMock
 
-from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 
-from .context import bmx
-import bmx.bmxprint as bmxprint
 import bmx.bmxwrite as bmxwrite
-import okta.models.user
-import bmx.prompt as prompt
-import bmx.credentialsutil as credentialsutil
 from bmx.aws_credentials import AwsCredentials
 
 class MockSession():
@@ -23,6 +14,22 @@ class MockSession():
         return ''
     def validate_session(self, x):
         return x
+
+def get_mocked_ConfigParser():
+    config_parser_dict = {}
+
+    def getitem(k):
+        return config_parser_dict[k]
+
+    def setitem(k, v):
+        config_parser_dict[k] = v
+
+    mock_config_parser = MagicMock()
+    mock_config_parser.__getitem__.side_effect = getitem
+    mock_config_parser.__setitem__.side_effect = setitem
+    mock_config_parser.get_dict.return_value = config_parser_dict
+
+    return mock_config_parser
 
 class BmxWriteTests(unittest.TestCase):
     @patch('argparse.ArgumentParser')
@@ -44,77 +51,42 @@ class BmxWriteTests(unittest.TestCase):
         self.assertEqual('--role', calls[3][0][0])
         self.assertTrue('help' in calls[3][1])
 
+    def test_get_aws_path(self):
+        with patch('os.path.expanduser', return_value='user_home'):
+            expected_aws_path = os.path.join('user_home', '.aws')
+            actual_aws_path = bmxwrite.get_aws_path()
+            self.assertEqual(expected_aws_path, actual_aws_path)
 
-    #@patch('builtins.open')
-    #@patch('boto3.client')
-    #@patch('configparser.ConfigParser', return_value=MagicMock())
-    #@patch('bmx.stsutil.get_app_roles')
-    #@patch('bmx.stsutil.oktautil')
-    #@patch('bmx.prompt.prompt_for_value', return_value="password")
-    #def test_write_with_account_and_role_should_write_correct_data(self,
-                                                                   #mock_prompt,
-                                                                   #mock_oktautil,
-                                                                   #mock_get_app_roles,
-                                                                   #mock_configparser,
-                                                                   #mock_boto3,
-                                                                   #mock_open):
-        #def getAppLink(props):
-            #applink = okta.models.user.AppLinks()
-            #for key, value in props.items():
-                #applink.__setattr__(key, value)
-            #return applink
+    def test_get_credentials_path(self):
+        with patch('bmx.bmxwrite.get_aws_path', return_value='aws_home'):
+            expected_aws_path = os.path.join('aws_home', 'credentials')
+            actual_aws_path = bmxwrite.get_credentials_path()
+            self.assertEqual(expected_aws_path, actual_aws_path)
 
+    @patch('bmx.bmxwrite.get_credentials_path', return_value='credential_path')
+    @patch('configparser.ConfigParser')
+    def test_write_credentials(self, mock_config, *args):
+        credentials = AwsCredentials({
+            'AccessKeyId': 'expectedAccessKeyId',
+            'SecretAccessKey': 'expectedSecretAccessKey',
+            'SessionToken': 'expectedSessionToken'
+        }, 'expected_account', 'expected_role')
 
-        #mock_oktautil.get_okta_session.return_value = MockSession(), 'someCookieObject'
+        mock_config_parser = get_mocked_ConfigParser()
+        mock_config.return_value = mock_config_parser
 
-        #mock_oktautil.create_users_client.return_value.get_user_applinks.return_value = [
-            #getAppLink({'appName': 'amazon_aws', 'label': 'not-my-account'}),
-            #getAppLink({'appName': 'amazon_aws', 'label': 'my-account'})
-        #]
-#
-        #mock_oktautil.connect_to_app.return_value = base64.b64encode(b'skip_me')
+        bmxwrite.write_credentials(credentials, 'expected_profile')
 
-        #mock_get_app_roles.return_value = [
-            #'arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/my-role',
-            #'arn:aws:iam::accountid:saml-provider/Okta,arn:aws:iam::accountid:role/not-my-role'
-        #]
+        mock_config_parser.read.assert_called_once()
+        self.assertDictEqual({
+            'expected_profile': {
+                'aws_access_key_id': 'expectedAccessKeyId',
+                'aws_secret_access_key': 'expectedSecretAccessKey',
+                'aws_session_token': 'expectedSessionToken'
+            }
+        }, mock_config_parser.get_dict())
+        mock_config_parser.write.assert_called_once()
 
-        #mock_boto3.return_value.assume_role_with_saml.return_value = {'Credentials':
-                                                                          #{'AccessKeyId': 'my-access-key',
-                                                                           #'SecretAccessKey': 'my-secret-access-key',
-                                                                           #'SessionToken': 'my-session-token'}
-                                                                      #}
-
-        #bmxwrite.cmd(['--profile', 'my-profile',
-                      #'--account', 'my-account',
-                      #'--username', 'my-user',
-                      #'--role', 'my-role'])
-
-        #mock_configparser.return_value.__setitem__.assert_called_with('my-profile', {'aws_access_key_id': 'my-access-key',
-                                                                                    #'aws_secret_access_key': 'my-secret-access-key',
-                                                                                    #'aws_session_token': 'my-session-token'})
-        #assert mock_configparser.return_value.write.called
-        #mock_open.assert_called_with(os.path.expanduser('~/.aws/credentials'), 'w')
-
-    #@patch('bmx.bmxprint.create_parser')
-    #def test_cmd_should_print_credentials_always(self, mock_arg_parser):
-        #return_value = {
-            #'AccessKeyId': ACCESS_KEY_ID,
-            #'SecretAccessKey': SECRET_ACCESS_KEY,
-            #'SessionToken': SESSION_TOKEN
-        #}
-
-        #bmx.bmxwrite.get_credentials = Mock(
-            #return_value=return_value
-        #)
-
-        #out = io.StringIO()
-        #with contextlib.redirect_stdout(out):
-            #self.assertEqual(0, bmx.bmxprint.cmd([]))
-        #out.seek(0)
-        #printed = json.load(out)
-
-        #self.assertEqual(return_value, printed)
 
 if __name__ == '__main__':
-    unittest.main();
+    unittest.main()
