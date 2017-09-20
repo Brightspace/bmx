@@ -13,15 +13,18 @@ import bmx.credentialsutil as credentialsutil
 
 from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL, OKTA_SUPPORTED_FACTORS
 
-def set_cached_session(cookies):
+def set_cached_session(username, cookies):
     credentialsutil.create_bmx_path()
-    with open(credentialsutil.get_cookie_session_path(), 'wb') as cookie_state:
-        pickle.dump(cookies, cookie_state)
+    with open(credentialsutil.get_cookie_session_path(), 'wb') as session_state:
+        pickle.dump({'cookies': cookies, 'username': username}, session_state)
 
-def get_cached_session():
+def get_cached_session(username):
     try:
-        with open(credentialsutil.get_cookie_session_path(), 'rb') as cookie_state:
-            cookies = pickle.load(cookie_state)
+        with open(credentialsutil.get_cookie_session_path(), 'rb') as session_state:
+            session_dict = pickle.load(session_state)
+        if username and session_dict['username'] != username:
+            raise ValueError()
+        cookies = session_dict['cookies']
         sessions_client = create_sessions_client(cookies)
         session = sessions_client.validate_session(cookies.get_dict()['sid'])
     except Exception:
@@ -63,15 +66,15 @@ def get_new_session(username):
                 authentication.sessionToken, additional_fields="cookieToken,cookieTokenUrl")
             cookies = requests.get(session.cookieTokenUrl).cookies
 
-            return session, cookies
+            return session, cookies, username
         except (OktaError, requests.HTTPError) as ex:
             print(ex)
 
 def get_okta_session(username):
-    session, cookies = get_cached_session()
+    session, cookies = get_cached_session(username)
     if None in (session, cookies):
-        session, cookies = get_new_session(username)
-        set_cached_session(cookies)
+        session, cookies, username = get_new_session(username)
+        set_cached_session(username, cookies)
     return session, cookies
 
 def cookie_string(cookies):
