@@ -1,6 +1,5 @@
 import unittest
-import datetime
-from dateutil.tz import tzutc
+from datetime import datetime, timedelta, timezone
 
 from .context import bmx
 from bmx.aws_credentials import AwsCredentials
@@ -19,7 +18,10 @@ class AwsCredentialsTest(unittest.TestCase):
     def test_normalize_keys_stringify_expiration(self):
         expected_expiration = '2010-10-10T10:10:10+00:00'
         normalized_keys = \
-            AwsCredentials.normalize_keys({'Expiration': datetime.datetime(2010,10,10,10,10,10, tzinfo=tzutc())})
+            AwsCredentials.normalize_keys(
+                    {
+                        'Expiration': datetime(2010,10,10,10,10,10, tzinfo=timezone.utc)
+                    })
         self.assertEqual(expected_expiration, normalized_keys['Expiration'])
 
     def test_normalize_keys_expiration_same_when_not_datetime(self):
@@ -28,15 +30,18 @@ class AwsCredentialsTest(unittest.TestCase):
             AwsCredentials.normalize_keys({'Expiration': expected_expiration})
         self.assertEqual(expected_expiration, normalized_keys['Expiration'])
 
-    def test_get_dict_from_credentials(self):
-        credentials = AwsCredentials(
-            {'expected_key': 'expected_value'},
+    def test_are_expired_returns_true_when_expiration_is_in_the_past(self):
+        self.assertTrue(AwsCredentials(
+            {
+                'Expiration': datetime.now(timezone.utc) - timedelta(days=1)
+            },
             'expected_account',
-            'expected_role')
-        self.assertDictEqual({
-            'expected_account': {
-                'expected_role': {
-                    'expected_key': 'expected_value'
-                }
-            }
-        }, credentials.get_dict())
+            'expected_role').have_expired())
+
+    def test_are_expired_returns_false_when_expiration_is_in_the_future(self):
+        self.assertFalse(AwsCredentials(
+            {
+                'Expiration': datetime.now(timezone.utc) + timedelta(days=1)
+            },
+            'expected_account',
+            'expected_role').have_expired())

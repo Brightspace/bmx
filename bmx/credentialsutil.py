@@ -31,18 +31,18 @@ def read_credentials(app=None, role=None):
             credentials_doc = yaml.load(credentials_file) or {}
 
         validate_credentials(credentials_doc)
+
         if not app and not role:
-            default_ref = setdefault(
-                setdefault(credentials_doc, BMX_META_KEY), BMX_DEFAULT_KEY)
-            app = default_ref.get(AWS_ACCOUNT_KEY)
-            role = default_ref.get(AWS_ROLE_KEY)
+            app, role = get_default_reference(credentials_doc)
 
-        credentials = setdefault(
-            setdefault(credentials_doc, BMX_CREDENTIALS_KEY), app).get(role)
+        return_value = None
+        credentials_dict = credentials_doc.get(BMX_CREDENTIALS_KEY, {}).get(app, {}).get(role)
+        if credentials_dict:
+            aws_credentials = AwsCredentials(credentials_dict, app, role)
+            if not aws_credentials.have_expired():
+                return_value = aws_credentials
 
-        return AwsCredentials(credentials, app, role) if credentials else None
-    else:
-        return None
+        return return_value
 
 def write_credentials(credentials):
     create_bmx_path()
@@ -56,27 +56,44 @@ def write_credentials(credentials):
     with open(file_descriptor, 'r+') as credentials_file:
         credentials_doc = yaml.load(credentials_file) or {}
         validate_credentials(credentials_doc)
+
         credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
+        credentials_doc.setdefault(BMX_META_KEY, {})[BMX_DEFAULT_KEY] = \
+                credentials.get_principal_dict()
 
-        setdefault(
-            credentials_doc,
-            BMX_META_KEY)[BMX_DEFAULT_KEY] = credentials.get_principal_dict()
+        credentials_doc.setdefault(BMX_CREDENTIALS_KEY, {}) \
+                .setdefault(credentials.account, {})[credentials.role] = credentials.keys
 
-        setdefault(
-            setdefault(
-                credentials_doc,
-                BMX_CREDENTIALS_KEY),
-            credentials.account)[credentials.role] = credentials.keys
+        prune_expired(credentials_doc)
 
         credentials_file.seek(0)
         credentials_file.truncate()
         yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
 
-def setdefault(dictionary, key):
-    if not isinstance(dictionary.setdefault(key, {}), dict):
-        dictionary[key] = {}
+def prune_expired(credentials_doc):
+    for app in credentials_doc[BMX_CREDENTIALS_KEY].keys():
+        credentials_doc[BMX_CREDENTIALS_KEY][app] = {
+                k: v for k, v in credentials_doc[BMX_CREDENTIALS_KEY][app].items() \
+                if not AwsCredentials(v, app, k).have_expired()}
 
-    return dictionary[key]
+    credentials_doc[BMX_CREDENTIALS_KEY] = {
+            k: v for k, v in credentials_doc[BMX_CREDENTIALS_KEY].items() \
+            if credentials_doc[BMX_CREDENTIALS_KEY][k]}
+
+    app, role = get_default_reference(credentials_doc)
+    if not credentials_doc[BMX_CREDENTIALS_KEY].get(app, {}).get(role):
+        del credentials_doc[BMX_META_KEY][BMX_DEFAULT_KEY]
+
+    if not credentials_doc[BMX_META_KEY]:
+        del credentials_doc[BMX_META_KEY]
+
+    if not credentials_doc[BMX_CREDENTIALS_KEY]:
+        del credentials_doc[BMX_CREDENTIALS_KEY]
+
+def get_default_reference(credentials_doc):
+    default_ref = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
+
+    return default_ref.get(AWS_ACCOUNT_KEY), default_ref.get(AWS_ROLE_KEY)
 
 def validate_credentials(credentials):
     schema = {
