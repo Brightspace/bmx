@@ -5,3 +5,4 @@ bmx.egg-info/
 .tox
 .cache
 build
+.coverage
