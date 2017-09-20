@@ -9,35 +9,43 @@ from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY, BMX_DEF
                            BMX_META_KEY, BMX_VERSION_KEY)
 from bmx.aws_credentials import AwsCredentials
 
-
-def create_bmx_path():
-    if not os.path.exists(get_bmx_path()):
-        os.makedirs(get_bmx_path(), mode=0o770)
-
 def get_bmx_path():
     return os.path.join(os.path.expanduser('~'), '.bmx')
 
-def get_credentials_path():
+def get_bmx_credentials_path():
     return os.path.join(get_bmx_path(), 'credentials')
 
-def get_cookie_session_path():
+def get_bmx_cookie_session_path():
     return os.path.join(get_bmx_path(), 'cookies.state')
 
-def read_credentials(app=None, role=None):
-    if not app and role or app and not role:
-        return None
-
-    if os.path.exists(get_credentials_path()):
-        with open(get_credentials_path(), 'r') as credentials_file:
+def load_bmx_credentials(credentials_path=get_bmx_credentials_path()):
+    if os.path.exists(credentials_path):
+        with open(credentials_path, 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
-        validate_credentials(credentials_doc)
+    else:
+        credentials_doc = {}
 
+    return BmxCredentials(credentials_doc)
+
+def create_bmx_directory(directory=get_bmx_path()):
+    if not os.path.exists(directory):
+        os.makedirs(directory, mode=0o770)
+
+class BmxCredentials:
+    def __init__(self, credentials_doc):
+        self.credentials_doc = credentials_doc
+        self.validate()
+
+    def get_credentials(self, app=None, role=None):
+        if not app and role or app and not role:
+            return None
 
         if not app and not role:
-            app, role = get_default_reference(credentials_doc)
+            app, role = self.get_default_reference()
 
         return_value = None
-        credentials_dict = credentials_doc.get(BMX_CREDENTIALS_KEY, {}).get(app, {}).get(role)
+        credentials_dict = self.credentials_doc \
+                .get(BMX_CREDENTIALS_KEY, {}).get(app, {}).get(role)
         if credentials_dict:
             aws_credentials = AwsCredentials(credentials_dict, app, role)
             if not aws_credentials.have_expired():
@@ -45,151 +53,123 @@ def read_credentials(app=None, role=None):
 
         return return_value
 
-def write_credentials(credentials):
-    create_bmx_path()
+    def put_credentials(self, aws_credentials):
+        self.credentials_doc.setdefault(BMX_META_KEY, {})[BMX_DEFAULT_KEY] = \
+                aws_credentials.get_principal_dict()
 
-    file_descriptor = os.open(
-        get_credentials_path(),
-        os.O_RDWR | os.O_CREAT,
-        mode=0o600
-    )
+        self.credentials_doc.setdefault(BMX_CREDENTIALS_KEY, {}) \
+                .setdefault(aws_credentials.account, {})[aws_credentials.role] = \
+                aws_credentials.keys
 
-    with open(file_descriptor, 'r+') as credentials_file:
-        credentials_doc = yaml.load(credentials_file) or {}
-        validate_credentials(credentials_doc)
+        self.validate()
 
-        credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
-        credentials_doc.setdefault(BMX_META_KEY, {})[BMX_DEFAULT_KEY] = \
-                credentials.get_principal_dict()
+    def remove_credentials(self, app=None, role=None):
+        if app and not role or not app and role:
+            message = f'Failed to remove credentials.\n' \
+                      f'Must specify both account and role or neither.\n' \
+                      f'Account: {app}\n' \
+                      f'Role: {role}'
+            raise ValueError(message)
 
-        credentials_doc.setdefault(BMX_CREDENTIALS_KEY, {}) \
-                .setdefault(credentials.account, {})[credentials.role] = credentials.keys
+        if not app and not role:
+            app, role = self.get_default_reference()
 
-        prune_expired(credentials_doc)
+        aws_keys = self.credentials_doc.get(
+                BMX_CREDENTIALS_KEY, {}).get(app, {}).pop(role, None)
 
-        credentials_file.seek(0)
-        credentials_file.truncate()
-        yaml.dump(credentials_doc, credentials_file, default_flow_style=False)
+        self.prune()
+        self.validate()
 
-def prune_expired(credentials_doc):
-    for app in credentials_doc[BMX_CREDENTIALS_KEY].keys():
-        credentials_doc[BMX_CREDENTIALS_KEY][app] = {
-                k: v for k, v in credentials_doc[BMX_CREDENTIALS_KEY][app].items() \
-                if not AwsCredentials(v, app, k).have_expired()}
+        return AwsCredentials(aws_keys, app, role) if aws_keys else None
 
-    credentials_doc[BMX_CREDENTIALS_KEY] = {
-            k: v for k, v in credentials_doc[BMX_CREDENTIALS_KEY].items() \
-            if credentials_doc[BMX_CREDENTIALS_KEY][k]}
+    def write(self, credentials_path=get_bmx_credentials_path()):
+        directory = os.path.basename(credentials_path)
+        create_bmx_directory(directory)
 
-    app, role = get_default_reference(credentials_doc)
-    if not credentials_doc[BMX_CREDENTIALS_KEY].get(app, {}).get(role):
-        del credentials_doc[BMX_META_KEY][BMX_DEFAULT_KEY]
+        self.credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
-    if not credentials_doc[BMX_META_KEY]:
-        del credentials_doc[BMX_META_KEY]
+        self.prune()
+        self.validate()
 
-    if not credentials_doc[BMX_CREDENTIALS_KEY]:
-        del credentials_doc[BMX_CREDENTIALS_KEY]
+        file_descriptor = os.open(
+            credentials_path,
+            os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
+            mode=0o600
+        )
 
-def get_default_reference(credentials_doc):
-    default_ref = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
+        with open(file_descriptor, 'w') as credentials_file:
+            yaml.dump(self.credentials_doc, credentials_file,
+                    default_flow_style=False)
 
-    return default_ref.get(AWS_ACCOUNT_KEY), default_ref.get(AWS_ROLE_KEY)
+    def get_default_reference(self):
+        default_ref = self.credentials_doc \
+                .get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
 
-def validate_credentials(credentials):
-    schema = {
-        BMX_VERSION_KEY: {
-            'type': 'string',
-            'allowed': [BMX_CREDENTIALS_VERSION]
-        },
-        BMX_META_KEY: {
-            'type': 'dict',
-            'schema': {
-                BMX_DEFAULT_KEY: {
-                    'type': 'dict',
-                    'required': True,
-                    'schema': {
-                        'account': {'type': 'string', 'required': True},
-                        'role': {'type': 'string', 'required': True}
+        return default_ref.get(AWS_ACCOUNT_KEY), default_ref.get(AWS_ROLE_KEY)
+
+    def prune(self):
+        if BMX_CREDENTIALS_KEY in self.credentials_doc:
+            for app in self.credentials_doc[BMX_CREDENTIALS_KEY].keys():
+                self.credentials_doc[BMX_CREDENTIALS_KEY][app] = {
+                        k: v for k, v in self.credentials_doc[BMX_CREDENTIALS_KEY][app].items() \
+                        if not AwsCredentials(v, app, k).have_expired()}
+
+            self.credentials_doc[BMX_CREDENTIALS_KEY] = {
+                    k: v for k, v in self.credentials_doc[BMX_CREDENTIALS_KEY].items() \
+                    if self.credentials_doc[BMX_CREDENTIALS_KEY][k]}
+
+            if not self.credentials_doc[BMX_CREDENTIALS_KEY]:
+                del self.credentials_doc[BMX_CREDENTIALS_KEY]
+
+        if BMX_META_KEY in self.credentials_doc:
+            if BMX_DEFAULT_KEY in self.credentials_doc[BMX_META_KEY]:
+                app, role = self.get_default_reference()
+                if not self.credentials_doc.get(BMX_CREDENTIALS_KEY, {}).get(app, {}).get(role):
+                    del self.credentials_doc[BMX_META_KEY][BMX_DEFAULT_KEY]
+
+            if not self.credentials_doc[BMX_META_KEY]:
+                del self.credentials_doc[BMX_META_KEY]
+
+    def validate(self):
+        schema = {
+            BMX_VERSION_KEY: {
+                'type': 'string',
+                'allowed': [BMX_CREDENTIALS_VERSION]
+            },
+            BMX_META_KEY: {
+                'type': 'dict',
+                'schema': {
+                    BMX_DEFAULT_KEY: {
+                        'type': 'dict',
+                        'required': True,
+                        'schema': {
+                            'account': {'type': 'string', 'required': True},
+                            'role': {'type': 'string', 'required': True}
+                        }
                     }
                 }
-            }
-        },
-        BMX_CREDENTIALS_KEY: {
-            'type': 'dict',
-            'minlength': 1,
-            'valueschema': {
+            },
+            BMX_CREDENTIALS_KEY: {
                 'type': 'dict',
                 'minlength': 1,
                 'valueschema': {
                     'type': 'dict',
-                    'schema': {
-                        'AccessKeyId': {'type': 'string', 'required': True},
-                        'SecretAccessKey': {'type': 'string', 'required': True},
-                        'SessionToken': {'type': 'string', 'required': True},
-                        'Expiration': {'type': 'string'}
+                    'minlength': 1,
+                    'valueschema': {
+                        'type': 'dict',
+                        'schema': {
+                            'AccessKeyId': {'type': 'string', 'required': True},
+                            'SecretAccessKey': {'type': 'string', 'required': True},
+                            'SessionToken': {'type': 'string', 'required': True},
+                            'Expiration': {'type': 'string'}
+                        }
                     }
                 }
             }
         }
-    }
-    validator = Validator(schema)
-    if validator.validate(credentials):
-        return True
-    raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
-def remove_default_credentials(credentials_doc):
-    app = role = None
-    if BMX_META_KEY not in credentials_doc:
-        return credentials_doc, app, role
+        validator = Validator(schema)
+        if validator.validate(self.credentials_doc):
+            return True
+        raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
-    default_settings = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
-    app = default_settings.get(AWS_ACCOUNT_KEY)
-    role = default_settings.get(AWS_ROLE_KEY)
-
-    credentials_doc_no_default = copy.deepcopy(credentials_doc)
-    del credentials_doc_no_default[BMX_META_KEY]
-
-    return credentials_doc_no_default, app, role
-
-def remove_named_credentials(credentials_doc, app, role):
-    credentials_doc_removed = copy.deepcopy(credentials_doc)
-    num_account_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
-
-    if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
-        role in credentials_doc[BMX_CREDENTIALS_KEY][app]):
-        num_roles_in_interested_account = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
-
-        if num_roles_in_interested_account > 1:
-            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
-        elif num_account_credentials > 1:
-            del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
-        else:
-            del credentials_doc_removed[BMX_CREDENTIALS_KEY]
-
-    return credentials_doc_removed
-
-def remove_credentials(app=None, role=None):
-    if (not app and role) or (app and not role):
-        message = f'Failed to remove credentials.\n' \
-                  f'Must specify both account and role or neither.\n' \
-                  f'Account: {app}\n' \
-                  f'Role: {role}'
-        raise ValueError(message)
-
-    if not os.path.exists(get_credentials_path()):
-        return
-
-    with open(get_credentials_path(), 'r+') as credentials_file:
-        credentials_doc = yaml.load(credentials_file) or {}
-        validate_credentials(credentials_doc)
-
-        if not app and not role:
-            removed_defaults_doc, app, role = remove_default_credentials(credentials_doc)
-            removed_credentials_doc = remove_named_credentials(removed_defaults_doc, app, role)
-        else:
-            removed_credentials_doc = remove_named_credentials(credentials_doc, app, role)
-
-        credentials_file.seek(0)
-        credentials_file.truncate()
-        yaml.dump(removed_credentials_doc, credentials_file, default_flow_style=False)
