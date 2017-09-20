@@ -29,6 +29,15 @@ BMX_PRINT_BASH_HELP = 'format credentials for Bash'
 BMX_PRINT_POWERSHELL_HELP = 'format credentials for PowerShell'
 
 
+# BMX REMOVE Argument Parser Strings
+BMX_REMOVE_HELP = 'renew AWS credentials from ~/.bmx/credentials'
+BMX_REMOVE_USAGE = '''
+
+bmx remove -h
+bmx remove [--account ACCOUNT] [--role ROLE] CLICOMMAND
+'''
+
+
 # BMX RENEW Argument Parser Strings
 BMX_RENEW_HELP = 'renew AWS credentials'
 BMX_RENEW_USAGE = '''
@@ -52,4 +61,3 @@ bmx write [--username USERNAME]
           [--role ROLE]'''
 
 BMX_WRITE_PROFILE_HELP = 'the profile to write to the credentials file'
-

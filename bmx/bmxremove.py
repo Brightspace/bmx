@@ -2,17 +2,16 @@ import sys
 import argparse
 
 import bmx.credentialsutil as credentialsutil
+from bmx.locale.options import (BMX_REMOVE_USAGE,
+                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx remove',
-        usage='''
-bmx remove -h
-bmx remove [--account ACCOUNT] [--role ROLE] CLICOMMAND
-'''
+        usage=BMX_REMOVE_USAGE
     )
-    parser.add_argument('--account', default=None, help='the aws account name to auth against')
-    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
 
     return parser
