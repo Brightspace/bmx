@@ -6,39 +6,39 @@ import argparse
 
 import bmx
 import bmx.credentialsutil as credentialsutil
+from bmx.locale.options import (BMX_PRINT_USAGE,
+                                BMX_PRINT_BASH_HELP,BMX_PRINT_JSON_HELP, BMX_PRINT_POWERSHELL_HELP,
+                                BMX_ACCOUNT_HELP, BMX_DURATION_HELP, BMX_ROLE_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx print',
-        usage='''
-bmx print -h
-bmx print [--username USERNAME] [--duration DURATION] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
-'''
+        usage=BMX_PRINT_USAGE
     )
 
     parser.add_argument('--username', help='the Okta username')
     parser.add_argument(
         '--duration',
         default=3600,
-        help='the requested STS-token lease duration'
+        help=BMX_DURATION_HELP
     )
-    parser.add_argument('--account', default=None, help='the aws account name to auth against')
-    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     formatting_group = parser.add_mutually_exclusive_group()
     formatting_group.add_argument(
         '-j',
-        help='format the credentials as JSON',
+        help=BMX_PRINT_JSON_HELP,
         action='store_true'
     )
     formatting_group.add_argument(
         '-b',
-        help='format the credentials for Bash',
+        help=BMX_PRINT_BASH_HELP,
         action='store_true'
     )
     formatting_group.add_argument(
         '-p',
-        help='format the credentials for PowerShell',
+        help=BMX_PRINT_POWERSHELL_HELP,
         action='store_true'
     )
 
