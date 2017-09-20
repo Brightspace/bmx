@@ -32,4 +32,3 @@ class AwsCredentials:
         return AWS_EXPIRATION_KEY in self.keys and \
                 dateutil.parser.parse(self.keys[AWS_EXPIRATION_KEY]) <= \
                 datetime.now(timezone.utc)
-

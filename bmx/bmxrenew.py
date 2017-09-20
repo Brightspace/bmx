@@ -1,6 +1,3 @@
-import configparser
-import sys
-import os
 import argparse
 
 import bmx.credentialsutil as credentialsutil
@@ -38,5 +35,5 @@ def cmd(args):
     credentialsutil.write_credentials(stsutil.get_credentials(
             known_args.username, known_args.duration,
             app=known_args.account, role=known_args.role))
-     
+
     return 0
