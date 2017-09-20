@@ -30,26 +30,13 @@ class AwsCredentialsTest(unittest.TestCase):
             AwsCredentials.normalize_keys({'Expiration': expected_expiration})
         self.assertEqual(expected_expiration, normalized_keys['Expiration'])
 
-    def test_get_dict_from_credentials(self):
-        credentials = AwsCredentials(
-            {'expected_key': 'expected_value'},
-            'expected_account',
-            'expected_role')
-        self.assertDictEqual({
-            'expected_account': {
-                'expected_role': {
-                    'expected_key': 'expected_value'
-                }
-            }
-        }, credentials.get_dict())
-
     def test_are_expired_returns_true_when_expiration_is_in_the_past(self):
         self.assertTrue(AwsCredentials(
             {
                 'Expiration': datetime.now(timezone.utc) - timedelta(days=1)
             },
             'expected_account',
-            'expected_role').are_expired())
+            'expected_role').have_expired())
 
     def test_are_expired_returns_false_when_expiration_is_in_the_future(self):
         self.assertFalse(AwsCredentials(
@@ -57,4 +44,4 @@ class AwsCredentialsTest(unittest.TestCase):
                 'Expiration': datetime.now(timezone.utc) + timedelta(days=1)
             },
             'expected_account',
-            'expected_role').are_expired())
+            'expected_role').have_expired())
