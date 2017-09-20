@@ -139,8 +139,9 @@ def validate_credentials(credentials):
     raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
 
 def remove_default_credentials(credentials_doc):
+    app = role = None
     if BMX_META_KEY not in credentials_doc:
-        return credentials_doc, None, None
+        return credentials_doc, app, role
 
     default_settings = credentials_doc.get(BMX_META_KEY, {}).get(BMX_DEFAULT_KEY, {})
     app = default_settings.get(AWS_ACCOUNT_KEY)
@@ -153,18 +154,18 @@ def remove_default_credentials(credentials_doc):
 
 def remove_named_credentials(credentials_doc, app, role):
     credentials_doc_removed = copy.deepcopy(credentials_doc)
-    number_of_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
+    number_of_account_credentials = len(credentials_doc[BMX_CREDENTIALS_KEY])
 
     if (app in credentials_doc[BMX_CREDENTIALS_KEY] and
         role in credentials_doc[BMX_CREDENTIALS_KEY][app]):
-        number_of_roles_in_app = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
+        number_of_roles_in_account_of_interest = len(credentials_doc[BMX_CREDENTIALS_KEY][app])
 
-        if number_of_credentials > 1:
-            if number_of_roles_in_app > 1:
+        if number_of_account_credentials > 1:
+            if number_of_roles_in_account_of_interest > 1:
                 del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
             else:
                 del credentials_doc_removed[BMX_CREDENTIALS_KEY][app]
-        elif number_of_roles_in_app > 1:
+        elif number_of_roles_in_account_of_interest > 1:
             del credentials_doc_removed[BMX_CREDENTIALS_KEY][app][role]
         else:
             del credentials_doc_removed[BMX_CREDENTIALS_KEY]
