@@ -12,21 +12,21 @@ import awscli.clidriver
 import bmx
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
+from bmx.locale.options import (BMX_AWS_USAGE,
+                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx aws',
-        usage='''
+        usage=BMX_AWS_USAGE
+    )
 
-bmx aws -h
-bmx aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISUBCOMMAND ...'''
-)
     parser.add_argument('--username',
-        help='specify username instead of being prompted')
+        help=BMX_USERNAME_HELP)
 
-    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
 
-    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     return parser
 

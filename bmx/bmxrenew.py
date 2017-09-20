@@ -2,30 +2,26 @@ import argparse
 
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
+from bmx.locale.options import (BMX_RENEW_USAGE,
+                                BMX_ACCOUNT_HELP, BMX_DURATION_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx renew',
-        usage='''
-
-bmx renew -h
-bmx renew [--username USERNAME]
-          [--duration DURATION]
-          [--account ACCOUNT]
-          [--role ROLE]'''
-)
+        usage=BMX_RENEW_USAGE
+    )
     parser.add_argument('--username',
-        help='specify username instead of being prompted')
+        help=BMX_USERNAME_HELP)
 
     parser.add_argument(
         '--duration',
         default=3600,
-        help='the requested STS-token lease duration'
+        help=BMX_DURATION_HELP
     )
 
-    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
 
-    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     return parser
 

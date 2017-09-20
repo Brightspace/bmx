@@ -4,29 +4,25 @@ import argparse
 
 import bmx
 import bmx.credentialsutil as credentialsutil
+from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
+                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
         prog='bmx write',
-        usage='''
-
-bmx write -h
-bmx write [--username USERNAME]
-          [--profile PROFILE]
-          [--account ACCOUNT]
-          [--role ROLE]'''
-)
+        usage=BMX_WRITE_USAGE
+    )
     parser.add_argument('--username',
-        help='specify username instead of being prompted')
+        help=BMX_USERNAME_HELP)
 
     parser.add_argument(
         '--profile',
         default='default',
-        help='the profile to write to the credentials file')
+        help=BMX_WRITE_PROFILE_HELP)
 
-    parser.add_argument('--account', default=None, help='the aws account name to auth against')
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
 
-    parser.add_argument('--role', default=None, help='the aws role name to auth as')
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     return parser
 
