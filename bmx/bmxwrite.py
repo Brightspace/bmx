@@ -42,7 +42,7 @@ def cmd(args):
 
     bmx_credentials = credentialsutil.load_bmx_credentials()
     aws_credentials = bmx_credentials.get_credentials(
-            app=known_args.account, role=known_args.role)
+            known_args.account, known_args.role)
 
     if not aws_credentials:
         print('Requesting a token from AWS STS...')
