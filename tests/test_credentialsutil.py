@@ -1,5 +1,119 @@
 import unittest
 
+from bmx.credentialsutil import BmxCredentials
+from bmx.constants import (AWS_ACCOUNT_KEY, AWS_ROLE_KEY,
+                           BMX_DEFAULT_KEY, BMX_META_KEY, BMX_VERSION_KEY,
+                           BMX_CREDENTIALS_KEY, BMX_CREDENTIALS_VERSION)
+
+UNEXPECTED_ACCOUNT = 'unexpected_account'
+UNEXPECTED_ROLE = 'unexpected_role'
+EXPECTED_ACCOUNT = 'expected_account'
+EXPECTED_ROLE = 'expected_role'
+UNEXPECTED_ROLE_KEYS = {
+    'AccessKeyId': 'invalid',
+    'SecretAccessKey': 'invalid',
+    'SessionToken': 'invalid'
+}
+EXPECTED_ROLE_KEYS = {
+    'AccessKeyId': 'valid',
+    'SecretAccessKey': 'valid',
+    'SessionToken': 'valid'
+}
+
+
+class RemoveCredentialsUtilTests(unittest.TestCase):
+    def check_expected_removal(self, initial_creds, expected_creds, account, role):
+        credentials = BmxCredentials(initial_creds)
+        result = credentials.remove_credentials(account, role)
+
+        self.assertEqual(result.account, account if account else UNEXPECTED_ACCOUNT)
+        self.assertEqual(result.role, role if role else UNEXPECTED_ROLE)
+        self.assertDictEqual(UNEXPECTED_ROLE_KEYS, result.keys)
+
+        self.assertDictEqual(expected_creds, credentials.credentials_doc)
+
+    def test_invalid_remove_credentials_input(self):
+        for account, role in [(None, 'expected_role'), ('expected_account', None)]:
+            with self.assertRaises(ValueError):
+                BmxCredentials({}).remove_credentials(account, role)
+
+    def test_default_remove_credentials_only_default(self):
+        expected_credentials = {
+            BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+        }
+
+        for account, role in [(None, None), (UNEXPECTED_ACCOUNT, UNEXPECTED_ROLE)]:
+            initial_credentials = {
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
+                        AWS_ACCOUNT_KEY: UNEXPECTED_ACCOUNT,
+                        AWS_ROLE_KEY: UNEXPECTED_ROLE
+                    }
+                },
+                BMX_CREDENTIALS_KEY: {
+                    UNEXPECTED_ACCOUNT: {
+                        UNEXPECTED_ROLE:  UNEXPECTED_ROLE_KEYS
+                    }
+                }
+            }
+            self.check_expected_removal(initial_credentials, expected_credentials, account, role)
+
+    def test_default_remove_credentials_with_non_default(self):
+        expected_credentials = {
+            BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+            BMX_CREDENTIALS_KEY: {
+                EXPECTED_ACCOUNT: {
+                    EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                }
+            }
+        }
+
+        for account, role in [(None, None), (UNEXPECTED_ACCOUNT, UNEXPECTED_ROLE)]:
+            initial_credentials = {
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
+                        AWS_ACCOUNT_KEY: UNEXPECTED_ACCOUNT,
+                        AWS_ROLE_KEY: UNEXPECTED_ROLE
+                    }
+                },
+                BMX_CREDENTIALS_KEY: {
+                    UNEXPECTED_ACCOUNT: {
+                        UNEXPECTED_ROLE: UNEXPECTED_ROLE_KEYS
+                    },
+                    EXPECTED_ACCOUNT: {
+                        EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                    }
+                }
+            }
+            self.check_expected_removal(initial_credentials, expected_credentials, account, role)
+
+    def test_remove_credentials_specified_multirole(self):
+        expected_credentials = {
+            BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+            BMX_CREDENTIALS_KEY: {
+                EXPECTED_ACCOUNT: {
+                    EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                }
+            }
+        }
+
+        initial_credentials = {
+            BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+            BMX_CREDENTIALS_KEY: {
+                EXPECTED_ACCOUNT: {
+                    EXPECTED_ROLE: EXPECTED_ROLE_KEYS,
+                    UNEXPECTED_ROLE: UNEXPECTED_ROLE_KEYS
+                }
+
+            }
+        }
+
+        self.check_expected_removal(initial_credentials, expected_credentials, EXPECTED_ACCOUNT, UNEXPECTED_ROLE)
+
+
+"""
 import bmx.credentialsutil as credentialsutil
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY,
                            BMX_DEFAULT_KEY, BMX_META_KEY, BMX_VERSION_KEY)
@@ -96,120 +210,7 @@ class CredentialsUtilTests(unittest.TestCase):
                 self.assertRaises(ValueError, credentialsutil.validate_credentials, test)
 
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY, BMX_VERSION_KEY)
-
-
-class BmxWriteTests(unittest.TestCase):
-    def test_remove_default_credentials_empty(self):
-        expected_result = {BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION}
-        result, app, role = credentialsutil.remove_default_credentials(expected_result)
-        self.assertDictEqual(result, expected_result)
-
-    def test_remove_named_credentials_multiple_account_one_roles(self):
-        initial_credentials = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    }
-                },
-                'a2': {
-                    'r2a': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        expected_result = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        result = credentialsutil.remove_named_credentials(initial_credentials, 'a2', 'r2a' )
-        self.assertDictEqual(result, expected_result)
-
-    def test_remove_named_credentials_one_account_multiple_roles(self):
-        initial_credentials = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    },
-                    'r1b': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        expected_result = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        result = credentialsutil.remove_named_credentials(initial_credentials, 'a1', 'r1b' )
-        self.assertDictEqual(result, expected_result)
-
-    def test_remove_named_credentials_one_account_one_role(self):
-        initial_credentials = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        expected_result = {}
-        result = credentialsutil.remove_named_credentials(initial_credentials, 'a1', 'r1a' )
-        self.assertDictEqual(result, expected_result)
-
-    def test_remove_named_credentials_multiple_account_multiple_roles(self):
-        initial_credentials = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1a': {
-                        'k': 'v'
-                    },
-                    'r1b': {
-                        'k': 'v'
-                    }
-                },
-                'a2': {
-                    'r2a': {
-                        'k': 'v'
-                    },
-                    'r2b': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        expected_result = {
-            BMX_CREDENTIALS_KEY: {
-                'a1': {
-                    'r1b': {
-                        'k': 'v'
-                    }
-                },
-                'a2': {
-                    'r2a': {
-                        'k': 'v'
-                    },
-                    'r2b': {
-                        'k': 'v'
-                    }
-                }
-            }
-        }
-        result = credentialsutil.remove_named_credentials(initial_credentials, 'a1', 'r1a' )
-        self.assertDictEqual(result, expected_result)
+"""
 
 if __name__ == '__main__':
     unittest.main()
