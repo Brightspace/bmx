@@ -1,5 +1,8 @@
 import unittest
 
+from unittest.mock import Mock
+
+from bmx.aws_credentials import AwsCredentials
 from bmx.credentialsutil import BmxCredentials
 from bmx.constants import (AWS_ACCOUNT_KEY, AWS_ROLE_KEY,
                            BMX_DEFAULT_KEY, BMX_META_KEY, BMX_VERSION_KEY,
@@ -21,7 +24,7 @@ EXPECTED_ROLE_KEYS = {
 }
 
 
-class RemoveCredentialsUtilTests(unittest.TestCase):
+class CredentialsUtilTests(unittest.TestCase):
     def check_expected_removal(self, initial_creds, expected_creds, account, role):
         credentials = BmxCredentials(initial_creds)
         result = credentials.remove_credentials(account, role)
@@ -36,6 +39,47 @@ class RemoveCredentialsUtilTests(unittest.TestCase):
         for account, role in [(None, 'expected_role'), ('expected_account', None)]:
             with self.assertRaises(ValueError):
                 BmxCredentials({}).remove_credentials(account, role)
+
+    def test_validate_should_throw_when_credentials_doc_invalid(self):
+        with self.assertRaises(ValueError):
+            BmxCredentials({'foo': 'bar'}).validate()
+
+    def test_put_sets_default_and_account_role(self):
+        cut = BmxCredentials({})
+
+        cut.put_credentials(AwsCredentials(EXPECTED_ROLE_KEYS,
+                EXPECTED_ACCOUNT, EXPECTED_ROLE))
+
+        self.assertEqual({
+            BMX_META_KEY: {
+                BMX_DEFAULT_KEY: {
+                    AWS_ACCOUNT_KEY: EXPECTED_ACCOUNT,
+                    AWS_ROLE_KEY: EXPECTED_ROLE
+                }
+            },
+            BMX_CREDENTIALS_KEY: {
+                EXPECTED_ACCOUNT: {
+                    EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                }
+            }}, cut.credentials_doc)
+
+    def test_invalid_get_credentials_input(self):
+        for account, role in [(None, 'expected_role'), ('expected_account', None)]:
+            self.assertIsNone(BmxCredentials({}).get_credentials(account, role))
+
+    def test_get_credentials_should_use_default_when_account_and_role_are_not_specified(self):
+        self.assertEqual(EXPECTED_ROLE_KEYS, BmxCredentials({
+            'meta': {
+                'default': {
+                    'account': EXPECTED_ACCOUNT,
+                    'role': EXPECTED_ROLE
+                }
+            }, 'credentials': {
+                EXPECTED_ACCOUNT: {
+                    EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                }
+            }
+        }).get_credentials().keys)
 
     def test_default_remove_credentials_only_default(self):
         expected_credentials = {
