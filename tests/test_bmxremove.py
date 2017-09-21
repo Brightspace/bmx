@@ -37,7 +37,7 @@ class BmxRemoveTests(unittest.TestCase):
         mock_load_bmx_credentials.return_value = mock_bmx_credentials
 
 
-        bmxremove.cmd(expected_args)
+        self.assertEqual(0, bmxremove.cmd(expected_args))
         mock_create_parser.return_value.parse_known_args.assert_called_once_with(expected_args)
         mock_load_bmx_credentials.assert_called_once()
         mock_bmx_credentials.remove_credentials.assert_called_once_with(expected_account, expected_role)
