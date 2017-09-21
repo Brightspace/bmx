@@ -2,6 +2,8 @@
 
 class MinMenu:
     def __init__(self, title, items, prompt, read_function=input):
+        if not items or len(items) < 1:
+            raise ValueError("At least one item required.")
         self.title = title
         self.items = items
         self.prompt = prompt

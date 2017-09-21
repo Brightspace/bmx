@@ -21,14 +21,16 @@ class PromptTests(unittest.TestCase):
             VALUE,
             prompt.prompt_for_value(read_function, PROMPT))
 
+    def test_invalid_minmenu(self):
+        with self.assertRaises(ValueError):
+            prompt.MinMenu(TITLE, [], PROMPT)
+
     @patch('bmx.prompt.MinMenu.prompt_for_choice')
     def test_get_selection_should_return_0_when_items_is_empty_or_single(self, mock_prompt_for_choice):
-        for i in [[], ['foo']]:
-            with self.subTest(i=i):
-                menu = prompt.MinMenu(TITLE, i, PROMPT)
+            menu = prompt.MinMenu(TITLE, ['foo'], PROMPT)
 
-                self.assertEqual(0, menu.get_selection())
-                mock_prompt_for_choice.assert_not_called()
+            self.assertEqual(0, menu.get_selection())
+            mock_prompt_for_choice.assert_not_called()
 
     @patch('bmx.prompt.MinMenu.prompt_for_choice')
     def test_get_selection_should_prompt_when_items_has_multiple(self, mock_prompt_for_choice):
