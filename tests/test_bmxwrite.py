@@ -50,6 +50,7 @@ class BmxWriteTests(unittest.TestCase):
             self.assertEqual(expected_aws_path, actual_aws_path)
 
     @patch('bmx.bmxwrite.get_credentials_path', return_value='credential_path')
+    @patch('builtins.open')
     @patch('configparser.ConfigParser')
     def test_write_credentials(self, mock_config, *args):
         credentials = AwsCredentials({
