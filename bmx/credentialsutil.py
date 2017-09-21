@@ -37,10 +37,10 @@ class BmxCredentials:
         self.validate()
 
     def get_credentials(self, app=None, role=None):
-        if not app and role or app and not role:
+        if (not app and role) or (app and not role):
             return None
 
-        if not app and not role:
+        if (not app) and (not role):
             app, role = self.get_default_reference()
 
         return_value = None
@@ -64,14 +64,14 @@ class BmxCredentials:
         self.validate()
 
     def remove_credentials(self, app=None, role=None):
-        if app and not role or not app and role:
+        if (not app and role) or (app and not role):
             message = f'Failed to remove credentials.\n' \
                       f'Must specify both account and role or neither.\n' \
                       f'Account: {app}\n' \
                       f'Role: {role}'
             raise ValueError(message)
 
-        if not app and not role:
+        if (not app) and (not role):
             app, role = self.get_default_reference()
 
         aws_keys = self.credentials_doc.get(
