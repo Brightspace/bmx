@@ -32,8 +32,8 @@ class BmxRemoveTests(unittest.TestCase):
                 'role': expected_role
             }
         )]
-        mock_bmx_credentials = Mock()
 
+        mock_bmx_credentials = mock_load_bmx_credentials.return_value
         mock_load_bmx_credentials.return_value = mock_bmx_credentials
 
 
