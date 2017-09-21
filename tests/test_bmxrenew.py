@@ -47,7 +47,7 @@ class BmxRenewTests(unittest.TestCase):
     @patch('bmx.stsutil.get_credentials', return_value=create_mock_aws_credentials())
     @patch('bmx.credentialsutil.load_bmx_credentials')
     @patch('bmx.bmxrenew.create_parser')
-    def test_cmd_should_delegate_to_aws_always(self,
+    def test_cmd_should_renew_credentials_always(self,
             mock_create_parser, mock_load_bmx_credentials, mock_sts_get_credentials):
 
         mock_parser = mock_create_parser.return_value
