@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timezone
-import dateutil
+import dateutil.parser
 
 from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY, AWS_EXPIRATION_KEY
 
