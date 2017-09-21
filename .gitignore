@@ -6,3 +6,4 @@ bmx.egg-info/
 .cache
 build
 .coverage
+.*.swp

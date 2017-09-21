@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import contextlib
 import io
 import os
@@ -9,7 +7,6 @@ import argparse
 
 import awscli.clidriver
 
-import bmx
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
 from bmx.locale.options import (BMX_AWS_USAGE,
@@ -21,27 +18,27 @@ def create_parser():
         usage=BMX_AWS_USAGE
     )
 
-    parser.add_argument('--username',
-        help=BMX_USERNAME_HELP)
-
-    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
-
-    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
+    parser.add_argument('--username', help=BMX_USERNAME_HELP)
+    parser.add_argument('--account', help=BMX_ACCOUNT_HELP)
+    parser.add_argument('--role', help=BMX_ROLE_HELP)
 
     return parser
 
 def cmd(args):
     [known_args, unknown_args] = create_parser().parse_known_args(args)
-    credentials = bmx.fetch_credentials(
-        username=known_args.username,
-        app=known_args.account,
-        role=known_args.role
-    )
+    bmx_credentials = credentialsutil.load_bmx_credentials()
+    aws_credentials = bmx_credentials.get_credentials(
+            app=known_args.account, role=known_args.role)
+
+    if not aws_credentials:
+        print('Requesting a token from AWS STS...')
+        aws_credentials = stsutil.get_credentials(
+                known_args.username, 3600, known_args.account, known_args.role)
 
     while True:
-        os.environ['AWS_ACCESS_KEY_ID'] = credentials.keys['AccessKeyId']
-        os.environ['AWS_SECRET_ACCESS_KEY'] = credentials.keys['SecretAccessKey']
-        os.environ['AWS_SESSION_TOKEN'] = credentials.keys['SessionToken']
+        os.environ['AWS_ACCESS_KEY_ID'] = aws_credentials.keys['AccessKeyId']
+        os.environ['AWS_SECRET_ACCESS_KEY'] = aws_credentials.keys['SecretAccessKey']
+        os.environ['AWS_SESSION_TOKEN'] = aws_credentials.keys['SessionToken']
 
         try:
             out = io.StringIO()
@@ -54,21 +51,16 @@ def cmd(args):
 
         if ret == 255 and (
             re.search('ExpiredToken', err.getvalue()) or
-            re.search('credentials', err.getvalue())
-        ):
+            re.search('credentials', err.getvalue())):
+
             print("Your AWS STS token has expired.  Renewing...")
-
-            credentials = stsutil.get_credentials(
-                known_args.username,
-                3600,
-                app=known_args.account,
-                role=known_args.role
-            )
+            aws_credentials = stsutil.get_credentials(
+                    known_args.username, 3600, app=known_args.account, role=known_args.role)
         else:
-            if ret == 0:
-                credentialsutil.write_credentials(credentials)
-
             break
+
+    bmx_credentials.put_credentials(aws_credentials)
+    bmx_credentials.write()
 
     errstring = err.getvalue()
     if errstring.strip():
@@ -79,6 +71,3 @@ def cmd(args):
         print(outstring)
 
     return ret
-
-def main():
-    sys.exit(cmd(sys.argv))

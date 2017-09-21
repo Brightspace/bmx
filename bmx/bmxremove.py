@@ -13,14 +13,13 @@ def create_parser():
     parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
     parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
-
     return parser
 
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
-    credentialsutil.remove_credentials(known_args.account, known_args.role)
+
+    bmx_credentials = credentialsutil.load_bmx_credentials()
+    bmx_credentials.remove_credentials(known_args.account, known_args.role)
+    bmx_credentials.write()
 
     return 0
-
-def main():
-    sys.exit(cmd(sys.argv))

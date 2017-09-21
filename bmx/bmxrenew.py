@@ -11,14 +11,7 @@ def create_parser():
         prog='bmx renew',
         usage=BMX_RENEW_USAGE
     )
-    parser.add_argument('--username',
-        help=BMX_USERNAME_HELP)
-
-    parser.add_argument(
-        '--duration',
-        default=3600,
-        help=BMX_DURATION_HELP
-    )
+    parser.add_argument('--username', help=BMX_USERNAME_HELP)
 
     parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
 
@@ -29,8 +22,16 @@ def create_parser():
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
 
-    credentialsutil.write_credentials(stsutil.get_credentials(
-            known_args.username, known_args.duration,
-            app=known_args.account, role=known_args.role))
+    bmx_credentials = credentialsutil.load_bmx_credentials()
+
+    if not known_args.account and not known_args.role:
+        app, role = bmx_credentials.get_default_reference()
+    else:
+        app, role = known_args.account, known_args.role
+
+    bmx_credentials.put_credentials(stsutil.get_credentials(
+                known_args.username, 3600, app, role))
+
+    bmx_credentials.write()
 
     return 0
