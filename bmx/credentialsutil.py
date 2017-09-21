@@ -16,7 +16,7 @@ def get_bmx_credentials_path():
     return os.path.join(get_bmx_path(), 'credentials')
 
 def get_bmx_cookie_session_path():
-    return os.path.join(get_bmx_path(), 'cookies.state')
+    return os.path.join(get_bmx_path(), 'session')
 
 def load_bmx_credentials(credentials_path=get_bmx_credentials_path()):
     if os.path.exists(credentials_path):
