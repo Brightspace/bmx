@@ -112,6 +112,31 @@ class RemoveCredentialsUtilTests(unittest.TestCase):
 
         self.check_expected_removal(initial_credentials, expected_credentials, EXPECTED_ACCOUNT, UNEXPECTED_ROLE)
 
+    def test_remove_credentials_invalid_ref(self):
+        for account, role in [('invalid_account', 'invalid_role'),
+                              (EXPECTED_ACCOUNT, 'invalid_role'),
+                              ('invalid_account', EXPECTED_ROLE)]:
+            initial_credentials = {
+                BMX_VERSION_KEY: BMX_CREDENTIALS_VERSION,
+                BMX_META_KEY: {
+                    BMX_DEFAULT_KEY: {
+                        AWS_ACCOUNT_KEY: EXPECTED_ACCOUNT,
+                        AWS_ROLE_KEY: EXPECTED_ROLE
+                    }
+                },
+                BMX_CREDENTIALS_KEY: {
+                    EXPECTED_ACCOUNT: {
+                        EXPECTED_ROLE: EXPECTED_ROLE_KEYS
+                    }
+                }
+            }
+            expected_credentials = dict(initial_credentials)
+            credentials = BmxCredentials(initial_credentials)
+
+            result = credentials.remove_credentials(account, role)
+
+            self.assertEqual(result, None)
+            self.assertDictEqual(expected_credentials, credentials.credentials_doc)
 
 """
 import bmx.credentialsutil as credentialsutil
