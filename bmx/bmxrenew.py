@@ -2,8 +2,7 @@ import argparse
 
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
-from bmx.locale.options import (BMX_RENEW_USAGE,
-                                BMX_ACCOUNT_HELP, BMX_DURATION_HELP,
+from bmx.locale.options import (BMX_RENEW_USAGE, BMX_ACCOUNT_HELP,
                                 BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 def create_parser():

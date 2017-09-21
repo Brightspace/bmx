@@ -1,5 +1,4 @@
 import os
-import copy
 
 import yaml
 from cerberus import Validator
@@ -172,4 +171,3 @@ class BmxCredentials:
         if validator.validate(self.credentials_doc):
             return True
         raise ValueError('ERROR: Invalid ~/.bmx/credentials file: {0}'.format(validator.errors))
-
