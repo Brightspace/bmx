@@ -97,7 +97,8 @@ class BmxWriteTests(unittest.TestCase):
                 'profile': expected_profile
             }
         )]
-        mock_bmx_credentials = Mock()
+
+        mock_bmx_credentials = mock_load_bmx_credentials.return_value
         mock_bmx_credentials.get_credentials.return_value = None
         mock_get_credentials.return_value = expected_aws_credentials
         mock_load_bmx_credentials.return_value = mock_bmx_credentials
