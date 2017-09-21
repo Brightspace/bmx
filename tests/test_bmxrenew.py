@@ -60,8 +60,9 @@ class BmxRenewTests(unittest.TestCase):
 
         mock_parser.parse_known_args.assert_called_with([])
         mock_bmx_credentials.get_default_reference.assert_called()
+        mock_sts_get_credentials.assert_called_with(USERNAME, 3600, APP, ROLE)
         mock_bmx_credentials.put_credentials.assert_called_with(
                 mock_sts_get_credentials.return_value)
 
 if __name__ == '__main__':
-    unittest.main();
+    unittest.main()
