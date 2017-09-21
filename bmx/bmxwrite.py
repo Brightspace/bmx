@@ -11,10 +11,10 @@ from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
 def create_parser():
     parser = argparse.ArgumentParser(prog='bmx write', usage=BMX_WRITE_USAGE)
 
-    parser.add_argument('--username', help=BMX_USERNAME_HELP) 
+    parser.add_argument('--username', default=None, help=BMX_USERNAME_HELP)
     parser.add_argument('--profile', default='default', help=BMX_WRITE_PROFILE_HELP)
-    parser.add_argument('--account', help=BMX_ACCOUNT_HELP)
-    parser.add_argument('--role', help=BMX_ROLE_HELP)
+    parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
+    parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     return parser
 
@@ -42,7 +42,7 @@ def cmd(args):
 
     bmx_credentials = credentialsutil.load_bmx_credentials()
     aws_credentials = bmx_credentials.get_credentials(
-            app=known_args.account, role=known_args.role)
+            known_args.account, known_args.role)
 
     if not aws_credentials:
         print('Requesting a token from AWS STS...')
