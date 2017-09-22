@@ -6,10 +6,10 @@
 BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  It uses your Okta identity to create short-term AWS STS tokens, instead of needing long-term IAM access keys.  BMX manages your STS tokens with five commands:
 
 1. `bmx aws` wraps the AWS CLI, calling the CLI on your behalf and updating tokens as necessary.  Example: `bmx aws cloudformation describe-stacks`.
-1. `bmx print` writes your short-term tokens to `stdout` as AWS environment variables.  You can execute `bmx print`'s output to make the environment variables available to your shell.  Example: `bmx print`.   
-1. `bmx write` writes your short-term tokens to `~/.aws/credentials`.  Example: `bmx write`.
-1. `bmx renew` requests a new token with a one-hour TTL.  Example: `bmx renew`.
-1. `bmx remove` forgets a token.  Example `bmx remove`.
+1. `bmx print` writes your short-term tokens to `stdout` as AWS environment variables.  You can execute `bmx print`'s output to make the environment variables available to your shell.
+1. `bmx write` writes your short-term tokens to `~/.aws/credentials`.
+1. `bmx renew` requests a new token with a one-hour TTL.
+1. `bmx remove` forgets a token.
 
 BMX prints detailed usage information when you run `bmx -h` or `bmx <cmd> -h`.
 
