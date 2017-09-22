@@ -53,4 +53,4 @@ BMX_WRITE_USAGE = '''
 bmx write -h
 bmx write [--username USERNAME] [--account ACCOUNT] [--role ROLE] [--profile PROFILE]'''
 
-BMX_WRITE_PROFILE_HELP = 'the target profile in ~/.aws/credentials'
+BMX_WRITE_PROFILE_HELP = 'use the specified profile in ~/.aws/credentials'
