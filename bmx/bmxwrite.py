@@ -45,7 +45,6 @@ def cmd(args):
             known_args.account, known_args.role)
 
     if not aws_credentials:
-        print('Requesting a token from AWS STS...')
         aws_credentials = stsutil.get_credentials(
                 known_args.username, 3600, known_args.account, known_args.role)
 
