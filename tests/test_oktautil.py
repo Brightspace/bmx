@@ -12,6 +12,7 @@ from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL
 import bmx.oktautil
 
 SESSION_ID = 'session id'
+COOKIES = 'cookies'
 APP_URL = 'app url'
 SAML_VALUE = 'saml value'
 
@@ -87,6 +88,52 @@ class OktaUtilTests(unittest.TestCase):
             call(STATE, FACTOR_ID, TOTP_CODE)
         ])
 
+    @patch('getpass.getpass')
+    @patch('bmx.oktautil.create_auth_client')
+    def test_authenticate_should_fail_for_unimplemented_factor(self, mock_auth_client, *args):
+        mock_auth_client.return_value.authenticate.return_value = create_auth_response_mock('unimplemented-factor')
+        self.assertRaises(NotImplementedError, bmx.oktautil.get_new_session, USERNAME)
+
+    @patch('bmx.oktautil.get_new_session')
+    @patch('bmx.oktautil.get_cached_session', return_value=(SESSION_ID, COOKIES))
+    def test_get_okta_session_returns_cached_session(self, mock_cached, mock_new):
+        self.assertEqual((SESSION_ID, COOKIES), bmx.oktautil.get_okta_session(USERNAME))
+        self.assertFalse(mock_new.called)
+
+    @patch('bmx.oktautil.set_cached_session')
+    @patch('bmx.oktautil.get_new_session', return_value=(SESSION_ID, COOKIES, USERNAME))
+    @patch('bmx.oktautil.get_cached_session', return_value=(SESSION_ID, None))
+    def test_get_okta_session_gets_new_session_if_no_cache(self, mock_cached, mock_new, *args):
+        self.assertEqual((SESSION_ID, COOKIES), bmx.oktautil.get_okta_session(USERNAME))
+
+    def test_create_auth_client_should_pass(self):
+        okta.AuthClient.__init__ = Mock(return_value=None)
+
+        bmx.oktautil.create_auth_client()
+
+        okta.AuthClient.__init__.assert_called_once_with(
+            OKTA_BASE_URL,
+            OKTA_API_TOKEN,
+            headers={
+                'Authorization': None
+            }
+        )
+
+    @patch('bmx.oktautil.cookie_string', return_value=COOKIES)
+    def test_create_sessions_client_should_pass_cookies(self, *args):
+        okta.SessionsClient.__init__ = Mock(return_value=None)
+
+        bmx.oktautil.create_sessions_client(COOKIES)
+
+        okta.SessionsClient.__init__.assert_called_once_with(
+            OKTA_BASE_URL,
+            OKTA_API_TOKEN,
+            headers={
+                'Authorization': None,
+                'Cookie': COOKIES
+            }
+        )
+
     def test_create_users_client_should_pass_session_id_always(self):
         okta.UsersClient.__init__ = Mock(return_value=None)
 
@@ -135,7 +182,7 @@ class OktaUtilTests(unittest.TestCase):
         mock_expanduser.return_value = temp_dir
 
         bmx.oktautil.set_cached_session(username, cookies)
-        with open(bmx.credentialsutil.get_cookie_session_path(), 'rb') as test_cookie_state:
+        with open(bmx.credentialsutil.get_bmx_cookie_session_path(), 'rb') as test_cookie_state:
             cached_object = pickle.load(test_cookie_state)
             self.assertEqual(expected_cached_object, cached_object)
 
@@ -145,7 +192,7 @@ class OktaUtilTests(unittest.TestCase):
         for username in ['username', None]:
             with self.subTest(username=username):
                 temp_file = tempfile.mkstemp()[1]
-                with patch('bmx.credentialsutil.get_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
+                with patch('bmx.credentialsutil.get_bmx_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
                     mock_cookie_session_path.return_value = temp_file
 
                     session, cookies = bmx.oktautil.get_cached_session(username)
@@ -157,7 +204,7 @@ class OktaUtilTests(unittest.TestCase):
     @patch('pickle.load', return_value=create_state_mock('username', MockCookie({'sid': 'expectedSession'})))
     def test_get_cache_session_wrong_username(self, mock_pickle):
         temp_file = tempfile.mkstemp()[1]
-        with patch('bmx.credentialsutil.get_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
+        with patch('bmx.credentialsutil.get_bmx_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
             mock_cookie_session_path.return_value = temp_file
 
             session, cookies = bmx.oktautil.get_cached_session('wrong-username')

@@ -1,4 +1,3 @@
-import sys
 import argparse
 
 import bmx.credentialsutil as credentialsutil
