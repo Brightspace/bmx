@@ -3,26 +3,53 @@
 
 # BMX
 
-BMX helps you keep your Okta-based AWS STS tokens fresh as you use the AWS CLI.  As you run AWS CLI commands, BMX watches each one.  When BMX sees a command fail due to an expired (or a missing) token,
+BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  It uses your Okta identity to create short-term AWS STS tokens, instead of needing long-term IAM access keys.  BMX manages your STS tokens with five commands:
 
-1. it prompts for your Okta credentials and desired AWS account/role,
-2. requests a new STS token from AWS,
-3. writes the new AWS credentials to your AWS .credentials file, and
-4. reruns the AWS CLI command.
+1. `bmx aws` wraps the AWS CLI, calling the CLI on your behalf and updating tokens as necessary.  Example: `bmx aws cloudformation describe-stacks`.
+1. `bmx print` writes your short-term tokens to `stdout` as AWS environment variables.  You can execute `bmx print`'s output to make the environment variables available to your shell.  Example: `bmx print`.   
+1. `bmx write` writes your short-term tokens to `~/.aws/credentials`.  Example: `bmx write`.
+1. `bmx renew` requests a new token with a one-hour TTL.  Example: `bmx renew`.
+1. `bmx remove` forgets a token.  Example `bmx remove`.
+
+BMX prints detailed usage information when you run `bmx -h` or `bmx <cmd> -h`.
 
 [A BMX demo](https://internal.desire2learncapture.com/1/Watch/126176213250197203083009125230093245081043106145.aspx) is on Capture.
+
+## Installation
+
+BMX installs with Pip from D2L's Artifactory repository.
+
+### PowerShell
+
+```
+PS C:\Users\credekop> py -3 --version
+Python 3.6.2
+
+PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url https://d2lartifacts.artifactoryonline.com/d2lartifacts/api/pypi/pypi-local/simple bmx
+```
+
+## System Requirements
+
+* [Python 3.6+](https://www.python.org/downloads/)
+* Pip, the Python installer.
+
+## Features
+1. BMX is multi-platform: it runs on Linux and Windows.
+1. BMX maintains your Okta session for 12 hours: you enter your Okta password once a day, and BMX takes care of the rest.
+1. BMX supports TOTP and SMS MFA.
+1. BMX manages its own AWS STS tokens and never modifies `~/.aws/credentials` without explicit direction from you.  (See `bmx write`.)
 
 ## Development
 
 BMX is designed to be extensible and easily rolled out.
 
-* It's a command-driven utility (think of Git, or the AWS CLI) where new commands can be added to the base system.
+* It's a command-driven utility (think of Git, Terraform, or the AWS CLI) where new commands can be added to the base system.
 * It's on our private Artifactory repo and can be easily installed.
 
 BMX is written in Python, like the AWS CLI.
 
 * It introduces no new language dependencies.
-* BMX can easily run in the same process as the AWS CLI, reducing overhead.
+* `bmx aws` runs in the same process as the AWS CLI, reducing overhead.
 
 ### Developer Setup
 
@@ -41,38 +68,13 @@ BMX uses [Pylint](https://www.pylint.org/) to enforce styling and run quality ch
 
 **Lint**: `pylint bmx`
 
-### Current development
-
-An active PR will add two things:
-
-1. Support for specifying your Okta username as an option.
-1. A new command that prints your AWS credentials to the screen.
-
 ### Slated development
 
-There is still [lots of work to do on BMX](https://github.com/Brightspace/bmx/issues)!
+BMX has [issues](https://github.com/Brightspace/bmx/issues).
 
-## System Requirements
+## Usage Examples
 
-* [Python 3.6+](https://www.python.org/downloads/)
-* pip, the Python installer.
-
-## Installation
-
-BMX lives in D2L's Artifactory repository.  You need to tell pip about this repository when you install BMX.
-
-### PowerShell
-
-```
-PS C:\Users\credekop> py -3 --version
-Python 3.6.2
-
-PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url https://d2lartifacts.artifactoryonline.com/d2lartifacts/api/pypi/pypi-local/simple bmx
-```
-
-## Usage
-
-To use BMX, just prepend your AWS CLI calls with 'bmx '.  Example usage in Cygwin is below.
+### Getting Help
 
 ```bash
 $ python3 --version
@@ -93,7 +95,7 @@ commands:
 Copyright 2017 D2L Corporation
 ```
 
-## Example
+## `bmx aws` in Bash
 ```
 $ bmx aws cloudformation describe-stacks
 {
@@ -103,8 +105,6 @@ $ bmx aws cloudformation describe-stacks
         }
     ]
 }
-
-$ rm ~/.aws/credentials
 
 $ bmx aws cloudformation describe-stacks
 Your AWS STS token has expired.  Renewing...
