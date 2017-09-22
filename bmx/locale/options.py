@@ -1,14 +1,13 @@
 # Common Argument Parser Strings
-BMX_ACCOUNT_HELP = 'the AWS account name to auth against'
+BMX_DESCRIPTION = 'IAM-less AWS API access for humans'
+BMX_USERNAME_HELP = 'use the specified Okta username'
+BMX_ACCOUNT_HELP = 'use the specified AWS account'
+BMX_ROLE_HELP = 'use the specified AWS role'
 BMX_COPYRIGHT = 'Copyright 2017 D2L Corporation'
-BMX_DESCRIPTION = 'Okta time-out helper for AWS CLI'
-BMX_DURATION_HELP = 'requested STS-token lease duration in seconds (default: 3600)'
-BMX_ROLE_HELP = 'the AWS role name to auth as'
-BMX_USERNAME_HELP = 'specify Okta username instead of being prompted'
 
 
 # BMX AWS Argument Parser Strings
-BMX_AWS_HELP = 'run the AWS CLI, with automatic renewal of AWS credentials'
+BMX_AWS_HELP = 'run the AWS CLI, updating AWS STS tokens as necessary'
 BMX_AWS_USAGE = '''
 
 bmx aws -h
@@ -17,11 +16,11 @@ bmx aws [--username USERNAME] [--account ACCOUNT] [--role ROLE] CLICOMMAND CLISU
 
 
 # BMX PRINT Argument Parser Strings
-BMX_PRINT_HELP = 'print AWS credentials to stdout'
+BMX_PRINT_HELP = 'print an AWS STS token to stdout'
 BMX_PRINT_USAGE = '''
 
 bmx print -h
-bmx print [--username USERNAME] [--duration DURATION] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
+bmx print [--username USERNAME] [--account ACCOUNT] [--role ROLE] [-j | -b | -p]
 '''
 
 BMX_PRINT_JSON_HELP = 'format credentials as JSON'
@@ -30,34 +29,28 @@ BMX_PRINT_POWERSHELL_HELP = 'format credentials for PowerShell'
 
 
 # BMX REMOVE Argument Parser Strings
-BMX_REMOVE_HELP = 'renew AWS credentials from ~/.bmx/credentials'
+BMX_REMOVE_HELP = 'forget an AWS STS token'
 BMX_REMOVE_USAGE = '''
 
 bmx remove -h
-bmx remove [--account ACCOUNT] [--role ROLE] CLICOMMAND
+bmx remove [--account ACCOUNT] [--role ROLE]
 '''
 
 
 # BMX RENEW Argument Parser Strings
-BMX_RENEW_HELP = 'renew AWS credentials'
+BMX_RENEW_HELP = 'renew an AWS STS token'
 BMX_RENEW_USAGE = '''
 
 bmx renew -h
-bmx renew [--username USERNAME]
-          [--duration DURATION]
-          [--account ACCOUNT]
-          [--role ROLE]
+bmx renew [--username USERNAME] [--account ACCOUNT] [--role ROLE]
 '''
 
 
 # BMX WRITE Argument Parser Strings
-BMX_WRITE_HELP = 'write AWS credentials to ~/.aws/credentials'
+BMX_WRITE_HELP = 'write an AWS STS token to ~/.aws/credentials'
 BMX_WRITE_USAGE = '''
 
 bmx write -h
-bmx write [--username USERNAME]
-          [--profile PROFILE]
-          [--account ACCOUNT]
-          [--role ROLE]'''
+bmx write [--username USERNAME] [--account ACCOUNT] [--role ROLE] [--profile PROFILE]'''
 
-BMX_WRITE_PROFILE_HELP = 'the profile to write to the credentials file'
+BMX_WRITE_PROFILE_HELP = 'the target profile in ~/.aws/credentials'
