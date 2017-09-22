@@ -2,13 +2,15 @@
 
 class MinMenu:
     def __init__(self, title, items, prompt, read_function=input):
+        if not items or len(items) < 1:
+            raise ValueError("At least one item required.")
         self.title = title
         self.items = items
         self.prompt = prompt
         self.read_function = read_function
 
-    def get_selection(self):
-        if len(self.items) > 1:
+    def get_selection(self, force_prompt=False):
+        if len(self.items) > 1 or force_prompt:
             index = self.prompt_for_choice()
         else:
             index = 0
@@ -32,12 +34,9 @@ class MinMenu:
 
         return choice - 1
 
-def is_empty(string):
-    return not string or string.isspace()
-
 def prompt_for_value(read_function, prompt):
-    value = None
-    while is_empty(value):
+    while True:
         value = read_function(prompt)
-
+        if value.strip():
+            break
     return value

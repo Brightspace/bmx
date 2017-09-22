@@ -1,9 +1,10 @@
 import contextlib
 import io
 import unittest
-from unittest.mock import Mock
+from unittest.mock import (Mock, patch)
 
-import bmx.prompt
+from .context import bmx
+import bmx.prompt as prompt
 
 TITLE = 'title'
 PROMPT = 'prompt'
@@ -11,45 +12,49 @@ VALUE = 'value'
 
 
 class PromptTests(unittest.TestCase):
-    def test_is_empty_should_return_true_when_string_is_empty(self):
-        for i in [None, '', "\t  \t  ", "  \n  "]:
-            with self.subTest(i=i):
-                self.assertTrue(bmx.prompt.is_empty(i))
-
-    def test_is_empty_should_return_false_when_string_is_not_empty(self):
-        self.assertFalse(bmx.prompt.is_empty('foo'))
-
     def test_prompt_for_value_should_return_value_always(self):
         def read_function(prompt):
             self.assertEqual(PROMPT, prompt)
-
             return VALUE
 
         self.assertEqual(
             VALUE,
-            bmx.prompt.prompt_for_value(read_function, PROMPT)
-        )
+            prompt.prompt_for_value(read_function, PROMPT))
 
-    def test_get_selection_should_return_0_when_items_is_empty(self):
-        for i in [[], ['foo']]:
-            with self.subTest(i=i):
-                menu = bmx.prompt.MinMenu(TITLE, i, PROMPT)
-                menu.prompt_for_choice = Mock()
+    def test_invalid_minmenu(self):
+        with self.assertRaises(ValueError):
+            prompt.MinMenu(TITLE, [], PROMPT)
 
-                self.assertEqual(0, menu.get_selection())
+    @patch('bmx.prompt.MinMenu.prompt_for_choice')
+    def test_get_selection_should_return_0_when_items_is_empty_or_single(self, mock_prompt_for_choice):
+            menu = prompt.MinMenu(TITLE, ['foo'], PROMPT)
 
-                menu.prompt_for_choice.assert_not_called()
+            self.assertEqual(0, menu.get_selection())
+            mock_prompt_for_choice.assert_not_called()
 
-    def test_get_selection_should_prompt_when_items_has_items(self):
+    @patch('bmx.prompt.MinMenu.prompt_for_choice')
+    def test_get_selection_should_prompt_when_items_has_multiple(self, mock_prompt_for_choice):
         items = ['foo', 'bar']
-        menu = bmx.prompt.MinMenu(TITLE, items, PROMPT)
-        menu.prompt_for_choice = Mock(return_value=1)
+        expected_selection = 1
 
-        self.assertEqual(1, menu.get_selection())
+        menu = bmx.prompt.MinMenu(TITLE, items, PROMPT)
+        mock_prompt_for_choice.return_value = expected_selection
+
+        self.assertEqual(expected_selection, menu.get_selection())
+
+    @patch('bmx.prompt.MinMenu.prompt_for_choice')
+    def test_get_selection_should_prompt_when_forced(self, mock_prompt_for_choice):
+        items = ['foo']
+        expected_selection = 1
+
+        menu = bmx.prompt.MinMenu(TITLE, items, PROMPT)
+        mock_prompt_for_choice.return_value = expected_selection
+
+        self.assertEqual(expected_selection, menu.get_selection(force_prompt=True))
 
     def test_prompt_for_choice_should_prompt_for_index_always(self):
         return_value = 2
-        read_function = Mock(return_value = return_value);
+        read_function = Mock(side_effect = ['retry_when_no_value', return_value])
         menu = bmx.prompt.MinMenu(
             TITLE,
             ['one', 'two', 'three'],
@@ -64,4 +69,4 @@ class PromptTests(unittest.TestCase):
         read_function.assert_called_with(PROMPT)
 
 if __name__ == '__main__':
-    unittest.main();
+    unittest.main()

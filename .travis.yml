@@ -1,13 +1,20 @@
 language: python
 
 python:
-- '3.5'
 - '3.6'
 
 install:
-- pip install --upgrade awscli
 - pip install -r requirements.txt
+- pip install coveralls
 
 script:
-- pylint bmx
-- python -m unittest discover -s tests/
+- pylint --errors-only bmx
+- tox
+
+after_success:
+- coveralls
+
+env:
+  global:
+  # COVERALLS_REPO_TOKEN (...)
+    secure: KwYWC38vy6CYk7E7hcJIQUoD7sKqCn+VW1B+OV0Zskfdg/xXJ12s2F2/ZA0kuZOZqKwCqSrQBiGeFcnPWglGhJudHbS7jJi7wgr1ri8EiYUVijQ/zrEp2LPWmNq41Z6BpHykDTU3yeHUgeXgeORay3J1HsZL96g+HpMcgArr/EuPuDm4gXHr6IshgRhoEnKXPhaFXgUKpbOH5dKB2bmBm6Llayn1WiDZFNjfMygvjRJoNBEbfg8AgVEJCao/oB2l6R02Ac12pnKA27MJk2mAkSvEaFLSQepL4UbRziZQJc026S7djKquCo9cTZqEqsiWfxnT7UnIZOC0o05C1fC1JwiLtZQfD9tUPpaBbkHo1UsoUoCr9DExznCHccFlWeDViwe4CFj8xSXzHbzIZmKKk3RSy1/fnFyZMsM0e4/NLxozsIhLQjg8MlWNWB6DeH9AFLUtPE4pNApWGbpOY8InzhwfAFOKJyt+qVbIW4qwRAVYwhsYFPsGBsegU0O7NDzgWvrQDBo7Pne6wL/AN4ExH7VhXBQMdTiqPs0Y2RTdRh00xFWPy7LmE5v/9Ma+dazmgMOXyAf8Ihp5im9A6X3Z8kh19uU+5whWw5xsg7Yiymr+saGQFlgc68027t6L+nCKJ5Uz/SvsoxLB2WcUSU4yeptHQynVHELL3TD0NgREjAw=

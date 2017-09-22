@@ -1,124 +1,83 @@
-#!/usr/bin/python3
-
-import sys
 import json
 import argparse
-import os
-import configparser
 
-from . import bmxwrite
+import bmx.credentialsutil as credentialsutil
+import bmx.stsutil as stsutil
+from bmx.locale.options import (BMX_PRINT_USAGE,
+                                BMX_PRINT_BASH_HELP, BMX_PRINT_JSON_HELP, BMX_PRINT_POWERSHELL_HELP,
+                                BMX_USERNAME_HELP, BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog='bmx-print',
-        usage='''
-        
-bmx-print -h
-bmx-print [--username USERNAME] [--duration DURATION] [-j | -b | -p]
-bmx-print [--profile PROFILE] [-j | -b | -p]'''
+        prog='bmx print',
+        usage=BMX_PRINT_USAGE
     )
 
-    parser.add_argument('--username', help='the Okta username')
-    parser.add_argument(
-        '--duration',
-        default=3600,
-        help='the requested STS-token lease duration'
-    )
+    parser.add_argument('--username', help=BMX_USERNAME_HELP)
+    parser.add_argument('--account', help=BMX_ACCOUNT_HELP)
+    parser.add_argument('--role', help=BMX_ROLE_HELP)
 
     formatting_group = parser.add_mutually_exclusive_group()
-    formatting_group.add_argument(
-        '-j',
-        help='format the credentials as JSON',
-        action='store_true'
-    )
-    formatting_group.add_argument(
-        '-b',
-        help='format the credentials for Bash',
-        action='store_true'
-    )
-    formatting_group.add_argument(
-        '-p',
-        help='format the credentials for PowerShell',
-        action='store_true'
-    )
-
-    parser.add_argument(
-        '--profile',
-        help='reads an existing profile from the credentials file',
-        default=''
-    )
+    formatting_group.add_argument('-j', help=BMX_PRINT_JSON_HELP, action='store_true')
+    formatting_group.add_argument('-b', help=BMX_PRINT_BASH_HELP, action='store_true')
+    formatting_group.add_argument('-p', help=BMX_PRINT_POWERSHELL_HELP, action='store_true')
 
     return parser
 
-def json_format_credentials(credentials):
+def json_format_credentials(aws_keys):
     return json.dumps(
         {
-            'AccessKeyId': credentials['AccessKeyId'],
-            'SecretAccessKey': credentials['SecretAccessKey'],
-            'SessionToken': credentials['SessionToken']
+            'AccessKeyId': aws_keys['AccessKeyId'],
+            'SecretAccessKey': aws_keys['SecretAccessKey'],
+            'SessionToken': aws_keys['SessionToken']
         },
         indent=4
     )
 
-def bash_format_credentials(credentials):
+def bash_format_credentials(aws_keys):
     return """export AWS_ACCESS_KEY_ID='{}'
 export AWS_SECRET_ACCESS_KEY='{}'
 export AWS_SESSION_TOKEN='{}'""".format(
-    credentials['AccessKeyId'],
-    credentials['SecretAccessKey'],
-    credentials['SessionToken']
+    aws_keys['AccessKeyId'],
+    aws_keys['SecretAccessKey'],
+    aws_keys['SessionToken']
 )
 
-def powershell_format_credentials(credentials):
+def powershell_format_credentials(aws_keys):
     return """$env:AWS_ACCESS_KEY_ID = '{}';
 $env:AWS_SECRET_ACCESS_KEY = '{}';
 $env:AWS_SESSION_TOKEN = '{}'""".format(
-    credentials['AccessKeyId'],
-    credentials['SecretAccessKey'],
-    credentials['SessionToken']
+    aws_keys['AccessKeyId'],
+    aws_keys['SecretAccessKey'],
+    aws_keys['SessionToken']
 )
 
-def format_credentials(args, credentials):
-    formatted_credentials = None
+def format_credentials(args, aws_credentials):
+    aws_keys = aws_credentials.keys
 
     if args.b:
-        formatted_credentials = bash_format_credentials(credentials)
+        formatted_credentials = bash_format_credentials(aws_keys)
     elif args.p:
-        formatted_credentials = powershell_format_credentials(credentials)
+        formatted_credentials = powershell_format_credentials(aws_keys)
     else:
-        formatted_credentials = json_format_credentials(credentials)
+        formatted_credentials = json_format_credentials(aws_keys)
 
     return formatted_credentials
 
-def read_config(profile):
-    config = configparser.ConfigParser()
-    filename = os.path.expanduser('~/.aws/credentials')
-
-    config.read(filename)
-    access_key_id = config.get(profile, 'aws_access_key_id')
-    secret_access_key = config.get(profile, 'aws_secret_access_key')
-    session_token = config.get(profile, 'aws_session_token')
-
-    return {
-        'AccessKeyId': access_key_id,
-        'SecretAccessKey': secret_access_key,
-        'SessionToken': session_token
-    }
-
 def cmd(args):
     known_args = create_parser().parse_known_args(args)[0]
+    bmx_credentials = credentialsutil.load_bmx_credentials()
+    aws_credentials = bmx_credentials.get_credentials(
+            app=known_args.account, role=known_args.role)
 
-    if known_args.profile:
-        credentials = read_config(known_args.profile)
-    else:
-        credentials = bmxwrite.get_credentials(
-            known_args.username,
-            known_args.duration
-        )
+    if not aws_credentials:
+        print('Requesting a token from AWS STS...')
+        aws_credentials = stsutil.get_credentials(
+                known_args.username, 3600, known_args.account, known_args.role)
 
-    print(format_credentials(known_args, credentials))
+    print(format_credentials(known_args, aws_credentials))
+
+    bmx_credentials.put_credentials(aws_credentials)
+    bmx_credentials.write()
 
     return 0
-
-def main():
-    sys.exit(cmd(sys.argv))

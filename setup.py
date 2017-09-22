@@ -1,13 +1,28 @@
-from setuptools import setup, find_packages
+from setuptools import setup
+
+_PACKAGES = ['bmx', 'bmx.locale']
+
+_REQUIRES = [
+        'future>=0.16.0',
+        'lxml==4.0.0',
+        'okta>=0.0.4',
+        'pies2overrides>=2.6.7',
+        'prompt>=0.4.1',
+        'requests>=2.18.3',
+        'awscli>=1.11.0',
+        'boto3>=1.4.7',
+        'cerberus>=1.1',
+        'python-dateutil>=2.6.1'
+]
 
 setup(
     name='bmx',
-    version='0.0.2',
-    description='An AWS CLI wrapper that renews STS tokens',
+    version='1.0.0',
+    description='IAM-less AWS API access for humans',
     url='https://github.com/Brightspace/bmx',
     license='Proprietary',
     classifiers = [
-	'Development Status :: 3 - Alpha',
+	'Development Status :: 4 - Beta',
 
     	'Intended Audience :: Developers',
     	'Topic :: Security',
@@ -15,26 +30,13 @@ setup(
 	'License :: Other/Proprietary License'
     ],
     keywords='aws cli okta sts token credentials',
-    packages=find_packages(),
+    packages=_PACKAGES,
     entry_points={
         'console_scripts': [
-            'bmx=bmx.bmx:main',
-            'bmx-aws=bmx.bmxaws:main',
-            'bmx-write=bmx.bmxwrite:main',
-            'bmx-print=bmx.bmxprint:main'
+            'bmx=bmx.bmx:main'
         ]
     },
-    install_requires=[
-        'boto3>=1.4.5',
-        'future>=0.16.0',
-        'lxml>=3.7.3',
-        'okta>=0.0.4',
-        'pies2overrides>=2.6.7',
-        'prompt>=0.4.1',
-        'requests>=2.18.3',
-        'setuptools>=20.7.0'
-    ],
+    install_requires=_REQUIRES,
     author='Chris Redekop',
     author_email='chris.redekop@d2l.com'
 )
-

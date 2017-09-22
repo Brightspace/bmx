@@ -1,101 +1,119 @@
-import argparse
-import contextlib
-import io
-import json
+import os
 import unittest
 
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import (MagicMock, Mock, patch)
 
-import bmx.bmxprint
-import bmx.bmxwrite
-
-CREDENTIALS = 'credentials'
-SAML_ASSERTION = 'saml assertion'
-PRINCIPAL = 'principal'
-ROLE = 'role'
-DURATION_SECONDS = 'duration seconds'
-XPATH_RESULTS = 'xpath results'
+import bmx.bmxwrite as bmxwrite
+from bmx.aws_credentials import AwsCredentials
+from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
+                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 
 class BmxWriteTests(unittest.TestCase):
-    @patch('argparse.ArgumentParser')
-    def test_create_parser_should_create_expected_parser_always(self, mock_arg_parser):
-        parser = bmx.bmxwrite.create_parser()
+    def get_mocked_configparser(self):
+        config_parser_dict = {}
 
-        calls = parser.add_argument.call_args_list
-        self.assertEqual(2, len(calls))
+        def getitem(k):
+            return config_parser_dict[k]
 
-        self.assertEqual('--username', calls[0][0][0])
-        self.assertTrue('help' in calls[0][1])
+        def setitem(k, v):
+            config_parser_dict[k] = v
 
-        self.assertEqual('--profile', calls[1][0][0])
-        self.assertTrue('help' in calls[1][1])
+        mock_config_parser = MagicMock()
+        mock_config_parser.__getitem__.side_effect = getitem
+        mock_config_parser.__setitem__.side_effect = setitem
+        mock_config_parser.get_dict.return_value = config_parser_dict
 
-    @patch('boto3.client')
-    def test_sts_assume_role_should_request_token_always(self, mock_sts_client):
-        mock_sts_client.return_value.assume_role_with_saml.return_value = {
-            'Credentials': CREDENTIALS
-        }
+        return mock_config_parser
 
-        self.assertEqual(
-            CREDENTIALS,
-            bmx.bmxwrite.sts_assume_role(
-                SAML_ASSERTION,
-                PRINCIPAL,
-                ROLE,
-                DURATION_SECONDS
-            )
-        )
+    @patch('argparse.ArgumentParser', autospec=True)
+    def test_create_parser_should_create_expected_parser_always(self, mock_argparser_constructor):
+        parser = bmxwrite.create_parser()
 
-        mock_sts_client.assert_called_with('sts')
-        mock_sts_client.return_value.assume_role_with_saml.assert_called_with(
-            SAMLAssertion=SAML_ASSERTION,
-            PrincipalArn=PRINCIPAL,
-            RoleArn=ROLE,
-            DurationSeconds=DURATION_SECONDS
-        )
 
-    @patch('lxml.etree.fromstring')
-    def test_get_app_roles_should_search_saml_for_roles_always(self, mock_etree):
-        mock_etree.return_value.xpath.return_value=XPATH_RESULTS
+        mock_argparser_constructor.assert_called_once_with(prog='bmx write', usage=BMX_WRITE_USAGE)
+        parser.add_argument.assert_any_call('--username', default=None, help=BMX_USERNAME_HELP)
+        parser.add_argument.assert_any_call('--profile', default='default', help=BMX_WRITE_PROFILE_HELP)
+        parser.add_argument.assert_any_call('--account', default=None, help=BMX_ACCOUNT_HELP)
+        parser.add_argument.assert_any_call('--role', default=None, help=BMX_ROLE_HELP)
 
-        self.assertEqual(
-            XPATH_RESULTS,
-            bmx.bmxwrite.get_app_roles(SAML_ASSERTION)
-        )
+    def test_get_aws_path(self):
+        with patch('os.path.expanduser', return_value='user_home'):
+            expected_aws_path = os.path.join('user_home', '.aws')
+            actual_aws_path = bmxwrite.get_aws_path()
+            self.assertEqual(expected_aws_path, actual_aws_path)
 
-        mock_etree.assert_called_with(SAML_ASSERTION)
-        mock_etree.return_value.xpath.assert_called_with(
-            ''.join([
-                '//x:AttributeStatement',
-                '/x:Attribute',
-                '[@Name="https://aws.amazon.com/SAML/Attributes/Role"]/x:AttributeValue/text()'
-            ]),
-            namespaces={'x': 'urn:oasis:names:tc:SAML:2.0:assertion'}
-        )
+    def test_get_credentials_path(self):
+        with patch('bmx.bmxwrite.get_aws_path', return_value='aws_home'):
+            expected_aws_path = os.path.join('aws_home', 'credentials')
+            actual_aws_path = bmxwrite.get_credentials_path()
+            self.assertEqual(expected_aws_path, actual_aws_path)
 
-    
+    @patch('bmx.bmxwrite.get_credentials_path', return_value='credential_path')
+    @patch('builtins.open')
+    @patch('configparser.ConfigParser')
+    def test_write_credentials(self, mock_config, *args):
+        credentials = AwsCredentials({
+            'AccessKeyId': 'expectedAccessKeyId',
+            'SecretAccessKey': 'expectedSecretAccessKey',
+            'SessionToken': 'expectedSessionToken'
+        }, 'expected_account', 'expected_role')
 
-    #@patch('bmx.bmxprint.create_parser')
-    #def test_cmd_should_print_credentials_always(self, mock_arg_parser):
-        #return_value = {
-            #'AccessKeyId': ACCESS_KEY_ID,
-            #'SecretAccessKey': SECRET_ACCESS_KEY,
-            #'SessionToken': SESSION_TOKEN
-        #}
+        mock_config_parser = self.get_mocked_configparser()
+        mock_config.return_value = mock_config_parser
 
-        #bmx.bmxwrite.get_credentials = Mock(
-            #return_value=return_value
-        #)
+        bmxwrite.write_credentials(credentials, 'expected_profile')
 
-        #out = io.StringIO()
-        #with contextlib.redirect_stdout(out):
-            #self.assertEqual(0, bmx.bmxprint.cmd([]))
-        #out.seek(0)
-        #printed = json.load(out)
+        mock_config_parser.read.assert_called_once()
+        self.assertDictEqual({
+            'expected_profile': {
+                'aws_access_key_id': 'expectedAccessKeyId',
+                'aws_secret_access_key': 'expectedSecretAccessKey',
+                'aws_session_token': 'expectedSessionToken'
+            }
+        }, mock_config_parser.get_dict())
+        mock_config_parser.write.assert_called_once()
 
-        #self.assertEqual(return_value, printed)
+    @patch('bmx.stsutil.get_credentials')
+    @patch('bmx.credentialsutil.load_bmx_credentials')
+    @patch('bmx.bmxwrite.write_credentials')
+    @patch('bmx.bmxwrite.create_parser')
+    def test_bmxremove_calls_required_methods(self,
+                                              mock_create_parser,
+                                              mock_write_credentials,
+                                              mock_load_bmx_credentials,
+                                              mock_get_credentials):
+        expected_args = 'expected_args'
+        expected_username = 'expected_username'
+        expected_account = 'expected_account'
+        expected_role = 'expected_role'
+        expected_profile = 'expected_profile'
+        expected_aws_credentials = 'expected_aws_credentials'
+        mock_create_parser.return_value.parse_known_args.return_value = [
+            Mock(
+            ** {
+                'username': expected_username,
+                'account': expected_account,
+                'role': expected_role,
+                'profile': expected_profile
+            }
+        )]
+
+        mock_bmx_credentials = mock_load_bmx_credentials.return_value
+        mock_bmx_credentials.get_credentials.return_value = None
+        mock_get_credentials.return_value = expected_aws_credentials
+        mock_load_bmx_credentials.return_value = mock_bmx_credentials
+
+        self.assertEqual(0, bmxwrite.cmd(expected_args))
+
+        mock_create_parser.return_value.parse_known_args.assert_called_once_with(expected_args)
+        mock_load_bmx_credentials.assert_called_once()
+        mock_bmx_credentials.get_credentials.assert_called_once_with(expected_account, expected_role)
+        mock_get_credentials.assert_called_once_with(expected_username, 3600, expected_account, expected_role)
+        mock_write_credentials.assert_called_once_with(expected_aws_credentials, expected_profile)
+        mock_bmx_credentials.put_credentials.assert_called_once_with(expected_aws_credentials)
+        mock_bmx_credentials.write.assert_called_once()
+
 
 if __name__ == '__main__':
-    unittest.main();
+    unittest.main()

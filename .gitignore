@@ -2,3 +2,8 @@ __pycache__/
 dist/
 bmx.egg-info/
 .idea/
+.tox
+.cache
+build
+.coverage
+.*.swp
