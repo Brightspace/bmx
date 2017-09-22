@@ -17,12 +17,12 @@ _REQUIRES = [
 
 setup(
     name='bmx',
-    version='0.0.1',
-    description='An AWS CLI wrapper that renews STS tokens',
+    version='1.0.0',
+    description='IAM-less AWS API access for humans',
     url='https://github.com/Brightspace/bmx',
     license='Proprietary',
     classifiers = [
-	'Development Status :: 3 - Alpha',
+	'Development Status :: 4 - Beta',
 
     	'Intended Audience :: Developers',
     	'Topic :: Security',
