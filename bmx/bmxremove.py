@@ -1,8 +1,9 @@
 import argparse
 
 import bmx.credentialsutil as credentialsutil
-from bmx.locale.options import (BMX_REMOVE_USAGE,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
+from bmx.options import (BMX_REMOVE_USAGE,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
+
 
 def create_parser():
     parser = argparse.ArgumentParser(
