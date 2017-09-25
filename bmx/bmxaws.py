@@ -9,8 +9,9 @@ import awscli.clidriver
 
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
-from bmx.locale.options import (BMX_AWS_USAGE,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
+from bmx.options import (BMX_AWS_USAGE,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
+
 
 def create_parser():
     parser = argparse.ArgumentParser(

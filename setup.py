@@ -1,6 +1,6 @@
 from setuptools import setup
 
-_PACKAGES = ['bmx', 'bmx.locale']
+_PACKAGES = ['bmx']
 
 _REQUIRES = [
         'future>=0.16.0',
