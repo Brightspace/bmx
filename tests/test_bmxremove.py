@@ -1,10 +1,9 @@
 import unittest
-
 from unittest.mock import (Mock, patch)
-from bmx.locale.options import (BMX_REMOVE_USAGE,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 import bmx.bmxremove as bmxremove
+from bmx.options import (BMX_REMOVE_USAGE,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 
 class BmxRemoveTests(unittest.TestCase):

@@ -4,9 +4,9 @@ import argparse
 
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
+from bmx.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
-from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 def create_parser():
     parser = argparse.ArgumentParser(prog='bmx write', usage=BMX_WRITE_USAGE)

@@ -1,12 +1,11 @@
 import os
 import unittest
-
 from unittest.mock import (MagicMock, Mock, patch)
 
 import bmx.bmxwrite as bmxwrite
 from bmx.aws_credentials import AwsCredentials
-from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
+from bmx.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 
 class BmxWriteTests(unittest.TestCase):
