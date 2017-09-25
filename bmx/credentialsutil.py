@@ -82,9 +82,6 @@ class BmxCredentials:
         return AwsCredentials(aws_keys, app, role) if aws_keys else None
 
     def write(self, credentials_path=get_bmx_credentials_path()):
-        directory = os.path.dirname(credentials_path)
-        create_bmx_directory(directory)
-
         self.credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
         self.prune()
