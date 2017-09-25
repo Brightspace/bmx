@@ -1,6 +1,7 @@
 import unittest
 
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from bmx.aws_credentials import AwsCredentials
 from bmx.credentialsutil import BmxCredentials
@@ -182,6 +183,15 @@ class CredentialsUtilTests(unittest.TestCase):
             self.assertEqual(result, None)
             self.assertDictEqual(expected_credentials, credentials.credentials_doc)
 
+    @patch('os.open')
+    @patch('yaml.dump')
+    @patch('builtins.open')
+    @patch('bmx.credentialsutil.create_bmx_directory')
+    def test_write_creates_bmx_dir(self, mock_createdir, mock_builtinsopen, mock_yamldump, mock_osopen):
+        BmxCredentials({}).write()
+        mock_createdir.assert_called()
+
+
 """
 import bmx.credentialsutil as credentialsutil
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY,
@@ -280,6 +290,9 @@ class CredentialsUtilTests(unittest.TestCase):
 
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY, BMX_VERSION_KEY)
 """
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

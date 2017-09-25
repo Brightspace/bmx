@@ -174,8 +174,9 @@ class OktaUtilTests(unittest.TestCase):
 
         mock_response.raise_for_status.assert_called_with()
 
+    @patch('bmx.credentialsutil.create_bmx_directory')
     @patch('bmx.credentialsutil.get_bmx_path')
-    def test_cached_session_serializes(self, mock_expanduser):
+    def test_cached_session_serializes(self, mock_expanduser, mock_createdir):
         username, cookies = 'username', 'expected_cached_object'
         expected_cached_object = create_state_mock(username, cookies)
         temp_dir = tempfile.mkdtemp()
