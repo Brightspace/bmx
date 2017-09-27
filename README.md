@@ -13,7 +13,7 @@ BMX grants you API access to your AWS accounts, based on Okta credentials that y
 
 BMX prints detailed usage information when you run `bmx -h` or `bmx <cmd> -h`.
 
-[A BMX demo](https://internal.desire2learncapture.com/1/Watch/126176213250197203083009125230093245081043106145.aspx) is on Capture.
+[A BMX demo](https://internal.desire2learncapture.com/1/Watch/6371.aspx) is on Capture.
 
 ## Installation
 
