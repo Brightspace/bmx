@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 class MinMenu:
     def __init__(self, title, items, prompt, read_function=input):
         if not items or len(items) < 1:

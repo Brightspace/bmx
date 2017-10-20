@@ -1,4 +1,12 @@
-# bmx
+# BMX
+
+## 1.0.1
+### FEATURES
+* BMX's write command now accepts an '--output' option (#128).
+
+### BUG FIXES
+* BMX no longer creates an empty 'credentials' directory in the CWD (#124).
+* BMX no longer fails when '~/.aws/credentials' does not exist (#131).
 
 ## 1.0.0
 ### FEATURES

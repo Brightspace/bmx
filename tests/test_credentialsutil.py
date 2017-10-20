@@ -183,13 +183,13 @@ class CredentialsUtilTests(unittest.TestCase):
             self.assertEqual(result, None)
             self.assertDictEqual(expected_credentials, credentials.credentials_doc)
 
-    @patch('os.open')
     @patch('yaml.dump')
     @patch('builtins.open')
-    @patch('bmx.credentialsutil.create_bmx_directory')
-    def test_write_creates_bmx_dir(self, mock_createdir, mock_builtinsopen, mock_yamldump, mock_osopen):
-        BmxCredentials({}).write()
-        mock_createdir.assert_called()
+    @patch('bmx.fileutil.open_path_secure')
+    @patch('bmx.credentialsutil.get_bmx_credentials_path', return_value='/dir/file')
+    def test_write_creates_bmx_dir(self,
+            mock_get_bmx_credentials_path,
+            mock_open_path_secure, *args):
 
-if __name__ == '__main__':
-    unittest.main()
+        BmxCredentials({}).write()
+        mock_open_path_secure.assert_called_with('/dir/file')
