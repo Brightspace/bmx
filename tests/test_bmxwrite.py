@@ -50,8 +50,9 @@ class BmxWriteTests(unittest.TestCase):
 
     @patch('bmx.bmxwrite.get_credentials_path', return_value='credential_path')
     @patch('builtins.open')
+    @patch('bmx.bmxwrite.create_aws_directory')
     @patch('configparser.ConfigParser')
-    def test_write_credentials(self, mock_config, *args):
+    def test_write_credentials(self, mock_config, mock_create_aws_directory, *args):
         credentials = AwsCredentials({
             'AccessKeyId': 'expectedAccessKeyId',
             'SecretAccessKey': 'expectedSecretAccessKey',
@@ -71,13 +72,14 @@ class BmxWriteTests(unittest.TestCase):
                 'aws_session_token': 'expectedSessionToken'
             }
         }, mock_config_parser.get_dict())
+        mock_create_aws_directory.assert_called_once()
         mock_config_parser.write.assert_called_once()
 
     @patch('bmx.stsutil.get_credentials')
     @patch('bmx.credentialsutil.load_bmx_credentials')
     @patch('bmx.bmxwrite.write_credentials')
     @patch('bmx.bmxwrite.create_parser')
-    def test_bmxremove_calls_required_methods(self,
+    def test_bmxwrite_calls_required_methods(self,
                                               mock_create_parser,
                                               mock_write_credentials,
                                               mock_load_bmx_credentials,
@@ -112,7 +114,6 @@ class BmxWriteTests(unittest.TestCase):
         mock_write_credentials.assert_called_once_with(expected_aws_credentials, expected_profile)
         mock_bmx_credentials.put_credentials.assert_called_once_with(expected_aws_credentials)
         mock_bmx_credentials.write.assert_called_once()
-
 
 if __name__ == '__main__':
     unittest.main()

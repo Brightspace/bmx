@@ -24,6 +24,12 @@ def get_aws_path():
 def get_credentials_path():
     return os.path.join(get_aws_path(), 'credentials')
 
+def create_aws_directory():
+    directory = get_aws_path()
+
+    if not os.path.exists(directory):
+        os.makedirs(directory, mode=0o770)
+
 def write_credentials(aws_credentials, profile):
     config = configparser.ConfigParser()
 
@@ -34,6 +40,7 @@ def write_credentials(aws_credentials, profile):
         'aws_session_token': aws_credentials.keys['SessionToken']
     }
 
+    create_aws_directory()
     with open(get_credentials_path(), 'w') as config_file:
         config.write(config_file)
 

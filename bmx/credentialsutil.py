@@ -26,7 +26,9 @@ def load_bmx_credentials(credentials_path=get_bmx_credentials_path()):
 
     return BmxCredentials(credentials_doc)
 
-def create_bmx_directory(directory=get_bmx_path()):
+def create_bmx_directory():
+    directory = get_bmx_path();
+
     if not os.path.exists(directory):
         os.makedirs(directory, mode=0o770)
 
@@ -83,7 +85,7 @@ class BmxCredentials:
 
     def write(self, credentials_path=get_bmx_credentials_path()):
         directory = os.path.dirname(credentials_path)
-        create_bmx_directory(directory)
+        create_bmx_directory()
 
         self.credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
