@@ -1,6 +1,6 @@
 # BMX
 
-## 1.0.1
+## 1.1.0
 ### FEATURES
 * BMX's write command now accepts an '--output' option (#128).
 
