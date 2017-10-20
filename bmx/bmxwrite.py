@@ -15,7 +15,8 @@ def create_parser():
     parser.add_argument('--username', default=None, help=BMX_USERNAME_HELP)
     parser.add_argument('--profile', default='default', help=BMX_WRITE_PROFILE_HELP)
     parser.add_argument('--account', default=None, help=BMX_ACCOUNT_HELP)
-    parser.add_argument('--output', default=os.path.join('~', '.aws', 'credentials'),help=BMX_WRITE_OUTPUT_HELP)
+    parser.add_argument('--output', default=os.path.join('~', '.aws', 'credentials'),
+            help=BMX_WRITE_OUTPUT_HELP)
     parser.add_argument('--role', default=None, help=BMX_ROLE_HELP)
 
     return parser
