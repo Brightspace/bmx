@@ -3,8 +3,8 @@ import os
 import pickle
 import requests
 import unittest
-import tempfile
 
+from io import BytesIO
 from unittest.mock import call, Mock, patch
 
 from .context import bmx
@@ -174,44 +174,42 @@ class OktaUtilTests(unittest.TestCase):
 
         mock_response.raise_for_status.assert_called_with()
 
-    @patch('bmx.credentialsutil.create_bmx_directory')
-    @patch('bmx.credentialsutil.get_bmx_path')
-    def test_cached_session_serializes(self, mock_expanduser, mock_createdir):
+    @patch('builtins.open', return_value=BytesIO())
+    @patch('bmx.fileutil.open_path_secure')
+    def test_cached_session_serializes(self,
+            mock_open_file_secure,
+            mock_open,
+            *args):
+
         username, cookies = 'username', 'expected_cached_object'
-        expected_cached_object = create_state_mock(username, cookies)
-        temp_dir = tempfile.mkdtemp()
-        mock_expanduser.return_value = temp_dir
+
+        bytesIo = mock_open.return_value
+        bytesIo.close = Mock() # BytesIO's value is unavailable after a close
 
         bmx.oktautil.set_cached_session(username, cookies)
-        with open(bmx.credentialsutil.get_bmx_cookie_session_path(), 'rb') as test_cookie_state:
-            cached_object = pickle.load(test_cookie_state)
-            self.assertEqual(expected_cached_object, cached_object)
+
+        self.assertEqual(create_state_mock(username, cookies),
+                pickle.loads(bytesIo.getvalue()))
 
     @patch('bmx.oktautil.create_sessions_client', return_value=MockSession())
     @patch('pickle.load', return_value=create_state_mock('username', MockCookie({'sid': 'expectedSession'})))
-    def test_get_cache_session_exists(self, mock_pickle, mock_session_client):
+    @patch('builtins.open')
+    def test_get_cache_session_exists(self, mock_open, mock_pickle, mock_session_client):
         for username in ['username', None]:
             with self.subTest(username=username):
-                temp_file = tempfile.mkstemp()[1]
-                with patch('bmx.credentialsutil.get_bmx_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
-                    mock_cookie_session_path.return_value = temp_file
-
-                    session, cookies = bmx.oktautil.get_cached_session(username)
-                    self.assertTrue(mock_pickle.called)
-                    self.assertTrue(mock_session_client.called)
-                    self.assertEqual('expectedSession', session)
-                    self.assertEqual(cookies.cookies, {'sid': 'expectedSession'})
+                session, cookies = bmx.oktautil.get_cached_session(username)
+                self.assertTrue(mock_pickle.called)
+                self.assertTrue(mock_session_client.called)
+                self.assertEqual('expectedSession', session)
+                self.assertEqual(cookies.cookies, {'sid': 'expectedSession'})
 
     @patch('pickle.load', return_value=create_state_mock('username', MockCookie({'sid': 'expectedSession'})))
-    def test_get_cache_session_wrong_username(self, mock_pickle):
-        temp_file = tempfile.mkstemp()[1]
-        with patch('bmx.credentialsutil.get_bmx_cookie_session_path', return_value = temp_file) as mock_cookie_session_path:
-            mock_cookie_session_path.return_value = temp_file
-
-            session, cookies = bmx.oktautil.get_cached_session('wrong-username')
-            self.assertTrue(mock_pickle.called)
-            self.assertIsNone(session)
-            self.assertIsNone(cookies)
+    @patch('builtins.open')
+    def test_get_cache_session_wrong_username(self, mock_open, mock_pickle):
+        session, cookies = bmx.oktautil.get_cached_session('wrong-username')
+        self.assertTrue(mock_pickle.called)
+        self.assertIsNone(session)
+        self.assertIsNone(cookies)
 
     def test_cookies_to_string_when_none(self):
         cookie_string = bmx.oktautil.cookie_string(None)

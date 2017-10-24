@@ -3,21 +3,22 @@ import os
 import yaml
 from cerberus import Validator
 
+import bmx.fileutil as fileutil
+
 from bmx.constants import AWS_ACCOUNT_KEY, AWS_ROLE_KEY
 from bmx.constants import (BMX_CREDENTIALS_VERSION, BMX_CREDENTIALS_KEY, BMX_DEFAULT_KEY,
                            BMX_META_KEY, BMX_VERSION_KEY)
 from bmx.aws_credentials import AwsCredentials
 
 def get_bmx_path():
-    return os.path.join(os.path.expanduser('~'), '.bmx')
+    return os.path.expanduser(os.path.join('~', '.bmx'))
 
 def get_bmx_credentials_path():
     return os.path.join(get_bmx_path(), 'credentials')
 
-def get_bmx_cookie_session_path():
-    return os.path.join(get_bmx_path(), 'session')
+def load_bmx_credentials():
+    credentials_path = get_bmx_credentials_path()
 
-def load_bmx_credentials(credentials_path=get_bmx_credentials_path()):
     if os.path.exists(credentials_path):
         with open(credentials_path, 'r') as credentials_file:
             credentials_doc = yaml.load(credentials_file) or {}
@@ -25,12 +26,6 @@ def load_bmx_credentials(credentials_path=get_bmx_credentials_path()):
         credentials_doc = {}
 
     return BmxCredentials(credentials_doc)
-
-def create_bmx_directory():
-    directory = get_bmx_path();
-
-    if not os.path.exists(directory):
-        os.makedirs(directory, mode=0o770)
 
 class BmxCredentials:
     def __init__(self, credentials_doc):
@@ -83,21 +78,13 @@ class BmxCredentials:
 
         return AwsCredentials(aws_keys, app, role) if aws_keys else None
 
-    def write(self, credentials_path=get_bmx_credentials_path()):
-        directory = os.path.dirname(credentials_path)
-        create_bmx_directory()
-
+    def write(self):
         self.credentials_doc[BMX_VERSION_KEY] = BMX_CREDENTIALS_VERSION
 
         self.prune()
         self.validate()
 
-        file_descriptor = os.open(
-            credentials_path,
-            os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
-            mode=0o600
-        )
-
+        file_descriptor = fileutil.open_path_secure(get_bmx_credentials_path())
         with open(file_descriptor, 'w') as credentials_file:
             yaml.dump(self.credentials_doc, credentials_file,
                     default_flow_style=False)

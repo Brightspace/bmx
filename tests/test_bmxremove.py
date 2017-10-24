@@ -33,8 +33,6 @@ class BmxRemoveTests(unittest.TestCase):
         )]
 
         mock_bmx_credentials = mock_load_bmx_credentials.return_value
-        mock_load_bmx_credentials.return_value = mock_bmx_credentials
-
 
         self.assertEqual(0, bmxremove.cmd(expected_args))
         mock_create_parser.return_value.parse_known_args.assert_called_once_with(expected_args)
