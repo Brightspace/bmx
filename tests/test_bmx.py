@@ -4,9 +4,10 @@ from unittest.mock import (Mock, patch)
 
 
 import bmx.bmx as bmx_main
-from bmx.locale.options import (BMX_COPYRIGHT, BMX_DESCRIPTION,
-                                BMX_AWS_HELP, BMX_PRINT_HELP, BMX_REMOVE_HELP,
-                                BMX_RENEW_HELP, BMX_WRITE_HELP)
+from bmx.options import (BMX_COPYRIGHT, BMX_DESCRIPTION,
+                     BMX_AWS_HELP, BMX_PRINT_HELP, BMX_REMOVE_HELP,
+                     BMX_RENEW_HELP, BMX_WRITE_HELP)
+
 
 class BmxMainTest(unittest.TestCase):
     @patch('argparse.ArgumentParser', autospec=True)

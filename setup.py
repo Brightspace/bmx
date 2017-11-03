@@ -1,6 +1,6 @@
 from setuptools import setup
 
-_PACKAGES = ['bmx', 'bmx.locale']
+_PACKAGES = ['bmx']
 
 _REQUIRES = [
         'future>=0.16.0',
@@ -17,7 +17,7 @@ _REQUIRES = [
 
 setup(
     name='bmx',
-    version='1.0.0',
+    version='1.1.0',
     description='IAM-less AWS API access for humans',
     url='https://github.com/Brightspace/bmx',
     license='Proprietary',

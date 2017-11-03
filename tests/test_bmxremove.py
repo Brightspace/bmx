@@ -1,10 +1,9 @@
 import unittest
-
 from unittest.mock import (Mock, patch)
-from bmx.locale.options import (BMX_REMOVE_USAGE,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 import bmx.bmxremove as bmxremove
+from bmx.options import (BMX_REMOVE_USAGE,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
 
 
 class BmxRemoveTests(unittest.TestCase):
@@ -34,8 +33,6 @@ class BmxRemoveTests(unittest.TestCase):
         )]
 
         mock_bmx_credentials = mock_load_bmx_credentials.return_value
-        mock_load_bmx_credentials.return_value = mock_bmx_credentials
-
 
         self.assertEqual(0, bmxremove.cmd(expected_args))
         mock_create_parser.return_value.parse_known_args.assert_called_once_with(expected_args)

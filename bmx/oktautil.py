@@ -1,26 +1,30 @@
-#!/usr/bin/python3
-
 import getpass
 import pickle
+import os
 
 import okta
 from okta.framework.OktaError import OktaError
 from lxml import html
 import requests
 
+import bmx.fileutil as fileutil
 import bmx.prompt as prompt
 import bmx.credentialsutil as credentialsutil
 
 from bmx.constants import OKTA_API_TOKEN, OKTA_BASE_URL, OKTA_SUPPORTED_FACTORS
 
+def get_bmx_session_path():
+    return os.path.join(credentialsutil.get_bmx_path(), 'session')
+
 def set_cached_session(username, cookies):
-    credentialsutil.create_bmx_directory()
-    with open(credentialsutil.get_bmx_cookie_session_path(), 'wb') as session_state:
+    file_descriptor = fileutil.open_path_secure(get_bmx_session_path())
+
+    with open(file_descriptor, 'wb') as session_state:
         pickle.dump({'cookies': cookies, 'username': username}, session_state)
 
 def get_cached_session(username):
     try:
-        with open(credentialsutil.get_bmx_cookie_session_path(), 'rb') as session_state:
+        with open(get_bmx_session_path(), 'rb') as session_state:
             session_dict = pickle.load(session_state)
         if username and session_dict['username'] != username:
             raise ValueError()

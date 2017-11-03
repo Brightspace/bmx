@@ -1,12 +1,11 @@
 import os
 import unittest
-
 from unittest.mock import (MagicMock, Mock, patch)
 
 import bmx.bmxwrite as bmxwrite
 from bmx.aws_credentials import AwsCredentials
-from bmx.locale.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
-                                BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
+from bmx.options import (BMX_WRITE_USAGE, BMX_WRITE_PROFILE_HELP,
+                     BMX_ACCOUNT_HELP, BMX_ROLE_HELP, BMX_USERNAME_HELP)
 
 
 class BmxWriteTests(unittest.TestCase):
@@ -49,10 +48,14 @@ class BmxWriteTests(unittest.TestCase):
             actual_aws_path = bmxwrite.get_credentials_path()
             self.assertEqual(expected_aws_path, actual_aws_path)
 
-    @patch('bmx.bmxwrite.get_credentials_path', return_value='credential_path')
     @patch('builtins.open')
+    @patch('bmx.fileutil.open_path_secure', return_value='secure_file')
     @patch('configparser.ConfigParser')
-    def test_write_credentials(self, mock_config, *args):
+    def test_write_credentials(self,
+            mock_config,
+            mock_open_path_secure,
+            mock_open,
+            *args):
         credentials = AwsCredentials({
             'AccessKeyId': 'expectedAccessKeyId',
             'SecretAccessKey': 'expectedSecretAccessKey',
@@ -62,7 +65,7 @@ class BmxWriteTests(unittest.TestCase):
         mock_config_parser = self.get_mocked_configparser()
         mock_config.return_value = mock_config_parser
 
-        bmxwrite.write_credentials(credentials, 'expected_profile')
+        bmxwrite.write_credentials(credentials, 'expected_output', 'expected_profile')
 
         mock_config_parser.read.assert_called_once()
         self.assertDictEqual({
@@ -72,35 +75,42 @@ class BmxWriteTests(unittest.TestCase):
                 'aws_session_token': 'expectedSessionToken'
             }
         }, mock_config_parser.get_dict())
+        mock_open_path_secure.assert_called_once()
+        mock_open.assert_called_with('secure_file', 'w')
         mock_config_parser.write.assert_called_once()
 
+    @patch('bmx.bmxwrite.write_credentials')
+    @patch('bmx.fileutil.prepare_path', return_value='prepared_output')
     @patch('bmx.stsutil.get_credentials')
     @patch('bmx.credentialsutil.load_bmx_credentials')
-    @patch('bmx.bmxwrite.write_credentials')
     @patch('bmx.bmxwrite.create_parser')
-    def test_bmxremove_calls_required_methods(self,
+    def test_bmxwrite_calls_required_methods(self,
                                               mock_create_parser,
-                                              mock_write_credentials,
                                               mock_load_bmx_credentials,
-                                              mock_get_credentials):
+                                              mock_get_credentials,
+                                              mock_prepare_path,
+                                              mock_write_credentials):
         expected_args = 'expected_args'
         expected_username = 'expected_username'
         expected_account = 'expected_account'
         expected_role = 'expected_role'
         expected_profile = 'expected_profile'
         expected_aws_credentials = 'expected_aws_credentials'
+        expected_output = 'expected_output'
         mock_create_parser.return_value.parse_known_args.return_value = [
             Mock(
             ** {
                 'username': expected_username,
                 'account': expected_account,
                 'role': expected_role,
-                'profile': expected_profile
+                'profile': expected_profile,
+                'output': expected_output
             }
         )]
 
         mock_bmx_credentials = mock_load_bmx_credentials.return_value
         mock_bmx_credentials.get_credentials.return_value = None
+
         mock_get_credentials.return_value = expected_aws_credentials
         mock_load_bmx_credentials.return_value = mock_bmx_credentials
 
@@ -110,10 +120,10 @@ class BmxWriteTests(unittest.TestCase):
         mock_load_bmx_credentials.assert_called_once()
         mock_bmx_credentials.get_credentials.assert_called_once_with(expected_account, expected_role)
         mock_get_credentials.assert_called_once_with(expected_username, 3600, expected_account, expected_role)
-        mock_write_credentials.assert_called_once_with(expected_aws_credentials, expected_profile)
+        mock_prepare_path.assert_called_once_with(expected_output)
+        mock_write_credentials.assert_called_once_with(expected_aws_credentials, 'prepared_output', expected_profile)
         mock_bmx_credentials.put_credentials.assert_called_once_with(expected_aws_credentials)
         mock_bmx_credentials.write.assert_called_once()
-
 
 if __name__ == '__main__':
     unittest.main()

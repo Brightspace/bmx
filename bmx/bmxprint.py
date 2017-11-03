@@ -3,9 +3,10 @@ import argparse
 
 import bmx.credentialsutil as credentialsutil
 import bmx.stsutil as stsutil
-from bmx.locale.options import (BMX_PRINT_USAGE,
-                                BMX_PRINT_BASH_HELP, BMX_PRINT_JSON_HELP, BMX_PRINT_POWERSHELL_HELP,
-                                BMX_USERNAME_HELP, BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
+from bmx.options import (BMX_PRINT_USAGE,
+                     BMX_PRINT_BASH_HELP, BMX_PRINT_JSON_HELP, BMX_PRINT_POWERSHELL_HELP,
+                     BMX_USERNAME_HELP, BMX_ACCOUNT_HELP, BMX_ROLE_HELP)
+
 
 def create_parser():
     parser = argparse.ArgumentParser(
