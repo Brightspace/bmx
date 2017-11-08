@@ -17,7 +17,7 @@ _REQUIRES = [
 
 setup(
     name='bmx',
-    version='1.0.0',
+    version='1.1.0',
     description='IAM-less AWS API access for humans',
     url='https://github.com/Brightspace/bmx',
     license='Proprietary',
