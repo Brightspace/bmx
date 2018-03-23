@@ -19,6 +19,22 @@ BMX prints detailed usage information when you run `bmx -h` or `bmx <cmd> -h`.
 
 BMX installs with Pip from D2L's Artifactory repository.
 
+### Credentials
+
+You will be asked for Artifactory credentials while installing BMX.  Your credentials are your D2L network credentials.  For example, your username is \<first initial> + \<last name>.  The next section shows the Artifactory password prompt in Bash.
+
+### Bash
+
+```
+vagrant@ubuntu-artful:~$ python3 --version
+Python 3.6.3
+
+vagrant@ubuntu-artful:~$ pip3 install --user --upgrade --extra-index-url https://d2lartifacts.artifactoryonline.com/d2lartifacts/api/pypi/pypi-local/simple bmx
+Collecting bmx
+User for d2lartifacts.artifactoryonline.com: credekop
+Password:
+```
+
 ### PowerShell
 
 ```
