@@ -161,3 +161,26 @@ Role Index: 2
     ]
 }
 ```
+
+## `bmx` via Docker
+
+You can build and run bmx inside of Docker:
+
+1. Clone this repo
+1. Run `docker build . -t bmx` in the cloned directory
+
+Optionally, add an alias/helper in your `.bashrc`, for example:
+
+```bash
+bmx() {
+  docker run \
+    --rm -ti \
+    -e "BMX_USERNAME=${BMX_USERNAME-$USER}" \
+    -e "BMX_ACCOUNT=${BMX_ACCOUNT-$AWS_PROFILE}" \
+    -e "BMX_PROFILE=${BMX_PROFILE-$AWS_PROFILE}" \
+    -e "BMX_ROLE=${BMX_ROLE-}" \
+    -v "${HOME}/.aws:/home/bmx/.aws" \
+    -v "${HOME}/.bmx:/home/bmx/.bmx" \
+    bmx $@
+}
+```
