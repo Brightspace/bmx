@@ -1,18 +1,7 @@
-language: python
+language: go
 
-python:
-- '3.6'
-
-install:
-- pip install -r requirements.txt
-- pip install coveralls
-
-script:
-- pylint --errors-only bmx
-- tox
-
-after_success:
-- coveralls
+go:
+- "1.10.x"
 
 env:
   global:
