@@ -7,3 +7,5 @@ bmx.egg-info/
 build
 .coverage
 .*.swp
+.idea/
+bmx.exe
