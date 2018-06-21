@@ -36,7 +36,7 @@ func read(f *os.File) (string, error) {
 		return "", err
 	}
 
-	return readLine()
+	return readLine(f)
 }
 
 func setConsoleMode(console syscall.Handle, mode uint32) error {

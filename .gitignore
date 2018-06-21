@@ -8,4 +8,5 @@ build
 .coverage
 .*.swp
 .idea/
-bmx.exe
+cmd/bmx/bmx.exe
+cmd/bmx/bmx

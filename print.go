@@ -103,6 +103,7 @@ func Print(config Options, args []string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Fprintln(os.Stderr)
 	}
 
 	// All users of cookiejar should import "golang.org/x/net/publicsuffix"
@@ -310,5 +311,9 @@ type Saml2Attribute struct {
 }
 
 func printPowershell(credentials *sts.Credentials) {
-	fmt.Printf(`$env:AWS_SESSION_TOKEN="%s"; $env:AWS_ACCESS_KEY_ID="%s"; $env:AWS_SECRET_ACCESS_KEY="%s"`, *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+	fmt.Printf(`$env:AWS_SESSION_TOKEN='%s'; $env:AWS_ACCESS_KEY_ID='%s'; $env:AWS_SECRET_ACCESS_KEY='%s'`, *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+}
+
+func printBash(credentials *sts.Credentials) {
+	fmt.Printf("export AWS_SESSION_TOKEN=%s\nexport AWS_ACCESS_KEY_ID=%s\nexport AWS_SECRET_ACCESS_KEY=%s", *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
 }

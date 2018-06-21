@@ -5,5 +5,5 @@ import (
 )
 
 func printDefaultFormat(credentials *sts.Credentials) {
-	printPowershell(credentials)
+	printBash(credentials)
 }
