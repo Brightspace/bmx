@@ -21,5 +21,5 @@ func read(f *os.File) (string, error) {
 	}
 	defer terminal.Restore(fd, oldState)
 
-	return readLine()
+	return readLine(f)
 }
