@@ -19,8 +19,8 @@ var (
 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms686033(v=vs.85).aspx
 const ENABLE_ECHO_INPUT = 0x0004
 
-func read(f *os.File) (string, error) {
-	handle := syscall.Handle(f.Fd())
+func read() (string, error) {
+	handle := syscall.Handle(os.Stdin.Fd())
 
 	// Grab the old console mode so we can reset it. We defer the reset
 	// right away because it doesn't matter (it is idempotent).
@@ -36,7 +36,7 @@ func read(f *os.File) (string, error) {
 		return "", err
 	}
 
-	return readLine(f)
+	return readLine()
 }
 
 func setConsoleMode(console syscall.Handle, mode uint32) error {
