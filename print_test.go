@@ -6,5 +6,6 @@ import (
 )
 
 func TestHelloWorld(t *testing.T) {
+	t.Fail()
 	fmt.Println("Hello world!")
 }
