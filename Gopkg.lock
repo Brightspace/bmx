@@ -14,14 +14,17 @@
     "aws/credentials/ec2rolecreds",
     "aws/credentials/endpointcreds",
     "aws/credentials/stscreds",
+    "aws/csm",
     "aws/defaults",
     "aws/ec2metadata",
     "aws/endpoints",
     "aws/request",
     "aws/session",
     "aws/signer/v4",
+    "internal/ini",
     "internal/sdkio",
     "internal/sdkrand",
+    "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
     "private/protocol/query",
@@ -30,14 +33,8 @@
     "private/protocol/xml/xmlutil",
     "service/sts"
   ]
-  revision = "827e7eac8c2680d5bdea7bc3ef29c596eabe1eae"
-  version = "v1.13.59"
-
-[[projects]]
-  name = "github.com/go-ini/ini"
-  packages = ["."]
-  revision = "06f5f3d67269ccec1fe5fe4134ba6e982984f7f5"
-  version = "v1.37.0"
+  revision = "47607acdb3657d60debbfa33f328dc9801fb3cfd"
+  version = "v1.15.74"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -66,7 +63,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
+  revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
   branch = "master"
@@ -77,7 +74,7 @@
     "idna",
     "publicsuffix"
   ]
-  revision = "1e491301e022f8f977054da4c2d852decd59571f"
+  revision = "88d92db4c548972d942ac2a3531a8a9a34c82ca6"
 
 [[projects]]
   branch = "master"
@@ -86,7 +83,7 @@
     "unix",
     "windows"
   ]
-  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -112,6 +109,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7051ebefa017829192e6ffcb461ebda637e88c0e5cc1bf641fe8160a7710deb5"
+  inputs-digest = "cb67438513807f3eeba23af18350b8a08c189d3dd7e6e9886a485a7c25b2d735"
   solver-name = "gps-cdcl"
   solver-version = 1
