@@ -1,11 +1,8 @@
 package bmx
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,11 +10,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
+
 	"github.com/Brightspace/bmx/okta"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"golang.org/x/net/html"
 )
 
 type oktaClient interface {
@@ -27,6 +26,7 @@ type oktaClient interface {
 	StartSession(sessionToken string) (*okta.OktaSessionResponse, error)
 	ListApplications(userId string) ([]okta.OktaAppLink, error)
 	SetSessionId(id string)
+	GetSaml(appLink okta.OktaAppLink) (okta.Saml2pResponse, string, error)
 }
 
 type PrintCmdOptions struct {
@@ -37,6 +37,7 @@ type PrintCmdOptions struct {
 	Password string
 
 	ConsoleReader ConsoleReader
+	StsClient     stsiface.STSAPI
 }
 
 const (
@@ -48,6 +49,15 @@ func Print(oktaClient oktaClient, printOptions PrintCmdOptions) {
 	consoleReader := printOptions.ConsoleReader
 	if printOptions.ConsoleReader == nil {
 		consoleReader = defaultConsoleReader{}
+	}
+
+	if printOptions.StsClient == nil {
+		awsSession, err := session.NewSession()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		printOptions.StsClient = sts.New(awsSession)
 	}
 
 	var username string
@@ -97,19 +107,7 @@ func Print(oktaClient oktaClient, printOptions PrintCmdOptions) {
 		app = &oktaApplications[accountId]
 	}
 
-	appResponse, err := oktaClient.GetHttpClient().Get(app.LinkUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	saml, err := getSaml(appResponse.Body)
-	decSaml, err := base64.StdEncoding.DecodeString(saml)
-
-	samlResponse := &Saml2pResponse{}
-	err = xml.Unmarshal(decSaml, samlResponse)
-	if err != nil {
-		log.Fatal(err)
-	}
+	samlResponse, saml, err := oktaClient.GetSaml(*app)
 
 	var arns []string
 	for _, v := range samlResponse.Assertion.AttributeStatement.Attributes {
@@ -118,18 +116,13 @@ func Print(oktaClient oktaClient, printOptions PrintCmdOptions) {
 		}
 	}
 
-	awsSession, err := session.NewSession()
-	if err != nil {
-		log.Fatal(err)
-	}
-	svc := sts.New(awsSession)
 	samlInput := &sts.AssumeRoleWithSAMLInput{
 		PrincipalArn:  aws.String(arns[0]),
 		RoleArn:       aws.String(arns[1]),
 		SAMLAssertion: aws.String(saml),
 	}
 
-	out, err := svc.AssumeRoleWithSAML(samlInput)
+	out, err := printOptions.StsClient.AssumeRoleWithSAML(samlInput)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -199,56 +192,6 @@ func findApp(app string, apps []okta.OktaAppLink) (foundApp *okta.OktaAppLink, f
 	}
 
 	return nil, false
-}
-
-func getSaml(r io.Reader) (string, error) {
-	z := html.NewTokenizer(r)
-	for {
-		tt := z.Next()
-		switch tt {
-		case html.ErrorToken:
-			return "", z.Err()
-		case html.SelfClosingTagToken:
-			tn, hasAttr := z.TagName()
-
-			if string(tn) == "input" {
-				attr := make(map[string]string)
-				for hasAttr {
-					key, val, moreAttr := z.TagAttr()
-					attr[string(key)] = string(val)
-					if !moreAttr {
-						break
-					}
-				}
-
-				if attr["name"] == "SAMLResponse" {
-					return string(attr["value"]), nil
-				}
-			}
-		}
-	}
-
-	return "", nil
-}
-
-type Saml2pResponse struct {
-	XMLName   xml.Name       `xml:"Response"`
-	Assertion Saml2Assertion `xml:"Assertion"`
-}
-
-type Saml2Assertion struct {
-	XMLName            xml.Name                `xml:"Assertion"`
-	AttributeStatement Saml2AttributeStatement `xml:"AttributeStatement"`
-}
-
-type Saml2AttributeStatement struct {
-	XMLName    xml.Name         `xml:"AttributeStatement"`
-	Attributes []Saml2Attribute `xml:"Attribute"`
-}
-
-type Saml2Attribute struct {
-	Name  string `xml:"Name,attr"`
-	Value string `xml:"AttributeValue"`
 }
 
 func printPowershell(credentials *sts.Credentials) {
