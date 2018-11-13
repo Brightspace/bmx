@@ -1,79 +1,42 @@
 package bmx
 
 import (
-	"bufio"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/cookiejar"
+	"net/url"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Brightspace/bmx/okta"
-	"github.com/Brightspace/bmx/password"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"golang.org/x/net/html"
-	"golang.org/x/net/publicsuffix"
 )
 
-type printOptions struct {
-	Url     string
-	Account string
-	User    string
-	NoMask  bool
-	Org     string
+type oktaClient interface {
+	Authenticate(username string, password string) (*okta.OktaAuthResponse, error)
+	GetHttpClient() *http.Client
+	GetBaseUrl() *url.URL
+	StartSession(sessionToken string) (*okta.OktaSessionResponse, error)
+	ListApplications(userId string) ([]okta.OktaAppLink, error)
+	SetSessionId(id string)
 }
 
-var options = printOptions{}
+type PrintCmdOptions struct {
+	Org      string
+	User     string
+	Account  string
+	NoMask   bool
+	Password string
 
-var printCmdLine = flag.NewFlagSet("print", flag.ExitOnError)
-
-func init() {
-	printCmdLine.StringVar(&options.Org, "org", "", "the okta org api to target")
-	printCmdLine.StringVar(&options.Account, "account", "", "the account name to auth against")
-	printCmdLine.StringVar(&options.User, "user", "", "the user to authenticate with")
-	printCmdLine.BoolVar(&options.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
-}
-
-func readLine(prompt string) (string, error) {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Fprint(os.Stderr, prompt)
-	var s string
-	scanner.Scan()
-	if scanner.Err() != nil {
-		return "", scanner.Err()
-	}
-	s = scanner.Text()
-	return s, nil
-}
-
-func readInt(prompt string) (int, error) {
-	var s string
-	var err error
-	if s, err = readLine(prompt); err != nil {
-		return -1, err
-	}
-
-	var i int
-	if i, err = strconv.Atoi(s); err != nil {
-		return -1, err
-	}
-
-	return i, nil
-}
-
-type Options struct {
-	Command string
+	ConsoleReader ConsoleReader
 }
 
 const (
@@ -81,66 +44,44 @@ const (
 	passwordPrompt = "Okta Password: "
 )
 
-func Print(config Options, args []string) {
-	err := printCmdLine.Parse(args)
-	if err != nil {
-		log.Fatal(err)
+func Print(oktaClient oktaClient, printOptions PrintCmdOptions) {
+	consoleReader := printOptions.ConsoleReader
+	if printOptions.ConsoleReader == nil {
+		consoleReader = defaultConsoleReader{}
 	}
 
 	var username string
-	if len(options.User) == 0 {
-		username, _ = readLine(usernamePrompt)
+	if len(printOptions.User) == 0 {
+		username, _ = consoleReader.ReadLine(usernamePrompt)
 	} else {
-		username = options.User
+		username = printOptions.User
 	}
 
 	var pass string
-	if options.NoMask {
-		pass, _ = readLine(passwordPrompt)
+	if printOptions.NoMask {
+		pass, _ = consoleReader.ReadLine(passwordPrompt)
 	} else {
 		var err error
-		pass, err = password.Read(passwordPrompt)
+		pass, err = consoleReader.ReadPassword(passwordPrompt)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Fprintln(os.Stderr)
 	}
 
-	// All users of cookiejar should import "golang.org/x/net/publicsuffix"
-	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	if err != nil {
-		log.Fatal(err)
-	}
-	httpClient := &http.Client{
-		Timeout: 30 * time.Second,
-		Jar:     jar,
-	}
-
-	oktaClient, _ := okta.NewOktaClient(httpClient, options.Org)
-
 	oktaAuthResponse, err := oktaClient.Authenticate(username, pass)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = doMfa(oktaAuthResponse, httpClient)
+	err = doMfa(oktaAuthResponse, oktaClient.GetHttpClient(), consoleReader)
 
 	oktaSessionResponse, err := oktaClient.StartSession(oktaAuthResponse.SessionToken)
-	cookies := jar.Cookies(oktaClient.BaseUrl)
-	cookie := &http.Cookie{
-		Name:     "sid",
-		Value:    oktaSessionResponse.Id,
-		Path:     "/",
-		Domain:   oktaClient.BaseUrl.Host,
-		Secure:   true,
-		HttpOnly: true,
-	}
-	cookies = append(cookies, cookie)
-	jar.SetCookies(oktaClient.BaseUrl, cookies)
+	oktaClient.SetSessionId(oktaSessionResponse.Id)
 
 	oktaApplications, err := oktaClient.ListApplications(oktaSessionResponse.UserId)
 
-	app, found := findApp(options.Account, oktaApplications)
+	app, found := findApp(printOptions.Account, oktaApplications)
 	if !found {
 		// select an account
 		fmt.Fprintln(os.Stderr, "Available accounts:")
@@ -150,13 +91,13 @@ func Print(config Options, args []string) {
 			}
 		}
 		var accountId int
-		if accountId, err = readInt("Select an account: "); err != nil {
+		if accountId, err = consoleReader.ReadInt("Select an account: "); err != nil {
 			log.Fatal(err)
 		}
 		app = &oktaApplications[accountId]
 	}
 
-	appResponse, err := httpClient.Get(app.LinkUrl)
+	appResponse, err := oktaClient.GetHttpClient().Get(app.LinkUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -196,7 +137,7 @@ func Print(config Options, args []string) {
 	printDefaultFormat(out.Credentials)
 }
 
-func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client) error {
+func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client, consoleReader ConsoleReader) error {
 	if oktaAuthResponse.Status == "MFA_REQUIRED" {
 		fmt.Fprintln(os.Stderr, "MFA Required")
 		for idx, factor := range oktaAuthResponse.Embedded.Factors {
@@ -205,7 +146,7 @@ func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client) error {
 
 		var mfaIdx int
 		var err error
-		if mfaIdx, err = readInt("Select an available MFA option: "); err != nil {
+		if mfaIdx, err = consoleReader.ReadInt("Select an available MFA option: "); err != nil {
 			log.Fatal(err)
 		}
 		vurl := oktaAuthResponse.Embedded.Factors[mfaIdx].Links.Verify.Url
@@ -223,7 +164,7 @@ func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client) error {
 		}
 
 		var code string
-		if code, err = readLine("Code: "); err != nil {
+		if code, err = consoleReader.ReadLine("Code: "); err != nil {
 			log.Fatal(err)
 		}
 		body = fmt.Sprintf(`{"stateToken":"%s","passCode":"%s"}`, oktaAuthResponse.StateToken, code)

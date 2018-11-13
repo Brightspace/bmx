@@ -5,17 +5,31 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
 	applicationJson = "application/json"
 )
 
-func NewOktaClient(httpClient *http.Client, org string) (*OktaClient, error) {
+func NewOktaClient(org string) (*OktaClient, error) {
+	// All users of cookiejar should import "golang.org/x/net/publicsuffix"
+	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+		Jar:     jar,
+	}
+
 	client := &OktaClient{
 		HttpClient: httpClient,
 	}
@@ -28,6 +42,14 @@ func NewOktaClient(httpClient *http.Client, org string) (*OktaClient, error) {
 type OktaClient struct {
 	HttpClient *http.Client
 	BaseUrl    *url.URL
+}
+
+func (o *OktaClient) GetHttpClient() *http.Client {
+	return o.HttpClient
+}
+
+func (o *OktaClient) GetBaseUrl() *url.URL {
+	return o.BaseUrl
 }
 
 func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthResponse, error) {
@@ -96,6 +118,20 @@ func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
 	}
 
 	return oktaApplications, nil
+}
+
+func (o *OktaClient) SetSessionId(id string) {
+	cookies := o.HttpClient.Jar.Cookies(o.BaseUrl)
+	cookie := &http.Cookie{
+		Name:     "sid",
+		Value:    id,
+		Path:     "/",
+		Domain:   o.BaseUrl.Host,
+		Secure:   true,
+		HttpOnly: true,
+	}
+	cookies = append(cookies, cookie)
+	o.HttpClient.Jar.SetCookies(o.BaseUrl, cookies)
 }
 
 type OktaAuthResponse struct {
