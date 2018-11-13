@@ -18,7 +18,6 @@ func init() {
 	printCmd.Flags().BoolVar(&printOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
 	printCmd.MarkFlagRequired("org")
-	printCmd.MarkFlagRequired("account")
 
 	rootCmd.AddCommand(printCmd)
 }
