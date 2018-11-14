@@ -207,10 +207,10 @@ func writeOktaCacheSessionsFile(sessions []OktaSessionCache) {
 func removeExpiredOktaSessions(sourceCaches []OktaSessionCache) []OktaSessionCache {
 	var returnCache []OktaSessionCache
 	curTime := time.Now()
-	for i := 0; i < len(sourceCaches); i++ {
-		expireTime, err := time.Parse(time.RFC3339, sourceCaches[i].ExpiresAt)
+	for _, sourceCache := range sourceCaches {
+		expireTime, err := time.Parse(time.RFC3339, sourceCache.ExpiresAt)
 		if err == nil && curTime.After(expireTime) {
-			returnCache = append(returnCache, sourceCaches[i])
+			returnCache = append(returnCache, sourceCache)
 		}
 	}
 	return returnCache
@@ -271,7 +271,7 @@ type OktaAppLink struct {
 }
 
 type OktaSessionCache struct {
-	Userid    string `json:"userId`
+	Userid    string `json:"userId"`
 	Org       string `json:"org"`
 	SessionId string `json:"sessionId"`
 	ExpiresAt string `json:"expiresAt"`
