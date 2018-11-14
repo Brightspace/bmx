@@ -130,10 +130,10 @@ func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
 
 func (o *OktaClient) CacheOktaSession(userId, org, sessionId, expiresAt string) {
 	session := OktaSessionCache{
-		Userid:     userId,
-		Org:        org,
-		SessionId:  sessionId,
-		ExpiryDate: expiresAt,
+		Userid:    userId,
+		Org:       org,
+		SessionId: sessionId,
+		ExpiresAt: expiresAt,
 	}
 	existingSessions, err := readOktaCacheSessionsFile()
 	if err != nil {
@@ -155,44 +155,6 @@ func (o *OktaClient) GetCachedOktaSession(userid, org string) (string, bool) {
 		}
 	}
 	return "", false
-}
-
-func readOktaCacheSessionsFile() ([]OktaSessionCache, error) {
-	sessionsFile, err := ioutil.ReadFile(path.Join(userHomeDir(), ".bmx", "sessions"))
-	if err != nil {
-		return nil, err
-	}
-	var sessions []OktaSessionCache
-	json.Unmarshal([]byte(sessionsFile), &sessions)
-	return removeExpiredOktaSessions(sessions), nil
-}
-
-func writeOktaCacheSessionsFile(sessions []OktaSessionCache) {
-	sessionsJSON, _ := json.Marshal(sessions)
-	ioutil.WriteFile(path.Join(userHomeDir(), ".bmx", "sessions"), sessionsJSON, 0644)
-}
-
-func removeExpiredOktaSessions(sourceCaches []OktaSessionCache) []OktaSessionCache {
-	var returnCache []OktaSessionCache
-	curTime := time.Now()
-	for i := 0; i < len(sourceCaches); i++ {
-		expireTime, err := time.Parse(time.RFC3339, sourceCaches[i].ExpiryDate)
-		if err == nil && curTime.After(expireTime) {
-			returnCache = append(returnCache, sourceCaches[i])
-		}
-	}
-	return returnCache
-}
-
-func userHomeDir() string {
-	if runtime.GOOS == "windows" {
-		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-		if home == "" {
-			home = os.Getenv("USERPROFILE")
-		}
-		return home
-	}
-	return os.Getenv("HOME")
 }
 
 func (o *OktaClient) SetSessionId(id string) {
@@ -228,6 +190,44 @@ func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error
 
 }
 
+func readOktaCacheSessionsFile() ([]OktaSessionCache, error) {
+	sessionsFile, err := ioutil.ReadFile(path.Join(userHomeDir(), ".bmx", "sessions"))
+	if err != nil {
+		return nil, err
+	}
+	var sessions []OktaSessionCache
+	json.Unmarshal([]byte(sessionsFile), &sessions)
+	return removeExpiredOktaSessions(sessions), nil
+}
+
+func writeOktaCacheSessionsFile(sessions []OktaSessionCache) {
+	sessionsJSON, _ := json.Marshal(sessions)
+	ioutil.WriteFile(path.Join(userHomeDir(), ".bmx", "sessions"), sessionsJSON, 0644)
+}
+
+func removeExpiredOktaSessions(sourceCaches []OktaSessionCache) []OktaSessionCache {
+	var returnCache []OktaSessionCache
+	curTime := time.Now()
+	for i := 0; i < len(sourceCaches); i++ {
+		expireTime, err := time.Parse(time.RFC3339, sourceCaches[i].ExpiresAt)
+		if err == nil && curTime.After(expireTime) {
+			returnCache = append(returnCache, sourceCaches[i])
+		}
+	}
+	return returnCache
+}
+
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+	}
+	return os.Getenv("HOME")
+}
+
 type OktaAuthResponse struct {
 	ExpiresAt    time.Time                `json:"expiresAt"`
 	SessionToken string                   `json:"sessionToken"`
@@ -259,9 +259,8 @@ type OktaSessionsRequest struct {
 }
 
 type OktaSessionResponse struct {
-	Id        string `json:"id"`
-	UserId    string `json:"userId"`
-	ExpiresAt string `json:"expiresAt"`
+	Id     string `json:"id"`
+	UserId string `json:"userId"`
 }
 
 type OktaAppLink struct {
@@ -273,10 +272,10 @@ type OktaAppLink struct {
 }
 
 type OktaSessionCache struct {
-	Userid     string `json:"userId`
-	Org        string `json:"org"`
-	SessionId  string `json:"sessionId"`
-	ExpiryDate string `json:"expiryDate"`
+	Userid    string `json:"userId`
+	Org       string `json:"org"`
+	SessionId string `json:"sessionId"`
+	ExpiresAt string `json:"expiresAt"`
 }
 
 type Saml2pResponse struct {
