@@ -1,25 +1,17 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
-	"github.com/Brightspace/bmx"
+	"github.com/spf13/cobra"
 )
 
-var options = bmx.Options{}
-
 func main() {
-	options.Command = os.Args[1]
-
-	switch options.Command {
-	case "print":
-		if len(os.Args) > 2 {
-			bmx.Print(options, os.Args[2:])
-		} else {
-			bmx.Print(options, []string{})
-		}
-	default:
-		log.Fatalf("Unknown command: %s", options.Command)
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
+
+var rootCmd = &cobra.Command{}

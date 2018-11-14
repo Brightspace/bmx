@@ -2,23 +2,42 @@ package okta
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 	"time"
+
+	"golang.org/x/net/html"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
 	applicationJson = "application/json"
 )
 
-func NewOktaClient(httpClient *http.Client, org string) (*OktaClient, error) {
+func NewOktaClient(org string) (*OktaClient, error) {
+	// All users of cookiejar should import "golang.org/x/net/publicsuffix"
+	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpClient := &http.Client{
+		Timeout: 30 * time.Second,
+		Jar:     jar,
+	}
+
 	client := &OktaClient{
 		HttpClient: httpClient,
 	}
@@ -31,6 +50,14 @@ func NewOktaClient(httpClient *http.Client, org string) (*OktaClient, error) {
 type OktaClient struct {
 	HttpClient *http.Client
 	BaseUrl    *url.URL
+}
+
+func (o *OktaClient) GetHttpClient() *http.Client {
+	return o.HttpClient
+}
+
+func (o *OktaClient) GetBaseUrl() *url.URL {
+	return o.BaseUrl
 }
 
 func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthResponse, error) {
@@ -168,6 +195,39 @@ func userHomeDir() string {
 	return os.Getenv("HOME")
 }
 
+func (o *OktaClient) SetSessionId(id string) {
+	cookies := o.HttpClient.Jar.Cookies(o.BaseUrl)
+	cookie := &http.Cookie{
+		Name:     "sid",
+		Value:    id,
+		Path:     "/",
+		Domain:   o.BaseUrl.Host,
+		Secure:   true,
+		HttpOnly: true,
+	}
+	cookies = append(cookies, cookie)
+	o.HttpClient.Jar.SetCookies(o.BaseUrl, cookies)
+}
+
+func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error) {
+	appResponse, err := o.HttpClient.Get(appLink.LinkUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	saml, err := GetSaml(appResponse.Body)
+	decSaml, err := base64.StdEncoding.DecodeString(saml)
+
+	samlResponse := &Saml2pResponse{}
+	err = xml.Unmarshal(decSaml, samlResponse)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return *samlResponse, saml, nil
+
+}
+
 type OktaAuthResponse struct {
 	ExpiresAt    time.Time                `json:"expiresAt"`
 	SessionToken string                   `json:"sessionToken"`
@@ -217,4 +277,54 @@ type OktaSessionCache struct {
 	Org        string `json:"org"`
 	SessionId  string `json:"sessionId"`
 	ExpiryDate string `json:"expiryDate"`
+}
+
+type Saml2pResponse struct {
+	XMLName   xml.Name       `xml:"Response"`
+	Assertion Saml2Assertion `xml:"Assertion"`
+}
+
+type Saml2Assertion struct {
+	XMLName            xml.Name                `xml:"Assertion"`
+	AttributeStatement Saml2AttributeStatement `xml:"AttributeStatement"`
+}
+
+type Saml2AttributeStatement struct {
+	XMLName    xml.Name         `xml:"AttributeStatement"`
+	Attributes []Saml2Attribute `xml:"Attribute"`
+}
+
+type Saml2Attribute struct {
+	Name  string `xml:"Name,attr"`
+	Value string `xml:"AttributeValue"`
+}
+
+func GetSaml(r io.Reader) (string, error) {
+	z := html.NewTokenizer(r)
+	for {
+		tt := z.Next()
+		switch tt {
+		case html.ErrorToken:
+			return "", z.Err()
+		case html.SelfClosingTagToken:
+			tn, hasAttr := z.TagName()
+
+			if string(tn) == "input" {
+				attr := make(map[string]string)
+				for hasAttr {
+					key, val, moreAttr := z.TagAttr()
+					attr[string(key)] = string(val)
+					if !moreAttr {
+						break
+					}
+				}
+
+				if attr["name"] == "SAMLResponse" {
+					return string(attr["value"]), nil
+				}
+			}
+		}
+	}
+
+	return "", nil
 }
