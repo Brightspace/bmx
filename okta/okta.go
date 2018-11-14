@@ -12,11 +12,13 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
+	"path"
+	"runtime"
 	"strings"
 	"time"
 
 	"golang.org/x/net/html"
-
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -125,6 +127,35 @@ func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
 	return oktaApplications, nil
 }
 
+func (o *OktaClient) CacheOktaSession(userId, org, sessionId, expiresAt string) {
+	session := OktaSessionCache{
+		Userid:    userId,
+		Org:       org,
+		SessionId: sessionId,
+		ExpiresAt: expiresAt,
+	}
+	existingSessions, err := readOktaCacheSessionsFile()
+	if err != nil {
+		return
+	}
+	existingSessions = append(existingSessions, session)
+	writeOktaCacheSessionsFile(existingSessions)
+}
+
+func (o *OktaClient) GetCachedOktaSession(userid, org string) (string, bool) {
+	oktaSessions, err := readOktaCacheSessionsFile()
+	if err != nil {
+		return "", false
+	}
+	for _, oktaSession := range oktaSessions {
+		if oktaSession.Userid == userid &&
+			oktaSession.Org == org {
+			return oktaSession.SessionId, true
+		}
+	}
+	return "", false
+}
+
 func (o *OktaClient) SetSessionId(id string) {
 	cookies := o.HttpClient.Jar.Cookies(o.BaseUrl)
 	cookie := &http.Cookie{
@@ -155,6 +186,45 @@ func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error
 	}
 
 	return *samlResponse, saml, nil
+
+}
+
+func readOktaCacheSessionsFile() ([]OktaSessionCache, error) {
+	sessionsFile, err := ioutil.ReadFile(path.Join(userHomeDir(), ".bmx", "sessions"))
+	if err != nil {
+		return nil, err
+	}
+	var sessions []OktaSessionCache
+	json.Unmarshal([]byte(sessionsFile), &sessions)
+	return removeExpiredOktaSessions(sessions), nil
+}
+
+func writeOktaCacheSessionsFile(sessions []OktaSessionCache) {
+	sessionsJSON, _ := json.Marshal(sessions)
+	ioutil.WriteFile(path.Join(userHomeDir(), ".bmx", "sessions"), sessionsJSON, 0644)
+}
+
+func removeExpiredOktaSessions(sourceCaches []OktaSessionCache) []OktaSessionCache {
+	var returnCache []OktaSessionCache
+	curTime := time.Now()
+	for _, sourceCache := range sourceCaches {
+		expireTime, err := time.Parse(time.RFC3339, sourceCache.ExpiresAt)
+		if err == nil && curTime.After(expireTime) {
+			returnCache = append(returnCache, sourceCache)
+		}
+	}
+	return returnCache
+}
+
+func userHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
+		}
+		return home
+	}
+	return os.Getenv("HOME")
 }
 
 type OktaAuthResponse struct {
@@ -198,6 +268,13 @@ type OktaAppLink struct {
 	LinkUrl       string `json:"linkUrl"`
 	AppName       string `json:"appName"`
 	AppInstanceId string `json:"appInstanceId"`
+}
+
+type OktaSessionCache struct {
+	Userid    string `json:"userId"`
+	Org       string `json:"org"`
+	SessionId string `json:"sessionId"`
+	ExpiresAt string `json:"expiresAt"`
 }
 
 type Saml2pResponse struct {
