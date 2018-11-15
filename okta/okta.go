@@ -73,6 +73,16 @@ func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthRe
 	if err != nil {
 		return nil, err
 	}
+	returnCode := authResponse.StatusCode
+	switch {
+	case returnCode == 401 || returnCode == 403 || returnCode == 429:
+		z, err := ioutil.ReadAll(authResponse.Body)
+		return nil, fmtError("")
+
+	case returnCode < 200 || returnCode >= 400:
+		body, err := ioutil.ReadAll(authResponse.Body)
+		return nil, fmt.Errorf("Received invalid response from okta.\nReponse code: %q`nBody:%s", authResponse.Status, body)
+	}
 
 	oktaAuthResponse := &OktaAuthResponse{}
 	z, err := ioutil.ReadAll(authResponse.Body)
@@ -163,6 +173,22 @@ type OktaAuthResponse struct {
 	StateToken   string                   `json:"stateToken"`
 	Status       string                   `json:"status"`
 	Embedded     OktaAuthResponseEmbedded `json:"_embedded"`
+}
+
+type errorResponse struct {
+	Code    string         `json:"errorCode"`
+	Summary string         `json:"errorSummary"`
+	Link    string         `json:"errorLink"`
+	ErrorId string         `json:"errorId"`
+	Causes  []errorSummary `json:"errorCauses"`
+}
+
+func (er errorResponse) string() string {
+
+}
+
+type errorSummary struct {
+	Summary string `json:"errorSummary"`
 }
 
 type OktaAuthResponseEmbedded struct {
