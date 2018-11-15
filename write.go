@@ -1,12 +1,12 @@
 package bmx
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"runtime"
 
 	"github.com/aws/aws-sdk-go/service/sts"
+	"gopkg.in/ini.v1"
 )
 
 type WriteCmdOptions struct {
@@ -16,6 +16,7 @@ type WriteCmdOptions struct {
 	NoMask   bool
 	Password string
 	Profile  string
+	Output   string
 }
 
 func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) UserInfo {
@@ -26,16 +27,20 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) UserInfo {
 		NoMask:   writeOptions.NoMask,
 		Password: writeOptions.Password,
 	}
-
 	return user
 }
 
 func Write(oktaClient oktaClient, writeOptions WriteCmdOptions) {
 	creds := GetCredentials(oktaClient, GetUserInfoFromWriteCmdOptions(writeOptions))
-	WriteToAwsCredentials(creds, writeOptions.Profile)
+	// creds := &sts.Credentials{
+	// 	AccessKeyId:     aws.String("abc"),
+	// 	SecretAccessKey: aws.String("key"),
+	// 	SessionToken:    aws.String("token"),
+	// }
+	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))
 }
 
-func UserHomeDir() string {
+func userHomeDir() string {
 	if runtime.GOOS == "windows" {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {
@@ -46,17 +51,27 @@ func UserHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func AWSCredentialsPath() string {
-	path := UserHomeDir() + "/.aws/creds"
+func awsCredentialsPath() string {
+	path := userHomeDir() + "/.aws/credentials"
 	return path
 }
 
-func WriteToAwsCredentials(credentials *sts.Credentials, profile string) {
-	file, err := os.Create(AWSCredentialsPath())
-	if err != nil {
-		log.Fatal("Cannot create file", err)
+func resolvePath(path string) string {
+	if path == "" {
+		path = awsCredentialsPath()
 	}
+	return path
+}
 
-	defer file.Close()
-	fmt.Fprintf(file, "[%s]\nAWS_SESSION_TOKEN=%s\nAWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s", profile, *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+func writeToAwsCredentials(credentials *sts.Credentials, profile string, path string) {
+	os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0666)
+
+	cfg, err := ini.Load(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	cfg.Section(profile).Key("aws_access_key_id").SetValue(*credentials.AccessKeyId)
+	cfg.Section(profile).Key("aws_secret_access_key").SetValue(*credentials.SecretAccessKey)
+	cfg.Section(profile).Key("aws_session_token").SetValue(*credentials.SessionToken)
+	cfg.SaveTo(path)
 }
