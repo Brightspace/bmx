@@ -1,4 +1,4 @@
-package bmx
+package aws
 
 import (
 	"encoding/json"
@@ -9,11 +9,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Brightspace/bmx/console"
 	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/serviceProviders"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
 const (
@@ -21,21 +22,12 @@ const (
 	passwordPrompt = "Okta Password: "
 )
 
-type UserInfo struct {
-	Org      string
-	User     string
-	Account  string
-	NoMask   bool
-	Password string
+type AwsServiceProvider struct{}
 
-	ConsoleReader ConsoleReader
-	StsClient     stsiface.STSAPI
-}
-
-func GetCredentials(oktaClient oktaClient, user UserInfo) *sts.Credentials {
+func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
 	consoleReader := user.ConsoleReader
 	if user.ConsoleReader == nil {
-		consoleReader = defaultConsoleReader{}
+		consoleReader = console.DefaultConsoleReader{}
 	}
 
 	if user.StsClient == nil {
@@ -117,7 +109,7 @@ func GetCredentials(oktaClient oktaClient, user UserInfo) *sts.Credentials {
 	return out.Credentials
 }
 
-func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client, consoleReader ConsoleReader) error {
+func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client, consoleReader console.ConsoleReader) error {
 	if oktaAuthResponse.Status == "MFA_REQUIRED" {
 		fmt.Fprintln(os.Stderr, "MFA Required")
 		for idx, factor := range oktaAuthResponse.Embedded.Factors {

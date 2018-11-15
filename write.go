@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/Brightspace/bmx/serviceProviders"
+	"github.com/Brightspace/bmx/serviceProviders/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/ini.v1"
 )
@@ -17,10 +19,12 @@ type WriteCmdOptions struct {
 	Password string
 	Profile  string
 	Output   string
+
+	Provider ServiceProvider
 }
 
-func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) UserInfo {
-	user := UserInfo{
+func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProviders.UserInfo {
+	user := serviceProviders.UserInfo{
 		Org:      writeOptions.Org,
 		User:     writeOptions.User,
 		Account:  writeOptions.Account,
@@ -30,13 +34,11 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) UserInfo {
 	return user
 }
 
-func Write(oktaClient oktaClient, writeOptions WriteCmdOptions) {
-	creds := GetCredentials(oktaClient, GetUserInfoFromWriteCmdOptions(writeOptions))
-	// creds := &sts.Credentials{
-	// 	AccessKeyId:     aws.String("abc"),
-	// 	SecretAccessKey: aws.String("key"),
-	// 	SessionToken:    aws.String("token"),
-	// }
+func Write(oktaClient IOktaClient, writeOptions WriteCmdOptions) {
+	if writeOptions.Provider == nil {
+		writeOptions.Provider = aws.AwsServiceProvider{}
+	}
+	creds := writeOptions.Provider.GetCredentials(oktaClient, GetUserInfoFromWriteCmdOptions(writeOptions))
 	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))
 }
 

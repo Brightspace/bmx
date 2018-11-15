@@ -4,22 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 
-	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/serviceProviders"
+	"github.com/Brightspace/bmx/serviceProviders/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
-
-type oktaClient interface {
-	Authenticate(username string, password string) (*okta.OktaAuthResponse, error)
-	GetHttpClient() *http.Client
-	GetBaseUrl() *url.URL
-	StartSession(sessionToken string) (*okta.OktaSessionResponse, error)
-	ListApplications(userId string) ([]okta.OktaAppLink, error)
-	SetSessionId(id string)
-	GetSaml(appLink okta.OktaAppLink) (okta.Saml2pResponse, string, error)
-}
 
 type PrintCmdOptions struct {
 	Org      string
@@ -27,22 +17,26 @@ type PrintCmdOptions struct {
 	Account  string
 	NoMask   bool
 	Password string
+
+	Provider ServiceProvider
 }
 
-func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) UserInfo {
-	user := UserInfo{
+func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
+	user := serviceProviders.UserInfo{
 		Org:      printOptions.Org,
 		User:     printOptions.User,
 		Account:  printOptions.Account,
 		NoMask:   printOptions.NoMask,
 		Password: printOptions.Password,
 	}
-
 	return user
 }
 
-func Print(oktaClient oktaClient, printOptions PrintCmdOptions) {
-	creds := GetCredentials(oktaClient, GetUserInfoFromPrintCmdOptions(printOptions))
+func Print(oktaClient IOktaClient, printOptions PrintCmdOptions) {
+	if printOptions.Provider == nil {
+		printOptions.Provider = aws.AwsServiceProvider{}
+	}
+	creds := printOptions.Provider.GetCredentials(oktaClient, GetUserInfoFromPrintCmdOptions(printOptions))
 	printDefaultFormat(creds)
 }
 

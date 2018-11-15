@@ -18,10 +18,6 @@ import (
 	"github.com/Brightspace/bmx/okta"
 )
 
-func TestHelloWorld(t *testing.T) {
-	fmt.Println("Hello world!")
-}
-
 type mokta struct {
 	BaseUrl *url.URL
 }
