@@ -1,4 +1,4 @@
-package bmx
+package console
 
 import (
 	"bufio"
@@ -15,9 +15,9 @@ type ConsoleReader interface {
 	ReadInt(prompt string) (int, error)
 }
 
-type defaultConsoleReader struct{}
+type DefaultConsoleReader struct{}
 
-func (r defaultConsoleReader) ReadLine(prompt string) (string, error) {
+func (r DefaultConsoleReader) ReadLine(prompt string) (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Fprint(os.Stderr, prompt)
 	var s string
@@ -29,7 +29,7 @@ func (r defaultConsoleReader) ReadLine(prompt string) (string, error) {
 	return s, nil
 }
 
-func (r defaultConsoleReader) ReadInt(prompt string) (int, error) {
+func (r DefaultConsoleReader) ReadInt(prompt string) (int, error) {
 	var s string
 	var err error
 	if s, err = r.ReadLine(prompt); err != nil {
@@ -44,6 +44,6 @@ func (r defaultConsoleReader) ReadInt(prompt string) (int, error) {
 	return i, nil
 }
 
-func (r defaultConsoleReader) ReadPassword(prompt string) (string, error) {
+func (r DefaultConsoleReader) ReadPassword(prompt string) (string, error) {
 	return password.Read(prompt)
 }
