@@ -58,6 +58,14 @@ type OktaClient struct {
 	BaseUrl      *url.URL
 }
 
+func (o *OktaClient) GetBaseUrl() *url.URL {
+	return o.BaseUrl
+}
+
+func (o *OktaClient) GetHttpClient() *http.Client {
+	return o.HttpClient
+}
+
 func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error) {
 	appResponse, err := o.HttpClient.Get(appLink.LinkUrl)
 	if err != nil {
