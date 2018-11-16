@@ -75,26 +75,17 @@ func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthRe
 	if err != nil {
 		return nil, err
 	}
-	returnCode := authResponse.StatusCode
-	switch {
-	case returnCode == 401 || returnCode == 403 || returnCode == 429:
+	if authResponse.StatusCode != 200 {
 		z, err := ioutil.ReadAll(authResponse.Body)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		eResp := &errorResponse{}
 		err = json.Unmarshal(z, &eResp)
 		if err != nil {
-			log.Fatal(err)
+			return nil, fmt.Errorf("Received invalid response from okta.\nReponse code: %q`nBody:%s", authResponse.Status, body)
 		}
 		return nil, fmt.Errorf("%s. Response code: %q", eResp.Summary, authResponse.Status)
-
-	case returnCode < 200 || returnCode >= 400:
-		body, err := ioutil.ReadAll(authResponse.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return nil, fmt.Errorf("Received invalid response from okta.\nReponse code: %q`nBody:%s", authResponse.Status, body)
 	}
 
 	oktaAuthResponse := &OktaAuthResponse{}
