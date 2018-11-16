@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/Brightspace/bmx/saml/identityProviders"
+
 	"github.com/Brightspace/bmx/saml/serviceProviders"
 	"github.com/Brightspace/bmx/saml/serviceProviders/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -34,11 +36,11 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProvide
 	return user
 }
 
-func Write(oktaClient IOktaClient, writeOptions WriteCmdOptions) {
+func Write(idProvider identityProviders.IdentityProvider, writeOptions WriteCmdOptions) {
 	if writeOptions.Provider == nil {
 		writeOptions.Provider = aws.AwsServiceProvider{}
 	}
-	creds := writeOptions.Provider.GetCredentials(oktaClient, GetUserInfoFromWriteCmdOptions(writeOptions))
+	creds := writeOptions.Provider.GetCredentials(idProvider, GetUserInfoFromWriteCmdOptions(writeOptions))
 	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))
 }
 
