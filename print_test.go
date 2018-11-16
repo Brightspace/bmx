@@ -6,13 +6,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Brightspace/bmx/saml/identityProviders"
+
 	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/Brightspace/bmx"
 	"github.com/Brightspace/bmx/okta"
-	"github.com/Brightspace/bmx/serviceProviders"
+	"github.com/Brightspace/bmx/saml/serviceProviders"
 )
 
 type mokta struct {
@@ -66,7 +68,7 @@ func (m *mokta) GetSaml(appLink okta.OktaAppLink) (okta.Saml2pResponse, string, 
 
 type awsServiceProviderMock struct{}
 
-func (a *awsServiceProviderMock) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
+func (a *awsServiceProviderMock) GetCredentials(oktaClient identityProviders.IdentityProvider, user serviceProviders.UserInfo) *sts.Credentials {
 	return &sts.Credentials{
 		AccessKeyId:     aws.String("access_key_id"),
 		SecretAccessKey: aws.String("secrest_access_key"),

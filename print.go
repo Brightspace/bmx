@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Brightspace/bmx/serviceProviders"
-	"github.com/Brightspace/bmx/serviceProviders/aws"
+	"github.com/Brightspace/bmx/saml/serviceProviders"
+	"github.com/Brightspace/bmx/saml/serviceProviders/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 

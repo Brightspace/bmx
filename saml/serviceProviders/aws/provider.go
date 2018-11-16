@@ -11,7 +11,8 @@ import (
 
 	"github.com/Brightspace/bmx/console"
 	"github.com/Brightspace/bmx/okta"
-	"github.com/Brightspace/bmx/serviceProviders"
+	"github.com/Brightspace/bmx/saml/identityProviders"
+	"github.com/Brightspace/bmx/saml/serviceProviders"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -24,7 +25,7 @@ const (
 
 type AwsServiceProvider struct{}
 
-func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
+func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.IdentityProvider, user serviceProviders.UserInfo) *sts.Credentials {
 	if user.ConsoleReader == nil {
 		user.ConsoleReader = console.DefaultConsoleReader{}
 	}
