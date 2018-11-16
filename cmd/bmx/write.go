@@ -30,11 +30,11 @@ var writeCmd = &cobra.Command{
 	Short: "Write to aws credential file",
 	Long:  "Write to aws credential file",
 	Run: func(cmd *cobra.Command, args []string) {
-		okatClient, err := okta.NewOktaClient(writeOptions.Org)
+		oktaClient, err := okta.NewOktaClient(writeOptions.Org)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		bmx.Write(okatClient, writeOptions)
+		bmx.Write(oktaClient, writeOptions)
 	},
 }

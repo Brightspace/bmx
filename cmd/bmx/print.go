@@ -27,11 +27,11 @@ var printCmd = &cobra.Command{
 	Short: "Print to screen",
 	Long:  `Print the long stuff to screen`,
 	Run: func(cmd *cobra.Command, args []string) {
-		okatClient, err := okta.NewOktaClient(printOptions.Org)
+		oktaClient, err := okta.NewOktaClient(printOptions.Org)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		bmx.Print(okatClient, printOptions)
+		bmx.Print(oktaClient, printOptions)
 	},
 }

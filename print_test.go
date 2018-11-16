@@ -1,14 +1,10 @@
 package bmx_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
-
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -16,6 +12,7 @@ import (
 
 	"github.com/Brightspace/bmx"
 	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/serviceProviders"
 )
 
 type mokta struct {
@@ -67,59 +64,21 @@ func (m *mokta) GetSaml(appLink okta.OktaAppLink) (okta.Saml2pResponse, string, 
 	return saml, raw, nil
 }
 
-type queuedConsoleReader struct {
-	ResponseItems []string
-	currentItem   int
-}
+type awsServiceProviderMock struct{}
 
-func (q *queuedConsoleReader) ReadLine(prompt string) (string, error) {
-	r := q.ResponseItems[q.currentItem]
-	q.currentItem++
-	fmt.Printf("%s: %s\n", prompt, r)
-	return r, nil
-}
-func (q *queuedConsoleReader) ReadPassword(prompt string) (string, error) {
-	r := q.ResponseItems[q.currentItem]
-	q.currentItem++
-	fmt.Printf("%s: %s\n", prompt, r)
-	return r, nil
-}
-func (q *queuedConsoleReader) ReadInt(prompt string) (int, error) {
-	r, _ := strconv.Atoi(q.ResponseItems[q.currentItem])
-	q.currentItem++
-	fmt.Printf("%s: %d\n", prompt, r)
-	return r, nil
-}
-
-type stsMock struct {
-	stsiface.STSAPI
-}
-
-func (s *stsMock) AssumeRoleWithSAML(input *sts.AssumeRoleWithSAMLInput) (*sts.AssumeRoleWithSAMLOutput, error) {
-	out := &sts.AssumeRoleWithSAMLOutput{
-		Credentials: &sts.Credentials{
-			AccessKeyId:     aws.String("access_key_id"),
-			SecretAccessKey: aws.String("secrest_access_key"),
-			SessionToken:    aws.String("session_token"),
-			Expiration:      aws.Time(time.Now().Add(time.Hour * 8)),
-		},
+func (a *awsServiceProviderMock) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
+	return &sts.Credentials{
+		AccessKeyId:     aws.String("access_key_id"),
+		SecretAccessKey: aws.String("secrest_access_key"),
+		SessionToken:    aws.String("session_token"),
+		Expiration:      aws.Time(time.Now().Add(time.Hour * 8)),
 	}
-
-	return out, nil
 }
 
 func TestMonkey(t *testing.T) {
-	cr := &queuedConsoleReader{
-		ResponseItems: []string{
-			"myuser",
-			"mypassword",
-			"0",
-		},
-	}
 	options := bmx.PrintCmdOptions{
-		Org:           "myorg",
-		ConsoleReader: cr,
-		StsClient:     &stsMock{},
+		Org:      "myorg",
+		Provider: &awsServiceProviderMock{},
 	}
 
 	oktaClient := &mokta{}

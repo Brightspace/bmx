@@ -25,9 +25,9 @@ const (
 type AwsServiceProvider struct{}
 
 func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
-	consoleReader := user.ConsoleReader
+	fmt.Printf("%T", oktaClient)
 	if user.ConsoleReader == nil {
-		consoleReader = console.DefaultConsoleReader{}
+		user.ConsoleReader = console.DefaultConsoleReader{}
 	}
 
 	if user.StsClient == nil {
@@ -41,17 +41,17 @@ func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClie
 
 	var username string
 	if len(user.User) == 0 {
-		username, _ = consoleReader.ReadLine(usernamePrompt)
+		username, _ = user.ConsoleReader.ReadLine(usernamePrompt)
 	} else {
 		username = user.User
 	}
 
 	var pass string
 	if user.NoMask {
-		pass, _ = consoleReader.ReadLine(passwordPrompt)
+		pass, _ = user.ConsoleReader.ReadLine(passwordPrompt)
 	} else {
 		var err error
-		pass, err = consoleReader.ReadPassword(passwordPrompt)
+		pass, err = user.ConsoleReader.ReadPassword(passwordPrompt)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,7 +63,7 @@ func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClie
 		log.Fatal(err)
 	}
 
-	err = doMfa(oktaAuthResponse, oktaClient.GetHttpClient(), consoleReader)
+	err = doMfa(oktaAuthResponse, oktaClient.GetHttpClient(), user.ConsoleReader)
 
 	oktaSessionResponse, err := oktaClient.StartSession(oktaAuthResponse.SessionToken)
 	oktaClient.SetSessionId(oktaSessionResponse.Id)
@@ -80,7 +80,7 @@ func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClie
 			}
 		}
 		var accountId int
-		if accountId, err = consoleReader.ReadInt("Select an account: "); err != nil {
+		if accountId, err = user.ConsoleReader.ReadInt("Select an account: "); err != nil {
 			log.Fatal(err)
 		}
 		app = &oktaApplications[accountId]
