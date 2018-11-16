@@ -14,7 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/sts"
 
-	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/saml/identityProviders/okta"
 	"github.com/Brightspace/bmx/saml/serviceProviders"
 	awsService "github.com/Brightspace/bmx/saml/serviceProviders/aws"
 )

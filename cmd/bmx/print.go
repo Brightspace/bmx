@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/saml/identityProviders/okta"
 
 	"github.com/Brightspace/bmx"
 	"github.com/spf13/cobra"

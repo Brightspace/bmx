@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Brightspace/bmx/okta"
+	"github.com/Brightspace/bmx/saml/identityProviders/okta"
 )
 
 type IdentityProvider interface {

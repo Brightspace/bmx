@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/Brightspace/bmx/console"
-	"github.com/Brightspace/bmx/okta"
 	"github.com/Brightspace/bmx/saml/identityProviders"
+	"github.com/Brightspace/bmx/saml/identityProviders/okta"
 	"github.com/Brightspace/bmx/saml/serviceProviders"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
