@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Brightspace/bmx/config"
 	"github.com/Brightspace/bmx/saml/identityProviders/okta"
 
 	"github.com/Brightspace/bmx"
@@ -17,8 +18,6 @@ func init() {
 	printCmd.Flags().StringVar(&printOptions.Account, "account", "", "the account name to auth against")
 	printCmd.Flags().BoolVar(&printOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	printCmd.MarkFlagRequired("org")
-
 	rootCmd.AddCommand(printCmd)
 }
 
@@ -27,6 +26,7 @@ var printCmd = &cobra.Command{
 	Short: "Print to screen",
 	Long:  `Print the long stuff to screen`,
 	Run: func(cmd *cobra.Command, args []string) {
+		MergePrintCmdOptions(&printOptions, config.DefaultConfig{})
 		oktaClient, err := okta.NewOktaClient(printOptions.Org)
 		if err != nil {
 			log.Fatal(err)
@@ -34,4 +34,22 @@ var printCmd = &cobra.Command{
 
 		bmx.Print(oktaClient, printOptions)
 	},
+}
+
+func MergePrintCmdOptions(printOptions *bmx.PrintCmdOptions, config Config) {
+	cfg := config.LoadConfigs()
+	if cfg != nil {
+		if printOptions.Org == "" {
+			printOptions.Org = cfg.Key("org").String()
+			if printOptions.Org == "" {
+				log.Fatal(`Have to provide "Org" either in config file or command line argument`)
+			}
+		}
+		if printOptions.User == "" {
+			printOptions.User = cfg.Key("user").String()
+		}
+		if printOptions.Account == "" {
+			printOptions.Account = cfg.Key("account").String()
+		}
+	}
 }
