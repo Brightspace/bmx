@@ -22,7 +22,7 @@ type WriteCmdOptions struct {
 	Profile  string
 	Output   string
 
-	Provider ServiceProvider
+	Provider serviceProviders.ServiceProvider
 }
 
 func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProviders.UserInfo {

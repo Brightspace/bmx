@@ -20,7 +20,7 @@ type PrintCmdOptions struct {
 	NoMask   bool
 	Password string
 
-	Provider ServiceProvider
+	Provider serviceProviders.ServiceProvider
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
