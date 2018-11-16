@@ -25,7 +25,6 @@ const (
 type AwsServiceProvider struct{}
 
 func (a AwsServiceProvider) GetCredentials(oktaClient serviceProviders.IOktaClient, user serviceProviders.UserInfo) *sts.Credentials {
-	fmt.Printf("%T", oktaClient)
 	if user.ConsoleReader == nil {
 		user.ConsoleReader = console.DefaultConsoleReader{}
 	}
