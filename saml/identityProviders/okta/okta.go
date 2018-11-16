@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Brightspace/bmx/okta/file"
+	"github.com/Brightspace/bmx/saml/identityProviders/okta/file"
 	"golang.org/x/net/html"
 	"golang.org/x/net/publicsuffix"
 )
@@ -58,12 +58,22 @@ type OktaClient struct {
 	BaseUrl      *url.URL
 }
 
-func (o *OktaClient) GetHttpClient() *http.Client {
-	return o.HttpClient
-}
+func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error) {
+	appResponse, err := o.HttpClient.Get(appLink.LinkUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func (o *OktaClient) GetBaseUrl() *url.URL {
-	return o.BaseUrl
+	saml, err := GetSaml(appResponse.Body)
+	decSaml, err := base64.StdEncoding.DecodeString(saml)
+
+	samlResponse := &Saml2pResponse{}
+	err = xml.Unmarshal(decSaml, samlResponse)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return *samlResponse, saml, nil
 }
 
 func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthResponse, error) {
@@ -183,25 +193,6 @@ func (o *OktaClient) SetSessionId(id string) {
 	}
 	cookies = append(cookies, cookie)
 	o.HttpClient.Jar.SetCookies(o.BaseUrl, cookies)
-}
-
-func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error) {
-	appResponse, err := o.HttpClient.Get(appLink.LinkUrl)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	saml, err := GetSaml(appResponse.Body)
-	decSaml, err := base64.StdEncoding.DecodeString(saml)
-
-	samlResponse := &Saml2pResponse{}
-	err = xml.Unmarshal(decSaml, samlResponse)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return *samlResponse, saml, nil
-
 }
 
 func removeExpiredOktaSessions(sourceCaches []file.OktaSessionCache) []file.OktaSessionCache {
