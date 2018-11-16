@@ -38,7 +38,7 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProvide
 
 func Write(idProvider identityProviders.IdentityProvider, writeOptions WriteCmdOptions) {
 	if writeOptions.Provider == nil {
-		writeOptions.Provider = aws.AwsServiceProvider{}
+		writeOptions.Provider = aws.NewAwsServiceProvider(writeOptions.Account)
 	}
 	creds := writeOptions.Provider.GetCredentials(idProvider, GetUserInfoFromWriteCmdOptions(writeOptions))
 	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))

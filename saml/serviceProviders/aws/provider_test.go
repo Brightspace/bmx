@@ -129,7 +129,8 @@ func TestMonkey(t *testing.T) {
 		StsClient:     &stsMock{},
 	}
 
-	provider := awsService.AwsServiceProvider{}
+	provider := awsService.NewAwsServiceProvider("account")
+	provider.StsClient = &stsMock{}
 	creds := provider.GetCredentials(oktaClient, user)
 	if creds == nil {
 		panic("fail")

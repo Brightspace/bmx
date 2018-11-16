@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
 const (
@@ -23,20 +24,29 @@ const (
 	passwordPrompt = "Okta Password: "
 )
 
-type AwsServiceProvider struct{}
+func NewAwsServiceProvider(account string) *AwsServiceProvider {
+	awsSession, err := session.NewSession()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stsClient := sts.New(awsSession)
+
+	serviceProvider := &AwsServiceProvider{
+		StsClient: stsClient,
+		Account:   account,
+	}
+	return serviceProvider
+}
+
+type AwsServiceProvider struct {
+	StsClient stsiface.STSAPI
+	Account   string
+}
 
 func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.IdentityProvider, user serviceProviders.UserInfo) *sts.Credentials {
 	if user.ConsoleReader == nil {
 		user.ConsoleReader = console.DefaultConsoleReader{}
-	}
-
-	if user.StsClient == nil {
-		awsSession, err := session.NewSession()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		user.StsClient = sts.New(awsSession)
 	}
 
 	var username string
@@ -70,7 +80,7 @@ func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.Identity
 
 	oktaApplications, err := oktaClient.ListApplications(oktaSessionResponse.UserId)
 
-	app, found := findApp(user.Account, oktaApplications)
+	app, found := findApp(a.Account, oktaApplications)
 	if !found {
 		// select an account
 		fmt.Fprintln(os.Stderr, "Available accounts:")
@@ -101,7 +111,7 @@ func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.Identity
 		SAMLAssertion: aws.String(saml),
 	}
 
-	out, err := user.StsClient.AssumeRoleWithSAML(samlInput)
+	out, err := a.StsClient.AssumeRoleWithSAML(samlInput)
 	if err != nil {
 		log.Fatal(err)
 	}

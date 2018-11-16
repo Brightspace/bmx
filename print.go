@@ -36,7 +36,7 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 
 func Print(oktaClient identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
 	if printOptions.Provider == nil {
-		printOptions.Provider = aws.AwsServiceProvider{}
+		printOptions.Provider = aws.NewAwsServiceProvider(printOptions.Account)
 	}
 	creds := printOptions.Provider.GetCredentials(oktaClient, GetUserInfoFromPrintCmdOptions(printOptions))
 	printDefaultFormat(creds)
