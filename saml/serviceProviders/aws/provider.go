@@ -1,30 +1,18 @@
 package aws
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"encoding/base64"
+	"encoding/xml"
 	"log"
-	"net/http"
-	"os"
 	"strings"
 
-	"github.com/Brightspace/bmx/console"
-	"github.com/Brightspace/bmx/saml/identityProviders"
-	"github.com/Brightspace/bmx/saml/identityProviders/okta"
-	"github.com/Brightspace/bmx/saml/serviceProviders"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-const (
-	usernamePrompt = "Okta Username: "
-	passwordPrompt = "Okta Password: "
-)
-
-func NewAwsServiceProvider(account string) *AwsServiceProvider {
+func NewAwsServiceProvider() *AwsServiceProvider {
 	awsSession, err := session.NewSession()
 	if err != nil {
 		log.Fatal(err)
@@ -34,69 +22,22 @@ func NewAwsServiceProvider(account string) *AwsServiceProvider {
 
 	serviceProvider := &AwsServiceProvider{
 		StsClient: stsClient,
-		Account:   account,
 	}
 	return serviceProvider
 }
 
 type AwsServiceProvider struct {
 	StsClient stsiface.STSAPI
-	Account   string
 }
 
-func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.IdentityProvider, user serviceProviders.UserInfo) *sts.Credentials {
-	if user.ConsoleReader == nil {
-		user.ConsoleReader = console.DefaultConsoleReader{}
-	}
+func (a AwsServiceProvider) GetCredentials(saml string) *sts.Credentials {
+	decSaml, err := base64.StdEncoding.DecodeString(saml)
 
-	var username string
-	if len(user.User) == 0 {
-		username, _ = user.ConsoleReader.ReadLine(usernamePrompt)
-	} else {
-		username = user.User
-	}
-
-	var pass string
-	if user.NoMask {
-		pass, _ = user.ConsoleReader.ReadLine(passwordPrompt)
-	} else {
-		var err error
-		pass, err = user.ConsoleReader.ReadPassword(passwordPrompt)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintln(os.Stderr)
-	}
-
-	oktaAuthResponse, err := oktaClient.Authenticate(username, pass)
+	samlResponse := &Saml2pResponse{}
+	err = xml.Unmarshal(decSaml, samlResponse)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	err = doMfa(oktaAuthResponse, oktaClient.GetHttpClient(), user.ConsoleReader)
-
-	oktaSessionResponse, err := oktaClient.StartSession(oktaAuthResponse.SessionToken)
-	oktaClient.SetSessionId(oktaSessionResponse.Id)
-
-	oktaApplications, err := oktaClient.ListApplications(oktaSessionResponse.UserId)
-
-	app, found := findApp(a.Account, oktaApplications)
-	if !found {
-		// select an account
-		fmt.Fprintln(os.Stderr, "Available accounts:")
-		for idx, a := range oktaApplications {
-			if a.AppName == "amazon_aws" {
-				os.Stderr.WriteString(fmt.Sprintf("[%d] %s\n", idx, a.Label))
-			}
-		}
-		var accountId int
-		if accountId, err = user.ConsoleReader.ReadInt("Select an account: "); err != nil {
-			log.Fatal(err)
-		}
-		app = &oktaApplications[accountId]
-	}
-
-	samlResponse, saml, err := oktaClient.GetSaml(*app)
 
 	var arns []string
 	for _, v := range samlResponse.Assertion.AttributeStatement.Attributes {
@@ -119,57 +60,22 @@ func (a AwsServiceProvider) GetCredentials(oktaClient identityProviders.Identity
 	return out.Credentials
 }
 
-func doMfa(oktaAuthResponse *okta.OktaAuthResponse, client *http.Client, consoleReader console.ConsoleReader) error {
-	if oktaAuthResponse.Status == "MFA_REQUIRED" {
-		fmt.Fprintln(os.Stderr, "MFA Required")
-		for idx, factor := range oktaAuthResponse.Embedded.Factors {
-			fmt.Fprintf(os.Stderr, "%d - %s\n", idx, factor.FactorType)
-		}
-
-		var mfaIdx int
-		var err error
-		if mfaIdx, err = consoleReader.ReadInt("Select an available MFA option: "); err != nil {
-			log.Fatal(err)
-		}
-		vurl := oktaAuthResponse.Embedded.Factors[mfaIdx].Links.Verify.Url
-
-		body := fmt.Sprintf(`{"stateToken":"%s"}`, oktaAuthResponse.StateToken)
-		authResponse, err := client.Post(vurl, "application/json", strings.NewReader(body))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		z, _ := ioutil.ReadAll(authResponse.Body)
-		err = json.Unmarshal(z, &oktaAuthResponse)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var code string
-		if code, err = consoleReader.ReadLine("Code: "); err != nil {
-			log.Fatal(err)
-		}
-		body = fmt.Sprintf(`{"stateToken":"%s","passCode":"%s"}`, oktaAuthResponse.StateToken, code)
-		authResponse, err = client.Post(vurl, "application/json", strings.NewReader(body))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		z, _ = ioutil.ReadAll(authResponse.Body)
-		err = json.Unmarshal(z, &oktaAuthResponse)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	return nil
+type Saml2pResponse struct {
+	XMLName   xml.Name       `xml:"Response"`
+	Assertion Saml2Assertion `xml:"Assertion"`
 }
 
-func findApp(app string, apps []okta.OktaAppLink) (foundApp *okta.OktaAppLink, found bool) {
-	for _, v := range apps {
-		if strings.ToLower(v.Label) == strings.ToLower(app) {
-			return &v, true
-		}
-	}
+type Saml2Assertion struct {
+	XMLName            xml.Name                `xml:"Assertion"`
+	AttributeStatement Saml2AttributeStatement `xml:"AttributeStatement"`
+}
 
-	return nil, false
+type Saml2AttributeStatement struct {
+	XMLName    xml.Name         `xml:"AttributeStatement"`
+	Attributes []Saml2Attribute `xml:"Attribute"`
+}
+
+type Saml2Attribute struct {
+	Name  string `xml:"Name,attr"`
+	Value string `xml:"AttributeValue"`
 }

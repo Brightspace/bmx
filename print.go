@@ -3,6 +3,7 @@ package bmx
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -13,14 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
+var (
+	AwsServiceProvider serviceProviders.ServiceProvider
+)
+
+func init() {
+	AwsServiceProvider = aws.NewAwsServiceProvider()
+}
+
 type PrintCmdOptions struct {
 	Org      string
 	User     string
 	Account  string
 	NoMask   bool
 	Password string
-
-	Provider serviceProviders.ServiceProvider
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
@@ -34,11 +41,19 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 	return user
 }
 
-func Print(oktaClient identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
-	if printOptions.Provider == nil {
-		printOptions.Provider = aws.NewAwsServiceProvider(printOptions.Account)
+func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
+	fmt.Println("PRINT")
+	printOptions.User, printOptions.Password = getCredentials(printOptions.User, printOptions.NoMask)
+	fmt.Println("got credentials")
+	user := GetUserInfoFromPrintCmdOptions(printOptions)
+	fmt.Println("got user")
+
+	saml, err := authenticate(user, idProvider)
+	if err != nil {
+		log.Fatal(err)
 	}
-	creds := printOptions.Provider.GetCredentials(oktaClient, GetUserInfoFromPrintCmdOptions(printOptions))
+
+	creds := AwsServiceProvider.GetCredentials(saml)
 	printDefaultFormat(creds)
 }
 

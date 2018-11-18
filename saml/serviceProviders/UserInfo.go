@@ -1,8 +1,6 @@
 package serviceProviders
 
-import (
-	"github.com/Brightspace/bmx/console"
-)
+import ()
 
 type UserInfo struct {
 	Org      string
@@ -10,6 +8,4 @@ type UserInfo struct {
 	Account  string
 	NoMask   bool
 	Password string
-
-	ConsoleReader console.ConsoleReader
 }

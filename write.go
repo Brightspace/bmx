@@ -6,9 +6,7 @@ import (
 	"runtime"
 
 	"github.com/Brightspace/bmx/saml/identityProviders"
-
 	"github.com/Brightspace/bmx/saml/serviceProviders"
-	"github.com/Brightspace/bmx/saml/serviceProviders/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"gopkg.in/ini.v1"
 )
@@ -37,10 +35,15 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProvide
 }
 
 func Write(idProvider identityProviders.IdentityProvider, writeOptions WriteCmdOptions) {
-	if writeOptions.Provider == nil {
-		writeOptions.Provider = aws.NewAwsServiceProvider(writeOptions.Account)
+	writeOptions.User, writeOptions.Password = getCredentials(writeOptions.User, writeOptions.NoMask)
+	user := GetUserInfoFromWriteCmdOptions(writeOptions)
+
+	saml, err := authenticate(user, idProvider)
+	if err != nil {
+		log.Fatal(err)
 	}
-	creds := writeOptions.Provider.GetCredentials(idProvider, GetUserInfoFromWriteCmdOptions(writeOptions))
+
+	creds := AwsServiceProvider.GetCredentials(saml)
 	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))
 }
 
