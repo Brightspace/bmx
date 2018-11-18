@@ -3,6 +3,7 @@
 package password
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"syscall"
@@ -26,6 +27,7 @@ func read() (string, error) {
 	// right away because it doesn't matter (it is idempotent).
 	var oldMode uint32
 	if err := syscall.GetConsoleMode(handle, &oldMode); err != nil {
+		fmt.Println("here")
 		log.Fatal(err)
 	}
 	defer setConsoleMode(handle, oldMode)

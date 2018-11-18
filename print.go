@@ -42,11 +42,8 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 }
 
 func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
-	fmt.Println("PRINT")
 	printOptions.User, printOptions.Password = getCredentials(printOptions.User, printOptions.NoMask)
-	fmt.Println("got credentials")
 	user := GetUserInfoFromPrintCmdOptions(printOptions)
-	fmt.Println("got user")
 
 	saml, err := authenticate(user, idProvider)
 	if err != nil {
