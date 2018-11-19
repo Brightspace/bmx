@@ -71,7 +71,7 @@ func (o *OktaClient) GetSaml(appLink OktaAppLink) (string, error) {
 	return GetSaml(appResponse.Body)
 }
 
-func (o *OktaClient) Authenticate(username string, password string) (string, error) {
+func (o *OktaClient) Authenticate(username, password, org string) (string, error) {
 	rel, err := url.Parse("authn")
 	if err != nil {
 		return "", err
@@ -101,8 +101,34 @@ func (o *OktaClient) Authenticate(username string, password string) (string, err
 
 	oktaSessionResponse, err := o.startSession(oktaAuthResponse.SessionToken)
 	o.setSessionId(oktaSessionResponse.Id)
+	o.CacheOktaSession(username, org, oktaSessionResponse.Id, oktaSessionResponse.ExpiresAt)
 
 	return oktaSessionResponse.UserId, err
+}
+
+func (o *OktaClient) AuthenticateFromCache(username, org string) (string, bool) {
+	sessionID, ok := o.GetCachedOktaSession(username, org)
+	if !ok {
+		return "", false
+	}
+
+	o.setSessionId(sessionID)
+
+	rel, _ := url.Parse(fmt.Sprintf("users/me"))
+	url := o.BaseUrl.ResolveReference(rel)
+
+	meRequest, err := http.NewRequest("GET", url.String(), nil)
+	meResponse, err := o.HttpClient.Do(meRequest)
+	if err != nil {
+		return "", false
+	}
+	var me OktaMeResponse
+	b, err := ioutil.ReadAll(meResponse.Body)
+	err = json.Unmarshal(b, &me)
+	if err != nil {
+		return "", false
+	}
+	return me.Id, true
 }
 
 func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
@@ -205,7 +231,7 @@ func removeExpiredOktaSessions(sourceCaches []file.OktaSessionCache) []file.Okta
 	curTime := time.Now()
 	for _, sourceCache := range sourceCaches {
 		expireTime, err := time.Parse(time.RFC3339, sourceCache.ExpiresAt)
-		if err == nil && curTime.After(expireTime) {
+		if err == nil && expireTime.After(curTime) {
 			returnCache = append(returnCache, sourceCache)
 		}
 	}
@@ -287,8 +313,13 @@ type OktaSessionsRequest struct {
 }
 
 type OktaSessionResponse struct {
-	Id     string `json:"id"`
-	UserId string `json:"userId"`
+	Id        string `json:"id"`
+	UserId    string `json:"userId"`
+	ExpiresAt string `json:"expiresAt"`
+}
+
+type OktaMeResponse struct {
+	Id string `json:"id"`
 }
 
 type OktaAppLink struct {

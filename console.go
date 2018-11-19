@@ -25,7 +25,7 @@ func init() {
 	ConsoleReader = console.DefaultConsoleReader{}
 }
 
-func getCredentials(usernameFlag string, noMask bool) (string, string) {
+func getUserIfEmpty(usernameFlag string) string {
 	var username string
 	if len(usernameFlag) == 0 {
 		var err error
@@ -36,7 +36,10 @@ func getCredentials(usernameFlag string, noMask bool) (string, string) {
 	} else {
 		username = usernameFlag
 	}
+	return username
+}
 
+func getPassword(noMask bool) string {
 	var pass string
 	if noMask {
 		var err error
@@ -52,14 +55,20 @@ func getCredentials(usernameFlag string, noMask bool) (string, string) {
 		}
 		fmt.Fprintln(os.Stderr)
 	}
-
-	return username, pass
+	return pass
 }
 
 func authenticate(user serviceProviders.UserInfo, oktaClient identityProviders.IdentityProvider) (string, error) {
-	userID, err := oktaClient.Authenticate(user.User, user.Password)
-	if err != nil {
-		log.Fatal(err)
+	var userID string
+	var ok bool
+	userID, ok = oktaClient.AuthenticateFromCache(user.User, user.Org)
+	if !ok {
+		user.Password = getPassword(user.NoMask)
+		var err error
+		userID, err = oktaClient.Authenticate(user.User, user.Password, user.Org)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	oktaApplications, err := oktaClient.ListApplications(userID)
