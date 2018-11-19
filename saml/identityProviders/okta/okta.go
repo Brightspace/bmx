@@ -90,14 +90,14 @@ func (o *OktaClient) Authenticate(username, password, org string) (string, error
 	if authResponse.StatusCode != 200 {
 		z, err := ioutil.ReadAll(authResponse.Body)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		eResp := &errorResponse{}
 		err = json.Unmarshal(z, &eResp)
 		if err != nil {
-			return nil, fmt.Errorf("Received invalid response from okta.\nReponse code: %q\nBody:%s", authResponse.Status, body)
+			return "", fmt.Errorf("Received invalid response from okta.\nReponse code: %q\nBody:%s", authResponse.Status, body)
 		}
-		return nil, fmt.Errorf("%s. Response code: %q", eResp.Summary, authResponse.Status)
+		return "", fmt.Errorf("%s. Response code: %q", eResp.Summary, authResponse.Status)
 	}
 
 	oktaAuthResponse := &OktaAuthResponse{}
