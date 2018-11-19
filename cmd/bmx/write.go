@@ -20,6 +20,22 @@ func init() {
 	writeCmd.Flags().StringVar(&writeOptions.Output, "output", "", "write to the specified file instead of ~/.aws/credentials")
 	writeCmd.Flags().BoolVar(&writeOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
+	if userConfig.Org == "" {
+		writeCmd.MarkFlagRequired("org")
+	}
+
+	if userConfig.Profile == "" {
+		writeCmd.MarkFlagRequired("profile")
+	}
+
+	if userConfig.User == "" {
+		writeCmd.MarkFlagRequired("user")
+	}
+
+	if userConfig.Account == "" {
+		writeCmd.MarkFlagRequired("account")
+	}
+
 	rootCmd.AddCommand(writeCmd)
 }
 
@@ -28,36 +44,29 @@ var writeCmd = &cobra.Command{
 	Short: "Write to aws credential file",
 	Long:  "Write to aws credential file",
 	Run: func(cmd *cobra.Command, args []string) {
-		MergeWriteCmdOptions(&writeOptions, config.DefaultConfig{})
-		oktaClient, err := okta.NewOktaClient(writeOptions.Org)
+		mergedOptions := MergeWriteCmdOptions(userConfig, writeOptions)
+		oktaClient, err := okta.NewOktaClient(mergedOptions.Org)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		bmx.Write(oktaClient, writeOptions)
+		bmx.Write(oktaClient, mergedOptions)
 	},
 }
 
-func MergeWriteCmdOptions(writeOptions *bmx.WriteCmdOptions, config Config) {
-	cfg := config.LoadConfigs()
-	if cfg != nil {
-		if writeOptions.Org == "" {
-			writeOptions.Org = cfg.Key("org").String()
-			if writeOptions.Org == "" {
-				log.Fatal(`Have to provide "Org" either in config file or command line argument`)
-			}
-		}
-		if writeOptions.Profile == "" {
-			writeOptions.Profile = cfg.Key("profile").String()
-			if writeOptions.Profile == "" {
-				log.Fatal(`Have to provide "Profile" either in config file or command line argument`)
-			}
-		}
-		if writeOptions.User == "" {
-			writeOptions.User = cfg.Key("user").String()
-		}
-		if writeOptions.Account == "" {
-			writeOptions.Account = cfg.Key("account").String()
-		}
+func MergeWriteCmdOptions(uc config.UserConfig, wc bmx.WriteCmdOptions) bmx.WriteCmdOptions {
+	if wc.Org == "" {
+		wc.Org = uc.Org
 	}
+	if wc.Profile == "" {
+		wc.Profile = uc.Profile
+	}
+	if wc.User == "" {
+		wc.User = uc.User
+	}
+	if wc.Account == "" {
+		wc.Account = uc.Account
+	}
+
+	return wc
 }
