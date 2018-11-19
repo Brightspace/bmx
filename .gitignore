@@ -10,3 +10,4 @@ build
 .idea/
 cmd/bmx/bmx.exe
 cmd/bmx/bmx
+.vscode
