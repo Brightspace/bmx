@@ -25,12 +25,12 @@ func TestLoadConfigFile(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	nestedDir := filepath.ToSlash(path.Join(tempDir, "this", "is", "a", "nested", "project"))
-	err = os.MkdirAll(nestedDir, os.ModeDir)
+	err = os.MkdirAll(nestedDir, os.ModeDir|os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = os.MkdirAll(path.Join(tempUserDir, ".bmx"), os.ModeDir)
+	err = os.MkdirAll(path.Join(tempUserDir, ".bmx"), os.ModeDir|os.ModePerm)
 	userConfigFile := filepath.ToSlash(path.Join(tempUserDir, ".bmx", "config"))
 	ioutil.WriteFile(userConfigFile, []byte("allow_project_configs=true"), os.ModePerm)
 
