@@ -35,7 +35,7 @@ func GetUserInfoFromWriteCmdOptions(writeOptions WriteCmdOptions) serviceProvide
 }
 
 func Write(idProvider identityProviders.IdentityProvider, writeOptions WriteCmdOptions) {
-	writeOptions.User, writeOptions.Password = getCredentials(writeOptions.User, writeOptions.NoMask)
+	writeOptions.User = getUserIfEmpty(writeOptions.User)
 	user := GetUserInfoFromWriteCmdOptions(writeOptions)
 
 	saml, err := authenticate(user, idProvider)

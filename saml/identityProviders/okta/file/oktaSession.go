@@ -24,6 +24,9 @@ func (o *OktaSessionStorage) SaveSessions(sessions []OktaSessionCache) {
 
 func (o *OktaSessionStorage) Sessions() ([]OktaSessionCache, error) {
 	sessionsFile, err := ioutil.ReadFile(path.Join(userHomeDir(), ".bmx", "sessions"))
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,7 @@ type Mokta struct {
 	BaseUrl *url.URL
 }
 
-func (m *Mokta) Authenticate(username string, password string) (string, error) {
+func (m *Mokta) Authenticate(username, password, org string) (string, error) {
 	return "1", nil
 }
 
@@ -20,6 +20,10 @@ func (m *Mokta) ListApplications(userId string) ([]okta.OktaAppLink, error) {
 	}
 
 	return response, nil
+}
+
+func (m *Mokta) AuthenticateFromCache(username, org string) (string, bool) {
+	return "", false
 }
 
 func (m *Mokta) GetSaml(appLink okta.OktaAppLink) (string, error) {
