@@ -1,9 +1,6 @@
 package serviceProviders
 
-import (
-	"github.com/Brightspace/bmx/console"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
-)
+import ()
 
 type UserInfo struct {
 	Org      string
@@ -11,7 +8,4 @@ type UserInfo struct {
 	Account  string
 	NoMask   bool
 	Password string
-
-	ConsoleReader console.ConsoleReader
-	StsClient     stsiface.STSAPI
 }

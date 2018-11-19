@@ -2,9 +2,7 @@ package okta
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,9 +10,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/Brightspace/bmx/console"
 	"github.com/Brightspace/bmx/saml/identityProviders/okta/file"
 	"golang.org/x/net/html"
 	"golang.org/x/net/publicsuffix"
@@ -37,9 +37,12 @@ func NewOktaClient(org string) (*OktaClient, error) {
 
 	oktaSessionStorage := &file.OktaSessionStorage{}
 
+	consoleReader := &console.DefaultConsoleReader{}
+
 	client := &OktaClient{
-		HttpClient:   httpClient,
-		SessionCache: oktaSessionStorage,
+		HttpClient:    httpClient,
+		SessionCache:  oktaSessionStorage,
+		ConsoleReader: consoleReader,
 	}
 
 	client.BaseUrl, _ = url.Parse(fmt.Sprintf("https://%s.okta.com/api/v1/", org))
@@ -53,62 +56,75 @@ type SessionCache interface {
 }
 
 type OktaClient struct {
-	HttpClient   *http.Client
-	SessionCache SessionCache
-	BaseUrl      *url.URL
+	HttpClient    *http.Client
+	SessionCache  SessionCache
+	ConsoleReader console.ConsoleReader
+	BaseUrl       *url.URL
 }
 
-func (o *OktaClient) GetBaseUrl() *url.URL {
-	return o.BaseUrl
-}
-
-func (o *OktaClient) GetHttpClient() *http.Client {
-	return o.HttpClient
-}
-
-func (o *OktaClient) GetSaml(appLink OktaAppLink) (Saml2pResponse, string, error) {
+func (o *OktaClient) GetSaml(appLink OktaAppLink) (string, error) {
 	appResponse, err := o.HttpClient.Get(appLink.LinkUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	saml, err := GetSaml(appResponse.Body)
-	decSaml, err := base64.StdEncoding.DecodeString(saml)
-
-	samlResponse := &Saml2pResponse{}
-	err = xml.Unmarshal(decSaml, samlResponse)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return *samlResponse, saml, nil
+	return GetSaml(appResponse.Body)
 }
 
-func (o *OktaClient) Authenticate(username string, password string) (*OktaAuthResponse, error) {
+func (o *OktaClient) Authenticate(username string, password string) (string, error) {
 	rel, err := url.Parse("authn")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	url := o.BaseUrl.ResolveReference(rel)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	body := fmt.Sprintf(`{"username":"%s", "password":"%s"}`, username, password)
 	authResponse, err := o.HttpClient.Post(url.String(), applicationJson, strings.NewReader(body))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	oktaAuthResponse := &OktaAuthResponse{}
 	z, err := ioutil.ReadAll(authResponse.Body)
 	err = json.Unmarshal(z, &oktaAuthResponse)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	return oktaAuthResponse, err
+	if err := o.doMfa(oktaAuthResponse); err != nil {
+		log.Fatal(err)
+	}
+
+	oktaSessionResponse, err := o.startSession(oktaAuthResponse.SessionToken)
+	o.setSessionId(oktaSessionResponse.Id)
+
+	return oktaSessionResponse.UserId, err
 }
 
-func (o *OktaClient) StartSession(sessionToken string) (*OktaSessionResponse, error) {
+func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
+	rel, _ := url.Parse(fmt.Sprintf("users/%s/appLinks", userId))
+	url := o.BaseUrl.ResolveReference(rel)
+
+	listApplicationRequest, err := http.NewRequest("GET", url.String(), nil)
+	listApplicationsResponse, err := o.HttpClient.Do(listApplicationRequest)
+	if err != nil {
+		return nil, err
+	}
+	var oktaApplications []OktaAppLink
+	b, err := ioutil.ReadAll(listApplicationsResponse.Body)
+	err = json.Unmarshal(b, &oktaApplications)
+	if err != nil {
+		return nil, err
+	}
+
+	return oktaApplications, nil
+}
+
+func (o *OktaClient) startSession(sessionToken string) (*OktaSessionResponse, error) {
 	rel, err := url.Parse("sessions")
 	if err != nil {
 		return nil, err
@@ -131,25 +147,6 @@ func (o *OktaClient) StartSession(sessionToken string) (*OktaSessionResponse, er
 	}
 
 	return oktaSessionResponse, nil
-}
-
-func (o *OktaClient) ListApplications(userId string) ([]OktaAppLink, error) {
-	rel, _ := url.Parse(fmt.Sprintf("users/%s/appLinks", userId))
-	url := o.BaseUrl.ResolveReference(rel)
-
-	listApplicationRequest, err := http.NewRequest("GET", url.String(), nil)
-	listApplicationsResponse, err := o.HttpClient.Do(listApplicationRequest)
-	if err != nil {
-		return nil, err
-	}
-	var oktaApplications []OktaAppLink
-	b, err := ioutil.ReadAll(listApplicationsResponse.Body)
-	err = json.Unmarshal(b, &oktaApplications)
-	if err != nil {
-		return nil, err
-	}
-
-	return oktaApplications, nil
 }
 
 func (o *OktaClient) CacheOktaSession(userId, org, sessionId, expiresAt string) {
@@ -189,7 +186,7 @@ func readOktaCacheSessionsFile(o *OktaClient) ([]file.OktaSessionCache, error) {
 	return removeExpiredOktaSessions(sessions), nil
 }
 
-func (o *OktaClient) SetSessionId(id string) {
+func (o *OktaClient) setSessionId(id string) {
 	cookies := o.HttpClient.Jar.Cookies(o.BaseUrl)
 	cookie := &http.Cookie{
 		Name:     "sid",
@@ -213,6 +210,50 @@ func removeExpiredOktaSessions(sourceCaches []file.OktaSessionCache) []file.Okta
 		}
 	}
 	return returnCache
+}
+
+func (o *OktaClient) doMfa(oktaAuthResponse *OktaAuthResponse) error {
+	if oktaAuthResponse.Status == "MFA_REQUIRED" {
+		fmt.Fprintln(os.Stderr, "MFA Required")
+		for idx, factor := range oktaAuthResponse.Embedded.Factors {
+			fmt.Fprintf(os.Stderr, "%d - %s\n", idx, factor.FactorType)
+		}
+
+		var mfaIdx int
+		var err error
+		if mfaIdx, err = o.ConsoleReader.ReadInt("Select an available MFA option: "); err != nil {
+			log.Fatal(err)
+		}
+		vurl := oktaAuthResponse.Embedded.Factors[mfaIdx].Links.Verify.Url
+
+		body := fmt.Sprintf(`{"stateToken":"%s"}`, oktaAuthResponse.StateToken)
+		authResponse, err := o.HttpClient.Post(vurl, "application/json", strings.NewReader(body))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		z, _ := ioutil.ReadAll(authResponse.Body)
+		err = json.Unmarshal(z, &oktaAuthResponse)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var code string
+		if code, err = o.ConsoleReader.ReadLine("Code: "); err != nil {
+			log.Fatal(err)
+		}
+		body = fmt.Sprintf(`{"stateToken":"%s","passCode":"%s"}`, oktaAuthResponse.StateToken, code)
+		authResponse, err = o.HttpClient.Post(vurl, "application/json", strings.NewReader(body))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		z, _ = ioutil.ReadAll(authResponse.Body)
+		if err := json.Unmarshal(z, &oktaAuthResponse); err != nil {
+			log.Fatal(err)
+		}
+	}
+	return nil
 }
 
 type OktaAuthResponse struct {
@@ -256,26 +297,6 @@ type OktaAppLink struct {
 	LinkUrl       string `json:"linkUrl"`
 	AppName       string `json:"appName"`
 	AppInstanceId string `json:"appInstanceId"`
-}
-
-type Saml2pResponse struct {
-	XMLName   xml.Name       `xml:"Response"`
-	Assertion Saml2Assertion `xml:"Assertion"`
-}
-
-type Saml2Assertion struct {
-	XMLName            xml.Name                `xml:"Assertion"`
-	AttributeStatement Saml2AttributeStatement `xml:"AttributeStatement"`
-}
-
-type Saml2AttributeStatement struct {
-	XMLName    xml.Name         `xml:"AttributeStatement"`
-	Attributes []Saml2Attribute `xml:"Attribute"`
-}
-
-type Saml2Attribute struct {
-	Name  string `xml:"Name,attr"`
-	Value string `xml:"AttributeValue"`
 }
 
 func GetSaml(r io.Reader) (string, error) {
