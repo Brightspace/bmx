@@ -9,8 +9,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-func read() (string, error) {
-	fd := int(os.Stdin.Fd())
+func read(f *os.File) (string, error) {
+	fd := int(f.Fd())
 	if !terminal.IsTerminal(fd) {
 		return "", fmt.Errorf("file descriptor %d is not a terminal", fd)
 	}
@@ -21,5 +21,5 @@ func read() (string, error) {
 	}
 	defer terminal.Restore(fd, oldState)
 
-	return readLine()
+	return readline(f)
 }

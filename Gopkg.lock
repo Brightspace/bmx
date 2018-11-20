@@ -40,6 +40,14 @@
   version = "v1.15.74"
 
 [[projects]]
+  digest = "1:2f20453442c3bea9708b8f3836cd12cadd31b7397e6cf08197afc2b470faa689"
+  name = "github.com/hashicorp/vault"
+  packages = ["helper/password"]
+  pruneopts = "UT"
+  revision = "a59ffa4a0f09bbf198241fe6793a96722789b639"
+  version = "v0.11.5"
+
+[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -157,10 +165,10 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/sts",
     "github.com/aws/aws-sdk-go/service/sts/stsiface",
+    "github.com/hashicorp/vault/helper/password",
     "github.com/magiconair/properties/assert",
     "github.com/mitchellh/go-homedir",
     "github.com/spf13/cobra",
-    "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/html",
     "golang.org/x/net/publicsuffix",
     "gopkg.in/ini.v1",
