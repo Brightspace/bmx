@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
-func NewAwsServiceProvider(inputReader console.ConsoleReader) *AwsServiceProvider {
+func NewAwsServiceProvider() *AwsServiceProvider {
 	awsSession, err := session.NewSession()
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +26,7 @@ func NewAwsServiceProvider(inputReader console.ConsoleReader) *AwsServiceProvide
 
 	serviceProvider := &AwsServiceProvider{
 		StsClient:   stsClient,
-		InputReader: inputReader,
+		InputReader: console.DefaultConsoleReader{},
 		UserOutput:  os.Stderr,
 	}
 	return serviceProvider

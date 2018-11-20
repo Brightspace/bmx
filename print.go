@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Brightspace/bmx/console"
-
 	"github.com/Brightspace/bmx/saml/identityProviders"
 
 	"github.com/Brightspace/bmx/saml/serviceProviders"
@@ -18,7 +16,7 @@ var (
 )
 
 func init() {
-	AwsServiceProvider = aws.NewAwsServiceProvider(console.DefaultConsoleReader{})
+	AwsServiceProvider = aws.NewAwsServiceProvider()
 }
 
 type PrintCmdOptions struct {

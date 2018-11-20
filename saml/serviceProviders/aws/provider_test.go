@@ -32,10 +32,9 @@ func (s *stsMock) AssumeRoleWithSAML(input *sts.AssumeRoleWithSAMLInput) (*sts.A
 }
 
 func TestMonkey(t *testing.T) {
-	consoleReader := mocks.ConsoleReaderMock{}
-
-	provider := awsService.NewAwsServiceProvider(consoleReader)
+	provider := awsService.NewAwsServiceProvider()
 	provider.StsClient = &stsMock{}
+	provider.InputReader = mocks.ConsoleReaderMock{}
 
 	// This is a base64 encoded minimal SAML input
 	saml := "PHNhbWxwOlJlc3BvbnNlPgogIDxzYW1sOkFzc2VydGlvbj4KICAgIDxzYW1sOkF0dHJpYnV0ZVN0YXRlbWVudD4KICAgICAgPHNhbWw6QXR0cmlidXRlIE5hbWU9Imh0dHBzOi8vYXdzLmFtYXpvbi5jb20vU0FNTC9BdHRyaWJ1dGVzL1JvbGUiPgogICAgICAgIDxzYW1sOkF0dHJpYnV0ZVZhbHVlIHhzaTp0eXBlPSJ4czpzdHJpbmciPkFybixyb2xlL1JvbGVBcm48L3NhbWw6QXR0cmlidXRlVmFsdWU+CiAgICAgIDwvc2FtbDpBdHRyaWJ1dGU+CiAgICA8L3NhbWw6QXR0cmlidXRlU3RhdGVtZW50PgogIDwvc2FtbDpBc3NlcnRpb24+Cjwvc2FtbHA6UmVzcG9uc2U+"
