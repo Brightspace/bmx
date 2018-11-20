@@ -23,14 +23,6 @@ func init() {
 		printCmd.MarkFlagRequired("org")
 	}
 
-	if userConfig.User == "" {
-		printCmd.MarkFlagRequired("user")
-	}
-
-	if userConfig.Account == "" {
-		printCmd.MarkFlagRequired("account")
-	}
-
 	rootCmd.AddCommand(printCmd)
 }
 

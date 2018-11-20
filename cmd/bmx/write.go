@@ -28,14 +28,6 @@ func init() {
 		writeCmd.MarkFlagRequired("profile")
 	}
 
-	if userConfig.User == "" {
-		writeCmd.MarkFlagRequired("user")
-	}
-
-	if userConfig.Account == "" {
-		writeCmd.MarkFlagRequired("account")
-	}
-
 	rootCmd.AddCommand(writeCmd)
 }
 
