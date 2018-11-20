@@ -17,6 +17,7 @@ func init() {
 	printCmd.Flags().StringVar(&printOptions.Org, "org", "", "the okta org api to target")
 	printCmd.Flags().StringVar(&printOptions.User, "user", "", "the user to authenticate with")
 	printCmd.Flags().StringVar(&printOptions.Account, "account", "", "the account name to auth against")
+	printCmd.Flags().StringVar(&printOptions.Role, "role", "", "the desired role to assume")
 	printCmd.Flags().BoolVar(&printOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
 	if userConfig.Org == "" {
@@ -51,6 +52,9 @@ func mergePrintOptions(uc config.UserConfig, pc bmx.PrintCmdOptions) bmx.PrintCm
 	}
 	if pc.Account == "" {
 		pc.Account = uc.Account
+	}
+	if pc.Role == "" {
+		pc.Role = uc.Role
 	}
 
 	return pc

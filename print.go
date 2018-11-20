@@ -2,10 +2,7 @@ package bmx
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/Brightspace/bmx/saml/identityProviders"
 
@@ -28,6 +25,7 @@ type PrintCmdOptions struct {
 	Account  string
 	NoMask   bool
 	Password string
+	Role     string
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
@@ -37,6 +35,7 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 		Account:  printOptions.Account,
 		NoMask:   printOptions.NoMask,
 		Password: printOptions.Password,
+		Role:     printOptions.Role,
 	}
 	return user
 }
@@ -50,17 +49,8 @@ func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdO
 		log.Fatal(err)
 	}
 
-	creds := AwsServiceProvider.GetCredentials(saml)
+	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role)
 	printDefaultFormat(creds)
-}
-
-func dumpResponse(response *http.Response) {
-	for m := range response.Header {
-		fmt.Fprintf(os.Stderr, "%s=%s\n", m, response.Header[m])
-	}
-
-	o, _ := ioutil.ReadAll(response.Body)
-	fmt.Fprintln(os.Stderr, string(o))
 }
 
 func printPowershell(credentials *sts.Credentials) {

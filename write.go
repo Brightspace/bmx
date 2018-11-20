@@ -19,6 +19,7 @@ type WriteCmdOptions struct {
 	Password string
 	Profile  string
 	Output   string
+	Role     string
 
 	Provider serviceProviders.ServiceProvider
 }
@@ -43,7 +44,7 @@ func Write(idProvider identityProviders.IdentityProvider, writeOptions WriteCmdO
 		log.Fatal(err)
 	}
 
-	creds := AwsServiceProvider.GetCredentials(saml)
+	creds := AwsServiceProvider.GetCredentials(saml, writeOptions.Role)
 	writeToAwsCredentials(creds, writeOptions.Profile, resolvePath(writeOptions.Output))
 }
 
