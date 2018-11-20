@@ -6,26 +6,22 @@
 package password
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
+
+	pwd "github.com/hashicorp/vault/helper/password"
 )
 
 var ErrInterrupted = errors.New("interrupted")
 
 func Read(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
-	return read()
-}
+	result, err := pwd.Read(os.Stdin)
 
-func readLine() (string, error) {
-	scanner := bufio.NewScanner(os.Stdin)
-	var s string
-	scanner.Scan()
-	if scanner.Err() != nil {
-		return "", scanner.Err()
-	}
-	s = scanner.Text()
-	return s, nil
+	// This discards up to 100 excess bytes on stdin in case we get extra garbage returned after eol has been detected as is the case on Windows with the \r\n pattern
+	var buf [100]byte
+	os.Stdin.Read(buf[:])
+
+	return result, err
 }

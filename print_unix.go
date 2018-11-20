@@ -1,3 +1,5 @@
+// +build linux darwin freebsd netbsd openbsd
+
 package bmx
 
 import (
