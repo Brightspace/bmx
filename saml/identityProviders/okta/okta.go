@@ -380,6 +380,4 @@ func GetSaml(r io.Reader) (string, error) {
 			}
 		}
 	}
-
-	return "", nil
 }

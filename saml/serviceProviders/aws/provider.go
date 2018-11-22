@@ -133,7 +133,7 @@ type Saml2AttributeStatement struct {
 
 type Saml2Attribute struct {
 	XMLName xml.Name `xml:"Attribute"`
-	Name    string   `xml:"Name,attr""`
+	Name    string   `xml:"Name,attr"`
 	Values  []string `xml:"AttributeValue"`
 }
 
