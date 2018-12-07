@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Brightspace/bmx/cli/config"
 	"github.com/Brightspace/bmx/identityProviders"
 	"github.com/Brightspace/bmx/identityProviders/okta"
 	"github.com/Brightspace/bmx/serviceProviders"
@@ -14,13 +15,12 @@ import (
 )
 
 type printOptions struct {
-	Org      string
-	User     string
-	Account  string
-	NoMask   bool
-	Password string
-	Role     string
-	Filter   string
+	Org     string
+	User    string
+	Account string
+	NoMask  bool
+	Role    string
+	Filter  string
 }
 
 var printOpts = printOptions{}
@@ -33,7 +33,9 @@ func init() {
 	printCmd.Flags().StringVar(&printOpts.Filter, "filter", "amazon_aws", "filter apps")
 	printCmd.Flags().BoolVar(&printOpts.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	printCmd.MarkFlagRequired("user")
+	if userConfig.Org == "" {
+		printCmd.MarkFlagRequired("user")
+	}
 
 	rootCmd.AddCommand(printCmd)
 }
@@ -45,8 +47,11 @@ var printCmd = &cobra.Command{
 	Use:   "print",
 	Short: "Print credentials",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		opts := mergePrintOpts(userConfig, printOpts)
+
 		var err error
-		identityClient, err = okta.NewOktaClient(printOpts.Org)
+		identityClient, err = okta.NewOktaClient(opts.Org)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -60,11 +65,11 @@ var printCmd = &cobra.Command{
 			consoleReader,
 			identityClient,
 			serviceClient,
-			printOpts.User,
-			printOpts.NoMask,
-			printOpts.Filter,
-			printOpts.Account,
-			printOpts.Role,
+			opts.User,
+			opts.NoMask,
+			opts.Filter,
+			opts.Account,
+			opts.Role,
 		)
 		if err != nil {
 			log.Fatal(err)
@@ -72,6 +77,39 @@ var printCmd = &cobra.Command{
 
 		printDefaultFormat(creds)
 	},
+}
+
+func mergePrintOpts(cfg config.UserConfig, printOpts printOptions) printOptions {
+	mergedOpts := printOptions{}
+
+	mergedOpts.Org = cfg.Org
+	mergedOpts.User = cfg.User
+	mergedOpts.Account = cfg.Account
+	mergedOpts.Role = cfg.Role
+	mergedOpts.Filter = cfg.Filter
+	mergedOpts.NoMask = printOpts.NoMask
+
+	if printOpts.Org != "" {
+		mergedOpts.Org = printOpts.Org
+	}
+
+	if printOpts.User != "" {
+		mergedOpts.User = printOpts.User
+	}
+
+	if printOpts.Account != "" {
+		mergedOpts.Account = printOpts.Account
+	}
+
+	if printOpts.Role != "" {
+		mergedOpts.Role = printOpts.Role
+	}
+
+	if printOpts.Filter != "" {
+		mergedOpts.Filter = printOpts.Filter
+	}
+
+	return mergedOpts
 }
 
 func printPowershell(credentials *sts.Credentials) {

@@ -6,9 +6,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"gopkg.in/ini.v1"
+	ini "gopkg.in/ini.v1"
 
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 const (
@@ -23,6 +23,7 @@ type UserConfig struct {
 	Account             string
 	Role                string
 	Profile             string
+	Filter              string
 }
 
 func NewUserConfig() UserConfig {

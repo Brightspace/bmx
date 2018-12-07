@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/Brightspace/bmx/cli/config"
 	"github.com/Brightspace/bmx/identityProviders/okta"
 	"github.com/Brightspace/bmx/serviceProviders/aws"
 
@@ -18,7 +19,6 @@ type writeOptions struct {
 	User     string
 	Account  string
 	NoMask   bool
-	Password string
 	Profile  string
 	Role     string
 	Filter   string
@@ -79,6 +79,44 @@ var writeCmd = &cobra.Command{
 func awsCredentialsPath() string {
 	path := userHomeDir() + "/.aws/credentials"
 	return path
+}
+
+func mergeWriteOpts(cfg config.UserConfig, writeOpts writeOptions) writeOptions {
+	mergedOpts := writeOptions{}
+
+	mergedOpts.Org = cfg.Org
+	mergedOpts.User = cfg.User
+	mergedOpts.Account = cfg.Account
+	mergedOpts.Role = cfg.Role
+	mergedOpts.Filter = cfg.Filter
+	mergedOpts.Profile = cfg.Profile
+	mergedOpts.NoMask = writeOpts.NoMask
+
+	if writeOpts.Org != "" {
+		mergedOpts.Org = writeOpts.Org
+	}
+
+	if writeOpts.User != "" {
+		mergedOpts.User = writeOpts.User
+	}
+
+	if writeOpts.Account != "" {
+		mergedOpts.Account = writeOpts.Account
+	}
+
+	if writeOpts.Role != "" {
+		mergedOpts.Role = writeOpts.Role
+	}
+
+	if writeOpts.Filter != "" {
+		mergedOpts.Filter = writeOpts.Filter
+	}
+
+	if writeOpts.Profile != "" {
+		mergedOpts.Profile = writeOpts.Profile
+	}
+
+	return mergedOpts
 }
 
 func resolvePath(path string) string {
