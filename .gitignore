@@ -11,3 +11,5 @@ build
 cmd/bmx/bmx.exe
 cmd/bmx/bmx
 .vscode
+
+coverage.out

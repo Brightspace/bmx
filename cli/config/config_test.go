@@ -1,4 +1,4 @@
-package config_test
+package config
 
 import (
 	"io/ioutil"
@@ -6,8 +6,6 @@ import (
 	"path"
 	"path/filepath"
 	"testing"
-
-	"github.com/Brightspace/bmx/config"
 
 	"github.com/magiconair/properties/assert"
 )
@@ -38,11 +36,11 @@ func TestLoadConfigFile(t *testing.T) {
 	configFile := filepath.ToSlash(path.Join(tempDir, ".bmx"))
 	ioutil.WriteFile(configFile, []byte("org=abc123"), os.ModePerm)
 
-	m := config.ConfigLoader{
+	m := ConfigLoader{
 		UserDirectory:    tempUserDir,
 		WorkingDirectory: nestedDir,
 	}
 
-	config := m.LoadConfigs()
-	assert.Equal(t, config.Org, "abc123")
+	cfg := m.LoadConfigs()
+	assert.Equal(t, cfg.Org, "abc123")
 }

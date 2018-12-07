@@ -3,7 +3,7 @@ package mocks
 import (
 	"net/url"
 
-	"github.com/Brightspace/bmx/identityProviders/okta"
+	"github.com/Brightspace/bmx/identityProviders"
 )
 
 type Mokta struct {
@@ -14,9 +14,9 @@ func (m *Mokta) Authenticate(username, password, org string) (string, error) {
 	return "1", nil
 }
 
-func (m *Mokta) ListApplications(userId string) ([]okta.OktaAppLink, error) {
-	response := []okta.OktaAppLink{
-		{Id: "id", Label: "label", LinkUrl: "url", AppName: "appname", AppInstanceId: "instanceid"},
+func (m *Mokta) ListApplications(userId string) ([]identityProviders.AppDetail, error) {
+	response := []identityProviders.AppDetail{
+		{ID: "id", Label: "label", LinkURL: "url", AppName: "appname", AppInstanceID: "instanceid"},
 	}
 
 	return response, nil
@@ -26,7 +26,7 @@ func (m *Mokta) AuthenticateFromCache(username, org string) (string, bool) {
 	return "", false
 }
 
-func (m *Mokta) GetSaml(appLink okta.OktaAppLink) (string, error) {
+func (m *Mokta) GetSaml(app identityProviders.AppDetail) (string, error) {
 	// saml := okta.Saml2pResponse{
 	// 	Assertion: okta.Saml2Assertion{
 	// 		AttributeStatement: okta.Saml2AttributeStatement{
