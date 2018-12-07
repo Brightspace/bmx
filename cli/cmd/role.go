@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders"
-	"github.com/toddradigan/bmx-go/cli/console"
+	"github.com/Brightspace/bmx/cli/console"
+	"github.com/Brightspace/bmx/serviceProviders"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 )

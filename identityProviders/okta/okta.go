@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/toddradigan/bmx-go/bmx/identityProviders"
-	"github.com/toddradigan/bmx-go/saml"
+	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/saml"
 
 	"golang.org/x/net/publicsuffix"
 )

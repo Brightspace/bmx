@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/toddradigan/bmx-go/bmx/identityProviders"
-	"github.com/toddradigan/bmx-go/bmx/identityProviders/okta"
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders"
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders/aws"
+	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/identityProviders/okta"
+	"github.com/Brightspace/bmx/serviceProviders"
+	"github.com/Brightspace/bmx/serviceProviders/aws"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/spf13/cobra"

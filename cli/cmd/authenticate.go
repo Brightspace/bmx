@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/toddradigan/bmx-go/bmx/identityProviders"
-	"github.com/toddradigan/bmx-go/cli/console"
+	"github.com/Brightspace/bmx/cli/console"
+	"github.com/Brightspace/bmx/identityProviders"
 )
 
 const (

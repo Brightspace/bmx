@@ -3,8 +3,8 @@ package aws
 import (
 	"strings"
 
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders"
-	"github.com/toddradigan/bmx-go/saml"
+	"github.com/Brightspace/bmx/saml"
+	"github.com/Brightspace/bmx/serviceProviders"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

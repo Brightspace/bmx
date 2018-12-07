@@ -5,8 +5,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/toddradigan/bmx-go/bmx/identityProviders/okta"
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders/aws"
+	"github.com/Brightspace/bmx/identityProviders/okta"
+	"github.com/Brightspace/bmx/serviceProviders/aws"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/spf13/cobra"

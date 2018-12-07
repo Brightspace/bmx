@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"github.com/toddradigan/bmx-go/bmx/identityProviders"
-
-	"github.com/toddradigan/bmx-go/bmx/serviceProviders"
-	"github.com/toddradigan/bmx-go/cli/console"
+	"github.com/Brightspace/bmx/cli/console"
+	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/serviceProviders"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 )

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Brightspace/bmx/config"
+
 	"github.com/magiconair/properties/assert"
 )
 

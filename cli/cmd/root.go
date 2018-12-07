@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/toddradigan/bmx-go/cli/console"
+	"github.com/Brightspace/bmx/cli/console"
 
 	"github.com/spf13/cobra"
 )
