@@ -25,7 +25,7 @@ func selectRole(reader console.Reader, desiredRole, saml string, service service
 	if desiredRole != "" {
 		desiredRole = strings.ToLower(desiredRole)
 		for _, r := range roles {
-			if strings.Compare(strings.ToLower(r.Name), desiredRole) == 0 {
+			if strings.ToLower(r.Name) == desiredRole {
 				role = &r
 				break
 			}
