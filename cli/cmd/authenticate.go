@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	passwordPrompt = "Password: "
+	invalidSelection = "invalid selection"
+	mfaRequired      = "MFA_REQUIRED"
+	passwordPrompt   = "Password: "
 )
 
 func authenticate(reader console.Reader, username string, noMask bool, filter, account string, identity identityProviders.IdentityProvider) (string, error) {
@@ -28,7 +30,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 
 		userID, err = identity.Authenticate(username, password)
 		if err != nil {
-			if err.Error() == "MFA_REQUIRED" {
+			if err.Error() == mfaRequired {
 				fmt.Fprintln(os.Stderr, "MFA Required")
 
 				mfaFactors, err := identity.GetMFAFactors()
@@ -46,7 +48,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 				}
 
 				if mfaIdx < 1 || mfaIdx > len(mfaFactors) {
-					return "", fmt.Errorf("invalid selection")
+					return "", fmt.Errorf(invalidSelection)
 				}
 
 				mfaURL := mfaFactors[mfaIdx-1].URL
@@ -57,6 +59,9 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 				}
 
 				userID, err = identity.CompleteMFA(username, mfaURL, mfaCode)
+				if err != nil {
+					return "", err
+				}
 			} else {
 				return "", err
 			}
@@ -89,7 +94,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 		}
 
 		if accountID < 1 || accountID > len(filteredApps) {
-			return "", fmt.Errorf("invalid selection")
+			return "", fmt.Errorf(invalidSelection)
 		}
 
 		app = filteredApps[accountID-1]

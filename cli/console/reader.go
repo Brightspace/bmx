@@ -10,21 +10,19 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-type Reader struct{}
-
-func (r Reader) ReadLine(prompt string) (string, error) {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Fprint(os.Stderr, prompt)
-	var s string
-	scanner.Scan()
-	if scanner.Err() != nil {
-		return "", scanner.Err()
-	}
-	s = scanner.Text()
-	return s, nil
+type Reader interface {
+	ReadInt(prompt string) (int, error)
+	ReadLine(prompt string) (string, error)
+	ReadPassword(prompt string) (string, error)
 }
 
-func (r Reader) ReadInt(prompt string) (int, error) {
+type reader struct{}
+
+func NewReader() reader {
+	return reader{}
+}
+
+func (r reader) ReadInt(prompt string) (int, error) {
 	var s string
 	var err error
 	if s, err = r.ReadLine(prompt); err != nil {
@@ -39,7 +37,19 @@ func (r Reader) ReadInt(prompt string) (int, error) {
 	return i, nil
 }
 
-func (r Reader) ReadPassword(prompt string) (string, error) {
+func (r reader) ReadLine(prompt string) (string, error) {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Fprint(os.Stderr, prompt)
+	var s string
+	scanner.Scan()
+	if scanner.Err() != nil {
+		return "", scanner.Err()
+	}
+	s = scanner.Text()
+	return s, nil
+}
+
+func (r reader) ReadPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
 	var pass, err = terminal.ReadPassword(syscall.Stdin)
 

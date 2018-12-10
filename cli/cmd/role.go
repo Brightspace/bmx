@@ -50,7 +50,7 @@ func selectRole(reader console.Reader, desiredRole, saml string, service service
 			}
 
 			if roleSelection < 1 || roleSelection > len(roles) {
-				return nil, fmt.Errorf("invalid selection")
+				return nil, fmt.Errorf(invalidSelection)
 			}
 
 			role = &roles[roleSelection-1]

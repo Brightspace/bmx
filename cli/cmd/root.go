@@ -14,7 +14,7 @@ var consoleReader console.Reader
 var userConfig config.UserConfig
 
 func init() {
-	consoleReader = console.Reader{}
+	consoleReader = console.NewReader()
 	userConfig = (config.ConfigLoader{}).LoadConfigs()
 }
 
