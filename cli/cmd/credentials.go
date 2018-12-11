@@ -19,12 +19,12 @@ func getCredentials(
 	role string,
 ) (*sts.Credentials, error) {
 
-	saml, err := authenticate(consoleReader, username, noMask, filter, account, identityClient)
+	saml, err := authenticate(reader, username, noMask, filter, account, identityClient)
 	if err != nil {
 		return nil, err
 	}
 
-	creds, err := selectRole(consoleReader, role, saml, serviceClient)
+	creds, err := selectRole(reader, role, saml, serviceClient)
 	if err != nil {
 		return nil, err
 	}
