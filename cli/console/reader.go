@@ -51,7 +51,7 @@ func (r reader) ReadLine(prompt string) (string, error) {
 
 func (r reader) ReadPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
-	var pass, err = terminal.ReadPassword(syscall.Stdin)
+	var pass, err = terminal.ReadPassword(int(syscall.Stdin))
 
 	if err != nil {
 		return "", err
