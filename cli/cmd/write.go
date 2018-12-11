@@ -27,7 +27,7 @@ type writeOptions struct {
 
 var writeOpts = writeOptions{}
 
-func init() {
+func writeInit() {
 	writeCmd.Flags().StringVar(&writeOpts.Org, "org", "d2l", "the okta org api to target")
 	writeCmd.Flags().StringVar(&writeOpts.Profile, "profile", "", "aws profile name")
 	writeCmd.Flags().StringVar(&writeOpts.User, "user", "", "the user to authenticate with")
@@ -37,8 +37,13 @@ func init() {
 	writeCmd.Flags().StringVar(&writeOpts.Output, "output", "", "write to the specified file instead of ~/.aws/credentials")
 	writeCmd.Flags().BoolVar(&writeOpts.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	writeCmd.MarkFlagRequired("user")
-	writeCmd.MarkFlagRequired("profile")
+	if userConfig.User == "" {
+		writeCmd.MarkFlagRequired("user")
+	}
+
+	if userConfig.Profile == "" {
+		writeCmd.MarkFlagRequired("profile")
+	}
 
 	rootCmd.AddCommand(writeCmd)
 }

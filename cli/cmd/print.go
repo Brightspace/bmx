@@ -25,7 +25,7 @@ type printOptions struct {
 
 var printOpts = printOptions{}
 
-func init() {
+func printInit() {
 	printCmd.Flags().StringVar(&printOpts.Org, "org", "d2l", "the okta org api to target")
 	printCmd.Flags().StringVar(&printOpts.User, "user", "", "the user to authenticate with")
 	printCmd.Flags().StringVar(&printOpts.Account, "account", "", "the account name to auth against")
@@ -33,7 +33,7 @@ func init() {
 	printCmd.Flags().StringVar(&printOpts.Filter, "filter", "amazon_aws", "filter apps")
 	printCmd.Flags().BoolVar(&printOpts.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	if userConfig.Org == "" {
+	if userConfig.User == "" {
 		printCmd.MarkFlagRequired("user")
 	}
 

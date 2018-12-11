@@ -16,6 +16,9 @@ var userConfig config.UserConfig
 func init() {
 	consoleReader = console.NewReader()
 	userConfig = (config.ConfigLoader{}).LoadConfigs()
+
+	printInit()
+	writeInit()
 }
 
 var rootCmd = &cobra.Command{}
