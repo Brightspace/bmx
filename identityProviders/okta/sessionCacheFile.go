@@ -2,7 +2,6 @@ package okta
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -11,14 +10,11 @@ import (
 )
 
 type oktaSessionFileCache struct {
-	org      string
 	sessions []oktaSessionCache
 }
 
-func NewOktaSessionFileCache(org string) *oktaSessionFileCache {
-	return &oktaSessionFileCache{
-		org: org,
-	}
+func NewOktaSessionFileCache() *oktaSessionFileCache {
+	return &oktaSessionFileCache{}
 }
 
 func (f *oktaSessionFileCache) Save(sessions []oktaSessionCache) error {
@@ -68,7 +64,7 @@ func (f *oktaSessionFileCache) Sessions() ([]oktaSessionCache, error) {
 }
 
 func (f *oktaSessionFileCache) sessionsFile() string {
-	return path.Join(userHomeDir(), ".bmx", fmt.Sprintf("%s-%s", f.org, "sessions"))
+	return path.Join(userHomeDir(), ".bmx", "sessions")
 }
 
 func userHomeDir() string {

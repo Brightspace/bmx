@@ -65,6 +65,7 @@ type oktaClient struct {
 	baseURL        *url.URL
 	factors        []identityProviders.MFAFactor
 	sessionCache   sessionCache
+	org            string
 }
 
 type oktaLinks struct {
@@ -76,6 +77,7 @@ type oktaMeResponse struct {
 }
 
 type oktaSessionCache struct {
+	Org       string `json:"org"`
 	Username  string `json:"userId"`
 	SessionID string `json:"sessionId"`
 	ExpiresAt string `json:"expiresAt"`
@@ -117,12 +119,13 @@ func NewOktaClient(org string) (*oktaClient, error) {
 		return nil, err
 	}
 
-	cache := NewOktaSessionFileCache(org)
+	cache := NewOktaSessionFileCache()
 
 	client := &oktaClient{
 		httpClient:   httpClient,
 		baseURL:      url,
 		sessionCache: cache,
+		org:          org,
 	}
 
 	return client, nil
@@ -225,7 +228,7 @@ func (o *oktaClient) AuthenticateFromCache(username string) (string, bool, error
 	sessionFound := false
 	sessionID := ""
 	for _, session := range activeSessions {
-		if session.Username == username {
+		if session.Username == username && session.Org == o.org {
 			sessionFound = true
 			sessionID = session.SessionID
 			break
@@ -370,6 +373,7 @@ func (o *oktaClient) ListApplications(userID string) ([]identityProviders.AppDet
 
 func (o *oktaClient) cacheSession(username, sessionID, expiresAt string) error {
 	session := oktaSessionCache{
+		Org:       o.org,
 		Username:  username,
 		SessionID: sessionID,
 		ExpiresAt: expiresAt,
