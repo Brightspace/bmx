@@ -13,6 +13,7 @@ const (
 	invalidSelection = "invalid selection"
 	mfaRequired      = "MFA_REQUIRED"
 	passwordPrompt   = "Password: "
+	userPrompt       = "Username: "
 )
 
 func authenticate(reader console.Reader, username string, noMask bool, filter, account string, identity identityProviders.IdentityProvider) (string, error) {
@@ -20,6 +21,14 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 	var password string
 	var err error
 	ok := false
+
+	username = strings.TrimSpace(username)
+	if username == "" {
+		username, err = getUsername(reader)
+		if err != nil {
+			return "", err
+		}
+	}
 
 	userID, ok, err = identity.AuthenticateFromCache(username)
 	if !ok || err != nil {
@@ -134,4 +143,8 @@ func getPassword(reader console.Reader, noMask bool) (string, error) {
 	}
 
 	return pass, nil
+}
+
+func getUsername(reader console.Reader) (string, error) {
+	return reader.ReadLine(userPrompt)
 }

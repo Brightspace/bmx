@@ -37,10 +37,6 @@ func writeInit() {
 	writeCmd.Flags().StringVar(&writeOpts.Output, "output", "", "write to the specified file instead of ~/.aws/credentials")
 	writeCmd.Flags().BoolVar(&writeOpts.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	if userConfig.User == "" {
-		writeCmd.MarkFlagRequired("user")
-	}
-
 	if userConfig.Profile == "" {
 		writeCmd.MarkFlagRequired("profile")
 	}

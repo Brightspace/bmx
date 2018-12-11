@@ -33,10 +33,6 @@ func printInit() {
 	printCmd.Flags().StringVar(&printOpts.Filter, "filter", "amazon_aws", "filter apps")
 	printCmd.Flags().BoolVar(&printOpts.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
-	if userConfig.User == "" {
-		printCmd.MarkFlagRequired("user")
-	}
-
 	rootCmd.AddCommand(printCmd)
 }
 
