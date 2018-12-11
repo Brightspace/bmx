@@ -48,8 +48,11 @@ var writeCmd = &cobra.Command{
 	Use:   "write",
 	Short: "Write to aws credential file",
 	Run: func(cmd *cobra.Command, args []string) {
+
+		opts := mergeWriteOpts(userConfig, writeOpts)
+
 		var err error
-		identityClient, err = okta.NewOktaClient(writeOpts.Org)
+		identityClient, err = okta.NewOktaClient(opts.Org)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -63,17 +66,17 @@ var writeCmd = &cobra.Command{
 			consoleReader,
 			identityClient,
 			serviceClient,
-			writeOpts.User,
-			writeOpts.NoMask,
-			writeOpts.Filter,
-			writeOpts.Account,
-			writeOpts.Role,
+			opts.User,
+			opts.NoMask,
+			opts.Filter,
+			opts.Account,
+			opts.Role,
 		)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		writeToFile(creds, writeOpts.Profile, resolvePath(writeOpts.Output))
+		writeToFile(creds, opts.Profile, resolvePath(opts.Output))
 	},
 }
 
