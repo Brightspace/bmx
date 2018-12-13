@@ -1,19 +1,19 @@
-package cmd
+package bmx
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/Brightspace/bmx/cli/console"
 	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/io"
 	"github.com/Brightspace/bmx/serviceProviders"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 func TestGetCredentials(t *testing.T) {
-	readerMock := console.NewMockReader()
+	rwMock := io.NewMockReadWriter()
 	identityMock := identityProviders.NewMockProvider()
 	serviceMock := serviceProviders.NewMockProvider()
 
@@ -27,7 +27,7 @@ func TestGetCredentials(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := getCredentials(readerMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
+		_, err := getCredentials(rwMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
 		if err == nil {
 			t.Fatalf("expected error, got none")
 		}
@@ -55,7 +55,7 @@ func TestGetCredentials(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := getCredentials(readerMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
+		_, err := getCredentials(rwMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
 		if err == nil {
 			t.Fatalf("expected error, got none")
 		}
@@ -95,7 +95,7 @@ func TestGetCredentials(t *testing.T) {
 			return creds, nil
 		})
 
-		returnedCredentials, err := getCredentials(readerMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
+		returnedCredentials, err := getCredentials(rwMock, identityMock, serviceMock, username, noMask, filter, account, desiredRole)
 		if err != nil {
 			t.Fatal(err)
 		}

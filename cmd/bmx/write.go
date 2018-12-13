@@ -1,28 +1,25 @@
-package cmd
+package main
 
 import (
 	"log"
-	"os"
-	"runtime"
 
-	"github.com/Brightspace/bmx/cli/config"
+	"github.com/Brightspace/bmx"
+	"github.com/Brightspace/bmx/cmd/config"
 	"github.com/Brightspace/bmx/identityProviders/okta"
 	"github.com/Brightspace/bmx/serviceProviders/aws"
 
-	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/spf13/cobra"
-	"gopkg.in/ini.v1"
 )
 
 type writeOptions struct {
-	Org      string
-	User     string
-	Account  string
-	NoMask   bool
-	Profile  string
-	Role     string
-	Filter   string
-	Output   string
+	Org     string
+	User    string
+	Account string
+	NoMask  bool
+	Profile string
+	Role    string
+	Filter  string
+	Output  string
 }
 
 var writeOpts = writeOptions{}
@@ -62,8 +59,8 @@ var writeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		creds, err := getCredentials(
-			consoleReader,
+		if err := bmx.Write(
+			consoleReadWriter,
 			identityClient,
 			serviceClient,
 			opts.User,
@@ -71,18 +68,12 @@ var writeCmd = &cobra.Command{
 			opts.Filter,
 			opts.Account,
 			opts.Role,
-		)
-		if err != nil {
+			opts.Profile,
+			opts.Output,
+		); err != nil {
 			log.Fatal(err)
 		}
-
-		writeToFile(creds, opts.Profile, resolvePath(opts.Output))
 	},
-}
-
-func awsCredentialsPath() string {
-	path := userHomeDir() + "/.aws/credentials"
-	return path
 }
 
 func mergeWriteOpts(cfg config.UserConfig, writeOpts writeOptions) writeOptions {
@@ -121,35 +112,4 @@ func mergeWriteOpts(cfg config.UserConfig, writeOpts writeOptions) writeOptions 
 	}
 
 	return mergedOpts
-}
-
-func resolvePath(path string) string {
-	if path == "" {
-		path = awsCredentialsPath()
-	}
-	return path
-}
-
-func userHomeDir() string {
-	if runtime.GOOS == "windows" {
-		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
-		if home == "" {
-			home = os.Getenv("USERPROFILE")
-		}
-		return home
-	}
-	return os.Getenv("HOME")
-}
-
-func writeToFile(credentials *sts.Credentials, profile string, path string) {
-	os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0666)
-
-	cfg, err := ini.Load(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cfg.Section(profile).Key("aws_access_key_id").SetValue(*credentials.AccessKeyId)
-	cfg.Section(profile).Key("aws_secret_access_key").SetValue(*credentials.SecretAccessKey)
-	cfg.Section(profile).Key("aws_session_token").SetValue(*credentials.SessionToken)
-	cfg.SaveTo(path)
 }

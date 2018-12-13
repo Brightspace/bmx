@@ -1,11 +1,11 @@
-package cmd
+package bmx
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/Brightspace/bmx/cli/console"
 	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/io"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 func TestAuthenticate(t *testing.T) {
-	readerMock := console.NewMockReader()
+	rwMock := io.NewMockReadWriter()
 	identityMock := identityProviders.NewMockProvider()
 
 	t.Run("authenticates from cache", func(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAuthenticate(t *testing.T) {
 			return dummySaml, nil
 		})
 
-		saml, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		saml, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -54,7 +54,7 @@ func TestAuthenticate(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -77,11 +77,11 @@ func TestAuthenticate(t *testing.T) {
 		})
 
 		testErrorMessage := "test - error reading int"
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 0, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := authenticate(readerMock, username, noMask, "", account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, "", account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -105,11 +105,11 @@ func TestAuthenticate(t *testing.T) {
 
 		selections := []int{0, 3}
 		for _, selection := range selections {
-			readerMock.MockReadInt(func(string) (int, error) {
+			rwMock.MockReadInt(func(string) (int, error) {
 				return selection, nil
 			})
 
-			_, err := authenticate(readerMock, username, noMask, "", account, identityMock)
+			_, err := authenticate(rwMock, username, noMask, "", account, identityMock)
 			if err == nil {
 				t.Error("expected error, got none")
 			}
@@ -141,11 +141,11 @@ func TestAuthenticate(t *testing.T) {
 			return dummySaml, nil
 		})
 
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 2, nil
 		})
 
-		saml, err := authenticate(readerMock, username, noMask, "", account, identityMock)
+		saml, err := authenticate(rwMock, username, noMask, "", account, identityMock)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,11 +161,11 @@ func TestAuthenticate(t *testing.T) {
 		})
 
 		testErrorMessage := "test - error reading password"
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -185,11 +185,11 @@ func TestAuthenticate(t *testing.T) {
 			return "", false, nil
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -213,11 +213,11 @@ func TestAuthenticate(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -243,15 +243,15 @@ func TestAuthenticate(t *testing.T) {
 		})
 
 		testErrorMessage := "test - error reading MFA selection"
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 0, fmt.Errorf(testErrorMessage)
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -276,17 +276,17 @@ func TestAuthenticate(t *testing.T) {
 			}, nil
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
 		selections := []int{0, 3}
 		for _, selection := range selections {
-			readerMock.MockReadInt(func(string) (int, error) {
+			rwMock.MockReadInt(func(string) (int, error) {
 				return selection, nil
 			})
 
-			_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+			_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 			if err == nil {
 				t.Error("expected error, got none")
 			}
@@ -312,20 +312,20 @@ func TestAuthenticate(t *testing.T) {
 			}, nil
 		})
 
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 1, nil
 		})
 
 		testErrorMessage := "test - error reading MFA code"
-		readerMock.MockReadLine(func(string) (string, error) {
+		rwMock.MockReadLine(func(string) (string, error) {
 			return "", fmt.Errorf(testErrorMessage)
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -355,19 +355,19 @@ func TestAuthenticate(t *testing.T) {
 			}, nil
 		})
 
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 1, nil
 		})
 
-		readerMock.MockReadLine(func(string) (string, error) {
+		rwMock.MockReadLine(func(string) (string, error) {
 			return "", nil
 		})
 
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", nil
 		})
 
-		_, err := authenticate(readerMock, username, noMask, filter, account, identityMock)
+		_, err := authenticate(rwMock, username, noMask, filter, account, identityMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -404,15 +404,15 @@ func TestFindApp(t *testing.T) {
 }
 
 func TestGetPassword(t *testing.T) {
-	readerMock := console.NewMockReader()
+	rwMock := io.NewMockReadWriter()
 
 	t.Run("error reading unmasked", func(t *testing.T) {
 		testErrorMessage := "testing - error reading password"
-		readerMock.MockReadLine(func(string) (string, error) {
+		rwMock.MockReadLine(func(string) (string, error) {
 			return "", fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := getPassword(readerMock, true)
+		_, err := getPassword(rwMock, true)
 		if err == nil {
 			t.Fatalf("expected error, got none")
 		}
@@ -424,11 +424,11 @@ func TestGetPassword(t *testing.T) {
 
 	t.Run("error reading masked", func(t *testing.T) {
 		testErrorMessage := "testing - error reading password"
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return "", fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := getPassword(readerMock, false)
+		_, err := getPassword(rwMock, false)
 		if err == nil {
 			t.Fatalf("expected error, got none")
 		}
@@ -440,11 +440,11 @@ func TestGetPassword(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		password := "secret"
-		readerMock.MockReadPassword(func(string) (string, error) {
+		rwMock.MockReadPassword(func(string) (string, error) {
 			return password, nil
 		})
 
-		returnedPassword, err := getPassword(readerMock, false)
+		returnedPassword, err := getPassword(rwMock, false)
 		if err != nil {
 			t.Fatal(err)
 		}

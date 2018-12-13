@@ -1,4 +1,4 @@
-package cmd
+package bmx
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 
-	"github.com/Brightspace/bmx/cli/console"
+	"github.com/Brightspace/bmx/io"
 	"github.com/Brightspace/bmx/serviceProviders"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 func TestSelectRole(t *testing.T) {
-	readerMock := console.NewMockReader()
+	rwMock := io.NewMockReadWriter()
 	serviceMock := serviceProviders.NewMockProvider()
 
 	t.Run("list roles error", func(t *testing.T) {
@@ -27,7 +27,7 @@ func TestSelectRole(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		_, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -42,7 +42,7 @@ func TestSelectRole(t *testing.T) {
 			return []serviceProviders.Role{}, nil
 		})
 
-		_, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		_, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -65,7 +65,7 @@ func TestSelectRole(t *testing.T) {
 			return nil, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		_, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -84,11 +84,11 @@ func TestSelectRole(t *testing.T) {
 		})
 
 		testErrorMessage := "test - error reading input"
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 0, fmt.Errorf(testErrorMessage)
 		})
 
-		_, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		_, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err == nil {
 			t.Error("expected error, got none")
 		}
@@ -108,11 +108,11 @@ func TestSelectRole(t *testing.T) {
 
 		selections := []int{0, 3}
 		for _, selection := range selections {
-			readerMock.MockReadInt(func(string) (int, error) {
+			rwMock.MockReadInt(func(string) (int, error) {
 				return selection, nil
 			})
 
-			_, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+			_, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 			if err == nil {
 				t.Error("expected error, got none")
 			}
@@ -141,7 +141,7 @@ func TestSelectRole(t *testing.T) {
 			return creds, nil
 		})
 
-		returnedCredentials, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		returnedCredentials, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -170,11 +170,11 @@ func TestSelectRole(t *testing.T) {
 			return creds, nil
 		})
 
-		readerMock.MockReadInt(func(string) (int, error) {
+		rwMock.MockReadInt(func(string) (int, error) {
 			return 2, nil
 		})
 
-		returnedCredentials, err := selectRole(readerMock, desiredRole, saml, serviceMock)
+		returnedCredentials, err := selectRole(rwMock, desiredRole, saml, serviceMock)
 		if err != nil {
 			t.Fatal(err)
 		}

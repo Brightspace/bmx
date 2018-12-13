@@ -1,17 +1,16 @@
-package cmd
+package bmx
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/Brightspace/bmx/cli/console"
+	"github.com/Brightspace/bmx/io"
 	"github.com/Brightspace/bmx/serviceProviders"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-func selectRole(reader console.Reader, desiredRole, saml string, service serviceProviders.ServiceProvider) (*sts.Credentials, error) {
+func selectRole(rw io.ReadWriter, desiredRole, saml string, service serviceProviders.ServiceProvider) (*sts.Credentials, error) {
 	roles, err := service.ListRoles(saml)
 	if err != nil {
 		return nil, err
@@ -32,7 +31,7 @@ func selectRole(reader console.Reader, desiredRole, saml string, service service
 		}
 
 		if role == nil {
-			fmt.Fprintln(os.Stderr, "Desired role not available")
+			rw.Writeln("Desired role not available")
 		}
 	}
 
@@ -41,10 +40,10 @@ func selectRole(reader console.Reader, desiredRole, saml string, service service
 			role = &roles[0]
 		} else {
 			for idx, r := range roles {
-				fmt.Fprintf(os.Stderr, "[%d] %s\n", idx+1, r.Name)
+				rw.Writeln(fmt.Sprintf("[%d] %s", idx+1, r.Name))
 			}
 
-			roleSelection, err := reader.ReadInt("Select a role: ")
+			roleSelection, err := rw.ReadInt("Select a role: ")
 			if err != nil {
 				return nil, err
 			}

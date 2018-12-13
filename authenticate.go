@@ -1,12 +1,11 @@
-package cmd
+package bmx
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/Brightspace/bmx/cli/console"
 	"github.com/Brightspace/bmx/identityProviders"
+	"github.com/Brightspace/bmx/io"
 )
 
 const (
@@ -16,7 +15,7 @@ const (
 	userPrompt       = "Username: "
 )
 
-func authenticate(reader console.Reader, username string, noMask bool, filter, account string, identity identityProviders.IdentityProvider) (string, error) {
+func authenticate(rw io.ReadWriter, username string, noMask bool, filter, account string, identity identityProviders.IdentityProvider) (string, error) {
 	var userID string
 	var password string
 	var err error
@@ -24,7 +23,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 
 	username = strings.TrimSpace(username)
 	if username == "" {
-		username, err = getUsername(reader)
+		username, err = rw.ReadLine(userPrompt)
 		if err != nil {
 			return "", err
 		}
@@ -32,7 +31,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 
 	userID, ok, err = identity.AuthenticateFromCache(username)
 	if !ok || err != nil {
-		password, err = getPassword(reader, noMask)
+		password, err = getPassword(rw, noMask)
 		if err != nil {
 			return "", err
 		}
@@ -40,7 +39,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 		userID, err = identity.Authenticate(username, password)
 		if err != nil {
 			if err.Error() == mfaRequired {
-				fmt.Fprintln(os.Stderr, "MFA Required")
+				rw.Writeln("MFA Required")
 
 				mfaFactors, err := identity.GetMFAFactors()
 				if err != nil {
@@ -48,11 +47,11 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 				}
 
 				for idx, factor := range mfaFactors {
-					fmt.Fprintf(os.Stderr, "%d - %s\n", idx+1, factor.Factor)
+					rw.Writeln(fmt.Sprintf("%d - %s\n", idx+1, factor.Factor))
 				}
 
 				var mfaIdx int
-				if mfaIdx, err = reader.ReadInt("Select an available MFA option: "); err != nil {
+				if mfaIdx, err = rw.ReadInt("Select an available MFA option: "); err != nil {
 					return "", err
 				}
 
@@ -63,7 +62,7 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 				mfaURL := mfaFactors[mfaIdx-1].URL
 
 				var mfaCode string
-				if mfaCode, err = reader.ReadLine("Code: "); err != nil {
+				if mfaCode, err = rw.ReadLine("Code: "); err != nil {
 					return "", err
 				}
 
@@ -88,17 +87,17 @@ func authenticate(reader console.Reader, username string, noMask bool, filter, a
 	app, found := findApp(account, applications)
 	if !found {
 		// select an account
-		fmt.Fprintln(os.Stderr, "Available accounts:")
+		rw.Writeln("Available accounts:")
 		for _, a := range applications {
 			if a.AppName == filter || filter == "" {
 				filteredApps = append(filteredApps, a)
-				os.Stderr.WriteString(fmt.Sprintf("[%d] %s\n", count, a.Label))
+				rw.Writeln(fmt.Sprintf("[%d] %s", count, a.Label))
 				count++
 			}
 		}
 
 		var accountID int
-		if accountID, err = reader.ReadInt("Select an account: "); err != nil {
+		if accountID, err = rw.ReadInt("Select an account: "); err != nil {
 			return "", err
 		}
 
@@ -123,28 +122,24 @@ func findApp(account string, apps []identityProviders.AppDetail) (identityProvid
 	return identityProviders.AppDetail{}, false
 }
 
-func getPassword(reader console.Reader, noMask bool) (string, error) {
+func getPassword(rw io.ReadWriter, noMask bool) (string, error) {
 	var pass string
 	if noMask {
 		var err error
-		pass, err = reader.ReadLine(passwordPrompt)
+		pass, err = rw.ReadLine(passwordPrompt)
 		if err != nil {
 			return "", err
 		}
 
 	} else {
 		var err error
-		pass, err = reader.ReadPassword(passwordPrompt)
+		pass, err = rw.ReadPassword(passwordPrompt)
 		if err != nil {
 			return "", err
 		}
 
-		fmt.Fprintln(os.Stderr)
+		rw.Writeln("")
 	}
 
 	return pass, nil
-}
-
-func getUsername(reader console.Reader) (string, error) {
-	return reader.ReadLine(userPrompt)
 }
