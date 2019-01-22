@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"syscall"
 
-	"github.com/Brightspace/bmx/password"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type ConsoleReader interface {
@@ -45,5 +46,12 @@ func (r DefaultConsoleReader) ReadInt(prompt string) (int, error) {
 }
 
 func (r DefaultConsoleReader) ReadPassword(prompt string) (string, error) {
-	return password.Read(prompt)
+	fmt.Fprint(os.Stderr, prompt)
+	var pass, err = terminal.ReadPassword(int(syscall.Stdin))
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(pass[:]), nil
 }

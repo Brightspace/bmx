@@ -50,8 +50,11 @@ BMX is designed to be extensible and easily rolled out.
 
 ### Developer Setup
 
-```
-go get github.com/Brightspace/bmx/cmd/bmx
+```sh
+go get github.com/Brightspace/bmx
+# until the 'go' branch is merged in to master:
+cd ~/go/src/github.com/Brightspace/bmx
+git checkout go
 ```
 
 ### Slated development
