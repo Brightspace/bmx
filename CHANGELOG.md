@@ -1,5 +1,15 @@
 # BMX
 
+## 2.0.1-beta
+### BUG FIXES
+* Fixes a problem with password entry on darwin builds
+### IMPROVEMENTS
+* Update README documentation to be more correct with the `go get` paths
+
+## 2.0.0-beta
+### IMPROVEMENTS
+* Rewrite in Golang
+
 ## 1.1.0
 ### FEATURES
 * BMX's write command now accepts an '--output' option (#128).
