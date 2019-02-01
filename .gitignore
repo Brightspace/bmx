@@ -1,13 +1,3 @@
-__pycache__/
-dist/
-bmx.egg-info/
 .idea/
-.tox
-.cache
-build
-.coverage
-.*.swp
-.idea/
-cmd/bmx/bmx.exe
-cmd/bmx/bmx
-.vscode
+.vscode/
+bmx.exe
