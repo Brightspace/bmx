@@ -1,72 +1,63 @@
 [![Build Status](https://travis-ci.com/Brightspace/bmx.svg?token=XBuHJueJZM92zaxjesN6&branch=master)](https://travis-ci.com/Brightspace/bmx)
-[![Coverage Status](https://coveralls.io/repos/github/Brightspace/bmx/badge.svg?branch=dev&t=c1nzIP)](https://coveralls.io/github/Brightspace/bmx?branch=dev)
+[![Coverage Status](https://coveralls.io/repos/github/Brightspace/bmx/badge.svg?branch=go&t=c1nzIP)](https://coveralls.io/github/Brightspace/bmx?branch=go)
+
 
 # BMX
 
-BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  It uses your Okta identity to create short-term AWS STS tokens, as an alternative to long-term IAM access keys.  BMX manages your STS tokens with five commands:
+BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  
+It uses your Okta identity to create short-term AWS STS tokens, as an alternative to long-term IAM access keys.
+BMX manages your STS tokens with five commands:
 
-1. `bmx aws` wraps the AWS CLI, calling the CLI on your behalf and updating tokens as necessary.  Example: `bmx aws cloudformation describe-stacks`.
 1. `bmx print` writes your short-term tokens to `stdout` as AWS environment variables.  You can execute `bmx print`'s output to make the environment variables available to your shell.
 1. `bmx write` writes your short-term tokens to `~/.aws/credentials`.
-1. `bmx renew` requests a new token with a one-hour TTL.
-1. `bmx remove` forgets a token.
 
 BMX prints detailed usage information when you run `bmx -h` or `bmx <cmd> -h`.
 
-[A BMX demo](https://internal.desire2learncapture.com/1/Watch/6371.aspx) is on Capture.
+[A BMX demo](https://internal.desire2learncapture.com/1/Watch/6371.aspx) is on Capture. (note that this demo is of the previous Python version)
 
 ## Installation
 
-BMX installs with Pip from D2L's Artifactory repository.
-
-### PowerShell
-
-```
-PS C:\Users\credekop> py -3 --version
-Python 3.6.2
-
-PS C:\Users\credekop> py -3 -m pip install --user --upgrade --extra-index-url https://d2lartifacts.artifactoryonline.com/d2lartifacts/api/pypi/pypi-local/simple bmx
-```
-
-## System Requirements
-
-* [Python 3.6+](https://www.python.org/downloads/)
-* Pip, the Python installer.
+Available versions of BMX are available on the [releases](https://github.com/Brightspace/bmx/releases) page. 
 
 ## Features
-1. BMX is multi-platform: it runs on Linux and Windows.
+1. BMX is multi-platform: it runs on Linux, Windows, and Mac.
 1. BMX maintains your Okta session for 12 hours: you enter your Okta password once a day, and BMX takes care of the rest.
-1. BMX supports TOTP and SMS MFA.
-1. BMX manages its own AWS STS tokens and never modifies `~/.aws/credentials` without explicit direction from you.  (See `bmx write`.)
+1. Project scoped configurations
+1. BMX supports Web and SMS MFA.
+
+## Configuration Files
+Many of the commandline parameters for BMX can be specified in a configuration file located at `~/.bmx/config`. BMX will
+load this file automatically and populate the parameters where appropriate.
+
+### Configuration Parameters
+* allow_project_configs (default=false) : Setting this to true will enable the project scoped configuration feature described below.
+* org : Specify the Okta org to connect to here. This value sets the api base URL for Okta calls (https://{org}.okta.com/).
+* user : This is the username used when connecting to the identity provider.
+* account : The AWS account to retrieve credentials for.
+* role : The AWS role to assume.
+* profile : The profile to `write` in `~/.aws/credentials`.
+
+### Project Scoped Configurations
+A project configuration scope can be defined by creating a `.bmx` file anywhere in your project's directory structure. 
+When running BMX in the folder with a `.bmx` file or in any folder nested beneath a `.bmx` file, BMX will walk up the 
+hierarchy until it finds a `.bmx` file and overlay the configuration with the user scoped configuration file `~/.bmx/config`. 
+Note that you must enable this feature with `allow_project_configs=true` in the user configuration file.
 
 ## Development
 
 BMX is designed to be extensible and easily rolled out.
 
+* BMX is written in [Go](https://golang.org)
 * It's a command-driven utility (think of Git, Terraform, or the AWS CLI) where new commands can be added to the base system.
-* It's on our private Artifactory repo and can be easily installed.
-
-BMX is written in Python, like the AWS CLI.
-
-* It introduces no new language dependencies.
-* `bmx aws` runs in the same process as the AWS CLI, reducing overhead.
 
 ### Developer Setup
 
-```bash
-git clone git@github.com:Brightspace/bmx.git
-cd bmx
-pip install -e .
-bmx -h
+```sh
+go get github.com/Brightspace/bmx
+# until the 'go' branch is merged in to master:
+cd ~/go/src/github.com/Brightspace/bmx
+git checkout go
 ```
-
-### Pylint
-
-BMX uses [Pylint](https://www.pylint.org/) to enforce styling and run quality checkers.
-
-**Install**: `pip install pylint`
-
-**Lint**: `pylint bmx`
 
 ### Slated development
 
@@ -77,71 +68,18 @@ BMX has [issues](https://github.com/Brightspace/bmx/issues).
 ### Getting Help
 
 ```bash
-$ python3 --version
-Python 3.6.2
-
 $ bmx -h
 
-usage: bmx {aws,write,print} ...
+Usage:
+   [command]
 
-Okta time-out helper for AWS CLI
+Available Commands:
+  help        Help about any command
+  print       Print to screen
+  write       Write to aws credential file
 
-commands:
-  {aws,write,print}
-    aws                awscli with automatic STS token renewal
-    write              create new AWS credentials and write them to ~/.aws/credentials
-    print              create new AWS credentials and print them to stdout
+Flags:
+  -h, --help   help for this command
 
-Copyright 2017 D2L Corporation
-```
-
-## `bmx aws` in Bash
-```
-$ bmx aws cloudformation describe-stacks
-{
-    "Stacks": [
-        {
-...
-        }
-    ]
-}
-
-$ bmx aws cloudformation describe-stacks
-Your AWS STS token has expired.  Renewing...
-Okta username: credekop
-Okta password:
-
-Available AWS Accounts:
- 1: DEV-BroadcastEventService
- 2: Dev-AnalyticsInegration
- 3: Dev-BDP
- 4: Dev-CI
- 5: Dev-IPA-EDU
- 6: Dev-LMS
- 7: Dev-PD-Tools
- 8: Dev-ServiceDashboard
- 9: Dev-Staging
-10: Dev-Translation
-11: Lrn-NimbusToronto
-12: PRD-BroadcastEventService
-13: Prd-BDP
-14: Prd-CDN
-15: Prd-NA
-16: Prd-ServiceDashboard
-17: Prd-Totem
-18: Service Dashboard
-AWS Account Index: 11
-
-Available Roles in Lrn-NimbusToronto:
- 1: Lrn-NimbusToronto-Owner
- 2: Lrn-NimbusToronto-User
-Role Index: 2
-
-{
-    "Stacks": [
-        {
-...
-        }
-    ]
-}
+Use " [command] --help" for more information about a command.
 ```
