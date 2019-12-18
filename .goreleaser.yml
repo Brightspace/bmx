@@ -17,7 +17,7 @@ changelog:
   skip: true
 release:
   github:
-    owner: Brightspace
+    owner: jrbeverly
     name: bmx
   prerelease: auto
   name_template: "v{{.Version}}"
