@@ -1,5 +1,6 @@
 builds:
   - binary: "{{.ProjectName}}_v{{.Version}}"
+    main: ./cmd/bmx/bmx.go
     env:
       - GO111MODULE=on
       - CGO_ENABLED=0
