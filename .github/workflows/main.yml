@@ -27,6 +27,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v1
     - name: Vet
-      run: go vet ./...
+      run: go vet ./..
     - name: Test
-      run: go test -v -covermode=count -coverprofile=coverage.out ./...
+      run: go test -v -covermode=count -coverprofile=coverage.out ./..
