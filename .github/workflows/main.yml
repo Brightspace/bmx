@@ -26,9 +26,6 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v1
-    - name: Format check
-      if: matrix.platform == 'ubuntu-latest'
-      run: bash scripts/gofmtcheck.sh
     - name: Vet
       run: go vet ./...
     - name: Test
