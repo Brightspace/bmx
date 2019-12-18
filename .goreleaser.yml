@@ -1,0 +1,26 @@
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - binary: "{{.ProjectName}}_v{{.Version}}"
+    env:
+      - GO111MODULE=on
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+archives:
+  - format: zip
+checksum:
+  name_template: "checksums.txt"
+changelog:
+  skip: true
+release:
+  github:
+    owner: Brightspace
+    name: bmx
+  prerelease: auto
+  name_template: "v{{.Version}}"
