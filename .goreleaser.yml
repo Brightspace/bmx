@@ -1,0 +1,23 @@
+builds:
+  - binary: "{{.ProjectName}}_v{{.Version}}"
+    main: ./cmd/bmx/
+    env:
+      - GO111MODULE=on
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+archives:
+  - format: zip
+checksum:
+  name_template: "checksums.txt"
+changelog:
+  skip: true
+release:
+  github:
+    owner: jrbeverly
+    name: bmx
+  prerelease: auto
+  name_template: "v{{.Version}}"
