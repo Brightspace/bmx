@@ -1,5 +1,3 @@
-[![Coverage Status](https://coveralls.io/repos/github/Brightspace/bmx/badge.svg?branch=master&t=c1nzIP)](https://coveralls.io/github/Brightspace/bmx?branch=master)
-
 # BMX
 BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  
 It uses your Okta identity to create short-term AWS STS tokens, as an alternative to long-term IAM access keys.
