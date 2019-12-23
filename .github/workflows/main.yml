@@ -20,13 +20,20 @@ jobs:
     env:
       GO111MODULE: on
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: Checkout code
-      uses: actions/checkout@v1
-    - name: Vet
-      run: go vet ./...
-    - name: Test
-      run: go test -v -covermode="count" -coverprofile="coverage.out" ./...
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -v -covermode="count" -coverprofile="profile.cov" ./...
+      - name: Send coverage
+        if: matrix.platform == 'ubuntu-latest'
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GO111MODULE=off go get github.com/mattn/goveralls
+          $(go env GOPATH)/bin/goveralls -coverprofile=profile.cov -service=github
