@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.com/Brightspace/bmx.svg?token=XBuHJueJZM92zaxjesN6&branch=master)](https://travis-ci.com/Brightspace/bmx)
 [![Coverage Status](https://coveralls.io/repos/github/Brightspace/bmx/badge.svg?branch=master&t=c1nzIP)](https://coveralls.io/github/Brightspace/bmx?branch=master)
-
 
 # BMX
 BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.  
