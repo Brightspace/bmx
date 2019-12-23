@@ -1,0 +1,39 @@
+name: Build & Test
+on:
+  push:
+    paths:
+      - "*.go"
+      - "*/*.go"
+      - "*/*/*.go"
+      - "*/*/*/*.go"
+      - "*/*/*/*/*.go"
+      - "*/*/*/*/*/*.go"
+      - .github/workflows/main.yml
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.13.x]
+        platform: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test -v -covermode="count" -coverprofile="profile.cov" ./...
+      - name: Send coverage
+        if: matrix.platform == 'ubuntu-latest'
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GO111MODULE=off go get github.com/mattn/goveralls
+          $(go env GOPATH)/bin/goveralls -coverprofile=profile.cov -service=github
