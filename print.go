@@ -35,6 +35,14 @@ func init() {
 	AwsServiceProvider = aws.NewAwsServiceProvider()
 }
 
+type OutputFormat string
+
+const (
+	OsShell    = "default"
+	Bash       = "bash"
+	Powershell = "powershell"
+)
+
 type PrintCmdOptions struct {
 	Org      string
 	User     string
@@ -42,6 +50,7 @@ type PrintCmdOptions struct {
 	NoMask   bool
 	Password string
 	Role     string
+	Output   OutputFormat
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
@@ -66,7 +75,14 @@ func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdO
 	}
 
 	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role)
-	printDefaultFormat(creds)
+	switch printOptions.Output {
+	case Powershell:
+		printPowershell(creds)
+	case Bash:
+		printBash(creds)
+	default:
+		printDefaultFormat(creds)
+	}
 }
 
 func printPowershell(credentials *sts.Credentials) {
