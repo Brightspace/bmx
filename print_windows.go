@@ -20,6 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-func printDefaultFormat(credentials *sts.Credentials) {
-	printPowershell(credentials)
+func printDefaultFormat(credentials *sts.Credentials) string {
+	return printPowershell(credentials)
 }

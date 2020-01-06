@@ -22,6 +22,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-func printDefaultFormat(credentials *sts.Credentials) {
-	printBash(credentials)
+func printDefaultFormat(credentials *sts.Credentials) string {
+	return printBash(credentials)
 }
