@@ -35,8 +35,6 @@ func init() {
 	AwsServiceProvider = aws.NewAwsServiceProvider()
 }
 
-type OutputFormat string
-
 const (
 	OsShell    = "default"
 	Bash       = "bash"
@@ -50,7 +48,7 @@ type PrintCmdOptions struct {
 	NoMask   bool
 	Password string
 	Role     string
-	Output   OutputFormat
+	Output   string
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
