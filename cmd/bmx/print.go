@@ -36,7 +36,7 @@ func init() {
 	printCmd.Flags().StringVar(&printOptions.Account, "account", "", "the account name to auth against")
 	printCmd.Flags().StringVar(&printOptions.Role, "role", "", "the desired role to assume")
 	printCmd.Flags().BoolVar(&printOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
-	printCmd.Flags().StringVar(&printOptions.Output, "output", "", "the output format")
+	printCmd.Flags().StringVar(&printOptions.Output, "output", "", "the output format [bash|powershell]")
 
 	if userConfig.Org == "" {
 		printCmd.MarkFlagRequired("org")
