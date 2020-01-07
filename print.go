@@ -36,7 +36,6 @@ func init() {
 }
 
 const (
-	OsShell    = "default"
 	Bash       = "bash"
 	Powershell = "powershell"
 )
