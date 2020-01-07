@@ -18,6 +18,7 @@ package main
 
 import (
 	"log"
+	"fmt"
 
 	"github.com/Brightspace/bmx/config"
 
@@ -56,7 +57,8 @@ var printCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		bmx.Print(oktaClient, mergedOptions)
+		command := bmx.Print(oktaClient, mergedOptions)
+		fmt.Println(command)
 	},
 }
 

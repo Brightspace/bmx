@@ -63,7 +63,7 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 	return user
 }
 
-func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
+func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) string {
 	printOptions.User = getUserIfEmpty(printOptions.User)
 	user := GetUserInfoFromPrintCmdOptions(printOptions)
 
@@ -74,7 +74,7 @@ func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdO
 
 	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role)
 	command := printCommand(printOptions, creds)
-	fmt.Print(command)
+	return command
 }
 
 func printCommand(printOptions PrintCmdOptions, creds *sts.Credentials) string {
