@@ -35,6 +35,11 @@ func init() {
 	AwsServiceProvider = aws.NewAwsServiceProvider()
 }
 
+const (
+	Bash       = "bash"
+	Powershell = "powershell"
+)
+
 type PrintCmdOptions struct {
 	Org      string
 	User     string
@@ -42,6 +47,7 @@ type PrintCmdOptions struct {
 	NoMask   bool
 	Password string
 	Role     string
+	Output   string
 }
 
 func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProviders.UserInfo {
@@ -56,7 +62,7 @@ func GetUserInfoFromPrintCmdOptions(printOptions PrintCmdOptions) serviceProvide
 	return user
 }
 
-func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) {
+func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdOptions) string {
 	printOptions.User = getUserIfEmpty(printOptions.User)
 	user := GetUserInfoFromPrintCmdOptions(printOptions)
 
@@ -66,13 +72,24 @@ func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdO
 	}
 
 	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role)
-	printDefaultFormat(creds)
+	command := printCommand(printOptions, creds)
+	return command
 }
 
-func printPowershell(credentials *sts.Credentials) {
-	fmt.Printf(`$env:AWS_SESSION_TOKEN='%s'; $env:AWS_ACCESS_KEY_ID='%s'; $env:AWS_SECRET_ACCESS_KEY='%s'`, *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+func printCommand(printOptions PrintCmdOptions, creds *sts.Credentials) string {
+	switch printOptions.Output {
+	case Powershell:
+		return printPowershell(creds)
+	case Bash:
+		return printBash(creds)
+	}
+	return printDefaultFormat(creds)
 }
 
-func printBash(credentials *sts.Credentials) {
-	fmt.Printf("export AWS_SESSION_TOKEN=%s\nexport AWS_ACCESS_KEY_ID=%s\nexport AWS_SECRET_ACCESS_KEY=%s", *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+func printPowershell(credentials *sts.Credentials) string {
+	return fmt.Sprintf(`$env:AWS_SESSION_TOKEN='%s'; $env:AWS_ACCESS_KEY_ID='%s'; $env:AWS_SECRET_ACCESS_KEY='%s'`, *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
+}
+
+func printBash(credentials *sts.Credentials) string {
+	return fmt.Sprintf("export AWS_SESSION_TOKEN=%s\nexport AWS_ACCESS_KEY_ID=%s\nexport AWS_SECRET_ACCESS_KEY=%s", *credentials.SessionToken, *credentials.AccessKeyId, *credentials.SecretAccessKey)
 }
