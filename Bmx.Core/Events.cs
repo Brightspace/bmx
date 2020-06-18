@@ -8,4 +8,6 @@
 	public delegate string PromptMfaInputHandler( string mfaInputPrompt );
 
 	public delegate string PromptRoleSelectionHandler( string[] roles );
+
+	public delegate void InformUnknownMfaTypesHandler(string[] mfaOptions);
 }

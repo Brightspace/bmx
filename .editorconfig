@@ -14,7 +14,6 @@ indent_size = 2
 
 [*.cs]
 tab_width                = 4
-max_line_length          = off
 
 # Yoinked from LMS and modified
 # Language conventions (https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference?view=vs-2017#language-conventions)
