@@ -5,6 +5,7 @@ using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using Bmx.Core;
+using Bmx.Idp.Okta;
 
 namespace Bmx.CommandLine {
 	class StubIdp : IIdentityProvider {
@@ -24,7 +25,8 @@ namespace Bmx.CommandLine {
 		private readonly Parser _cmdLineParser;
 
 		public CommandLine() {
-			_bmx = new BmxCore( new StubIdp() );
+			// TODO: Fix this :| (ref: Program.cs)
+			_bmx = new BmxCore( new OktaClient( "d2l" ) );
 			_cmdLineParser = BuildCommandLine().UseDefaults().Build();
 
 			_bmx.PromptUserName += GetUser;
@@ -53,7 +55,9 @@ namespace Bmx.CommandLine {
 				// TODO: Consider generating these elsewhere, overlaps with write command options
 				new Option<string>( "--account" ) {Required = true, Description = "account name to auth against"},
 				new Option<string>( "--org" ) {Required = true, Description = "okta org api to target"},
-				new Option<string>( "--output" ) {Required = false, Description = "the output format [bash|powershell]"},
+				new Option<string>( "--output" ) {
+					Required = false, Description = "the output format [bash|powershell]"
+				},
 				new Option<string>( "--role" ) {Required = false, Description = "desired role to assume"},
 				new Option<string>( "--user" ) {Required = false, Description = "user to authenticate with"}
 			};
@@ -63,7 +67,9 @@ namespace Bmx.CommandLine {
 			return new Command( "write" ) {
 				new Option<string>( "--account" ) {Required = true, Description = "account name to auth against"},
 				new Option<string>( "--org" ) {Required = true, Description = "okta org api to target"},
-				new Option<string>( "--output" ) {Required = false, Description = "write to the specified file instead of ~/.aws/credentials"},
+				new Option<string>( "--output" ) {
+					Required = false, Description = "write to the specified file instead of ~/.aws/credentials"
+				},
 				new Option<string>( "--role" ) {Required = false, Description = "desired role to assume"},
 				new Option<string>( "--user" ) {Required = false, Description = "user to authenticate with"},
 				new Option<string>( "--profile" ) {Required = false, Description = "aws profile name"}

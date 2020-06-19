@@ -9,5 +9,5 @@
 
 	public delegate string PromptRoleSelectionHandler( string[] roles );
 
-	public delegate void InformUnknownMfaTypesHandler(string[] mfaOptions);
+	public delegate void InformUnknownMfaTypesHandler( string[] mfaOptions );
 }

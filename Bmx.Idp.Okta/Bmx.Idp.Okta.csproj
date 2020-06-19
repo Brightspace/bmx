@@ -1,17 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Bmx.Core\Bmx.Core.csproj" />
-      <ProjectReference Include="..\Bmx.Idp.Okta\Bmx.Idp.Okta.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20303.1" />
     </ItemGroup>
 
 </Project>
