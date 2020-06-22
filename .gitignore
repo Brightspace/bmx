@@ -1,0 +1,6 @@
+# DotNetCore
+**/bin
+**/obj
+
+# Rider
+.idea/
