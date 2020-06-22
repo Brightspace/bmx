@@ -6,8 +6,9 @@
 	public delegate int PromptMfaTypeHandler( string[] mfaOptions );
 
 	public delegate string PromptMfaInputHandler( string mfaInputPrompt );
+	public delegate int PromptAccountSelectHandler( string[] accounts );
 
-	public delegate string PromptRoleSelectionHandler( string[] roles );
+	public delegate int PromptRoleSelectionHandler( string[] roles );
 
 	public delegate void InformUnknownMfaTypesHandler( string[] mfaOptions );
 }

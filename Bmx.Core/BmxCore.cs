@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace Bmx.Core {
 		public event PromptUserPasswordHandler PromptUserPassword;
 		public event PromptMfaTypeHandler PromptMfaType;
 		public event PromptMfaInputHandler PromptMfaInput;
+		public event PromptAccountSelectHandler PromptAccountSelection;
 		public event PromptRoleSelectionHandler PromptRoleSelection;
 		public event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
 
@@ -22,18 +24,18 @@ namespace Bmx.Core {
 			_identityProvider = identityProvider;
 		}
 
-		public void Print( string account, string org, string role = null, string user = null,
+		public void Print( string org, string account = null, string role = null, string user = null,
 			string output = "powershell" ) {
 			_output = output;
-			DoCoreBmx( account, org, role, user ).Wait();
+			DoCoreBmx( org, account, role, user ).Wait();
 		}
 
-		private async Task DoCoreBmx( string account, string org, string role = null, string user = null ) {
 			_account = account;
 			_org = org;
 			_role = role;
 			_user = user;
 
+		private async Task DoCoreBmx( string org, string account = null, string role = null, string user = null ) {
 			Debug.Assert( PromptUserName != null, nameof(PromptUserName) + " != null" );
 			Debug.Assert( PromptUserPassword != null, nameof(PromptUserPassword) + " != null" );
 			Debug.Assert( PromptMfaType != null, nameof(PromptMfaType) + " != null" );
@@ -70,6 +72,7 @@ namespace Bmx.Core {
 				// TODO: Remove need for input here, Push style flows have no user input on app here
 				// ex: https://developer.okta.com/docs/reference/api/authn/#response-example-waiting
 				PromptMfaInput( selectedMfa.Name );
+				throw new NotImplementedException();
 			}
 		}
 	}
