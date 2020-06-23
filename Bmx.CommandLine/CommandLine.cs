@@ -37,6 +37,7 @@ namespace Bmx.CommandLine {
 			_bmx.PromptUserPassword += GetPassword;
 			_bmx.PromptMfaType += GetMfaType;
 			_bmx.PromptMfaInput += GetMfaInput;
+			_bmx.PromptAccountSelection += GetAccount;
 			_bmx.PromptRoleSelection += GetRoleType;
 		}
 
