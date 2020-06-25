@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: Brightspace/third-party-actions@actions/checkout
       - name: Validate config
         uses: docker://goreleaser/goreleaser@sha256:83ea87528d24d5c5cafa92674f79ccdd5fad6d6fbb906d0925e8913e3e3f4248
         with:
