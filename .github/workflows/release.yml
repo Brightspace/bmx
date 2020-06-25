@@ -8,6 +8,7 @@ jobs:
   release:
     name: Release on GitHub
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Check out code
         uses: Brightspace/third-party-actions@actions/checkout
