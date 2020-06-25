@@ -80,7 +80,21 @@ namespace Bmx.Core {
 				selectedAccountIndex = PromptAccountSelection( accounts );
 			}
 
-			var accountCredentials = _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
+			var accountCredentials = await _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
+
+			_cloudProvider.SetSamlToken( accountCredentials );
+			var roles = _cloudProvider.GetRoles();
+			role = role?.ToLower();
+
+			int selectedRoleIndex = -1;
+
+			if( role != null ) {
+				selectedRoleIndex = Array.IndexOf( roles.Select( s => s.ToLower() ).ToArray(), role );
+			}
+
+			if( role == null || selectedRoleIndex == -1 ) {
+				selectedRoleIndex = PromptRoleSelection( roles );
+			}
 		}
 	}
 }
