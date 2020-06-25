@@ -1,4 +1,4 @@
-﻿namespace Bmx.Idp.Okta.models {
+﻿namespace Bmx.Idp.Okta.Models {
 	public struct SessionOptions {
 		public string SessionToken { get; set; }
 

@@ -8,22 +8,6 @@ using Bmx.Core;
 using Bmx.Idp.Okta;
 
 namespace Bmx.CommandLine {
-	class StubIdp : IIdentityProvider {
-		public string Name => "StubIDP";
-
-		public Task<MfaOption[]> Authenticate( string username, string password ) {
-			throw new NotImplementedException();
-		}
-
-		public Task<bool> ChallengeMfa( int selectedMfaIndex, string challengeResponse ) {
-			throw new NotImplementedException();
-		}
-
-		public Task<string[]> GetAccounts( string accountType ) {
-			throw new NotImplementedException();
-		}
-	}
-
 	public class CommandLine {
 		private BmxCore _bmx;
 		private readonly Parser _cmdLineParser;

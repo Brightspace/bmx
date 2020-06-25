@@ -1,4 +1,4 @@
-﻿namespace Bmx.Idp.Okta.models {
+﻿namespace Bmx.Idp.Okta.Models {
 	public struct OktaMfaFactor {
 		public string Id { get; set; }
 		public string FactorType { get; set; }

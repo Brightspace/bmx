@@ -1,4 +1,4 @@
-﻿namespace Bmx.Idp.Okta.models {
+﻿namespace Bmx.Idp.Okta.Models {
 	public struct AuthenticateChallengeMfaOptions {
 		public string FactorId { get; set; }
 		public string PassCode { get; set; }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace Bmx.Idp.Okta.models {
+namespace Bmx.Idp.Okta.Models {
 	public class AuthenticateResponse {
 		public DateTimeOffset ExpiresAt { get; set; }
 
