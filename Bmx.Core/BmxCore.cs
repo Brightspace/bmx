@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace Bmx.Core {
 	public class BmxCore {
 		private readonly IIdentityProvider _identityProvider;
+		private readonly ICloudProvider _cloudProvider;
 		public event PromptUserNameHandler PromptUserName;
 		public event PromptUserPasswordHandler PromptUserPassword;
 		public event PromptMfaTypeHandler PromptMfaType;
@@ -15,8 +16,9 @@ namespace Bmx.Core {
 		public event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
 
 
-		public BmxCore( IIdentityProvider identityProvider ) {
+		public BmxCore( IIdentityProvider identityProvider, ICloudProvider cloudProvider ) {
 			_identityProvider = identityProvider;
+			_cloudProvider = cloudProvider;
 		}
 
 		public void Print( string org, string account = null, string role = null, string user = null,
@@ -80,7 +82,9 @@ namespace Bmx.Core {
 				selectedAccountIndex = PromptAccountSelection( accounts );
 			}
 
-			var accountCredentials = _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
+			var accountCredentials = await _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
+
+			var roles = _cloudProvider.GetRoles( );
 		}
 	}
 }
