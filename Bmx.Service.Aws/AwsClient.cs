@@ -1,17 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Bmx.Core;
 using Bmx.Service.Aws.Models;
 
 namespace Bmx.Service.Aws {
 	public class AwsClient : ICloudProvider {
+		private readonly AmazonSecurityTokenServiceClient _stsClient;
+
 		private string _samlString;
 		private XmlDocument _samlToken;
 		private List<AwsRole> _awsRoles;
 
-		public void SetSamlToken( XmlDocument samlToken ) {
-			_samlToken = samlToken;
+		public AwsClient() {
+			_stsClient = new AmazonSecurityTokenServiceClient();
+		}
+
 		public void SetSamlToken( string encodedSaml ) {
 			_samlString = encodedSaml;
 
@@ -46,6 +56,21 @@ namespace Bmx.Service.Aws {
 			}
 
 			return _awsRoles.Select( role => role.RoleName ).ToArray();
+		}
+
+		public async Task<Dictionary<string, string>> GetTokens( int selectedRoleIndex ) {
+			var role = _awsRoles[selectedRoleIndex];
+
+			// Generate access keys valid for 1 hour (default)
+			var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
+				PrincipalArn = role.PrincipalArn, RoleArn = role.RoleArn, SAMLAssertion = _samlString
+			} );
+
+			return new Dictionary<string, string> {
+				{"AWS_SESSION_TOKEN", authResp.Credentials.SessionToken},
+				{"AWS_ACCESS_KEY_ID", authResp.Credentials.AccessKeyId},
+				{"AWS_SECRET_ACCESS_KEY", authResp.Credentials.SecretAccessKey}
+			};
 		}
 	}
 }

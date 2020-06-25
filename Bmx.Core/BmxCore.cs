@@ -95,6 +95,8 @@ namespace Bmx.Core {
 			if( role == null || selectedRoleIndex == -1 ) {
 				selectedRoleIndex = PromptRoleSelection( roles );
 			}
+
+			var tokens = await _cloudProvider.GetTokens( selectedRoleIndex );
 		}
 	}
 }
