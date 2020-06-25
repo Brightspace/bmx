@@ -8,18 +8,6 @@ using Bmx.Core;
 using Bmx.Idp.Okta;
 
 namespace Bmx.CommandLine {
-	class StubIdp : IIdentityProvider {
-		public string Name => "StubIDP";
-
-		public Task<MfaOption[]> Authenticate( string username, string password ) {
-			throw new NotImplementedException();
-		}
-
-		public Task<bool> ChallengeMfa( int selectedMfaIndex, string challengeResponse ) {
-			throw new NotImplementedException();
-		}
-	}
-
 	public class CommandLine {
 		private BmxCore _bmx;
 		private readonly Parser _cmdLineParser;
@@ -33,6 +21,7 @@ namespace Bmx.CommandLine {
 			_bmx.PromptUserPassword += GetPassword;
 			_bmx.PromptMfaType += GetMfaType;
 			_bmx.PromptMfaInput += GetMfaInput;
+			_bmx.PromptAccountSelection += GetAccount;
 			_bmx.PromptRoleSelection += GetRoleType;
 		}
 
@@ -53,7 +42,7 @@ namespace Bmx.CommandLine {
 		private Command BuildPrintCommand() {
 			return new Command( "print", "Prints credentials to screen" ) {
 				// TODO: Consider generating these elsewhere, overlaps with write command options
-				new Option<string>( "--account" ) {Required = true, Description = "account name to auth against"},
+				new Option<string>( "--account" ) {Description = "account name to auth against"},
 				new Option<string>( "--org" ) {Required = true, Description = "okta org api to target"},
 				new Option<string>( "--output" ) {
 					Required = false, Description = "the output format [bash|powershell]"
@@ -65,7 +54,7 @@ namespace Bmx.CommandLine {
 
 		private Command BuildWriteCommand() {
 			return new Command( "write" ) {
-				new Option<string>( "--account" ) {Required = true, Description = "account name to auth against"},
+				new Option<string>( "--account" ) {Description = "account name to auth against"},
 				new Option<string>( "--org" ) {Required = true, Description = "okta org api to target"},
 				new Option<string>( "--output" ) {
 					Required = false, Description = "write to the specified file instead of ~/.aws/credentials"
@@ -76,9 +65,9 @@ namespace Bmx.CommandLine {
 			};
 		}
 
-		private void ExecutePrint( string account, string org, string role = null, string user = null,
+		private void ExecutePrint( string org, string account = null, string role = null, string user = null,
 			string output = null ) {
-			_bmx.Print( account, org, role, user, output );
+			_bmx.Print( org, account, role, user, output );
 		}
 
 		private string GetUser( string provider ) {
@@ -112,25 +101,7 @@ namespace Bmx.CommandLine {
 
 		private int GetMfaType( string[] mfaOptions ) {
 			Console.WriteLine( "MFA Required" );
-
-			for( var i = 0; i < mfaOptions.Length; i++ ) {
-				Console.WriteLine( $"[{i}] - {mfaOptions[i]}" );
-			}
-
-			int selectedMfaOption;
-
-			do {
-				Console.Write( "Select an available MFA Option: " );
-				var inputStr = Console.ReadLine();
-
-				if( inputStr == null || !int.TryParse( inputStr, out selectedMfaOption ) || selectedMfaOption < 0 ||
-				    selectedMfaOption >= mfaOptions.Length ) {
-					selectedMfaOption = -1;
-					Console.WriteLine( $"Invalid option, valid options are between 0 and {mfaOptions.Length - 1}" );
-				}
-			} while( selectedMfaOption < 0 || selectedMfaOption >= mfaOptions.Length );
-
-			return selectedMfaOption;
+			return OptionalSelect( mfaOptions );
 		}
 
 		private string GetMfaInput( string mfaInputPrompt ) {
@@ -138,27 +109,35 @@ namespace Bmx.CommandLine {
 			return Console.ReadLine();
 		}
 
-		private string GetRoleType( string[] roles ) {
+		private int GetRoleType( string[] roles ) {
 			Console.WriteLine( "Available Roles" );
+			return OptionalSelect( roles, "Select a role" );
+		}
 
-			for( var i = 0; i < roles.Length; i++ ) {
-				Console.WriteLine( $"[{i}] - {roles[i]}" );
+		private int GetAccount( string[] accounts ) {
+			Console.WriteLine( "Available accounts:" );
+			return OptionalSelect( accounts, "Select an account" );
+		}
+
+		private int OptionalSelect( string[] options, string selectPrompt = "Select an option" ) {
+			int selectedOption;
+
+			for( var i = 0; i < options.Length; i++ ) {
+				Console.WriteLine( $"[{i}] - {options[i]}" );
 			}
 
-			int selectedRole;
-
 			do {
-				Console.Write( "Select a role: " );
+				Console.Write( $"{selectPrompt}: " );
 				var inputStr = Console.ReadLine();
 
-				if( inputStr == null || !int.TryParse( inputStr, out selectedRole ) || selectedRole < 0 ||
-				    selectedRole >= roles.Length ) {
-					selectedRole = -1;
-					Console.WriteLine( $"Invalid option, valid options are between 0 and {roles.Length - 1}" );
+				if( inputStr == null || !int.TryParse( inputStr, out selectedOption ) || selectedOption < 0 ||
+				    selectedOption >= options.Length ) {
+					selectedOption = -1;
+					Console.WriteLine( $"Invalid option, valid options are between 0 and {options.Length - 1}" );
 				}
-			} while( selectedRole < 0 || selectedRole >= roles.Length );
+			} while( selectedOption < 0 || selectedOption >= options.Length );
 
-			return roles[selectedRole];
+			return selectedOption;
 		}
 
 		public Task<int> InvokeAsync( string[] args ) {

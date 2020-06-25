@@ -1,4 +1,4 @@
-﻿namespace Bmx.Idp.Okta.models {
+﻿namespace Bmx.Idp.Okta.Models {
 	public struct OktaError {
 		public string ErrorCode { get; set; }
 		public string ErrorSumamry { get; set; }

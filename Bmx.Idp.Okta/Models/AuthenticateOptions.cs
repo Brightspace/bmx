@@ -1,4 +1,4 @@
-﻿namespace Bmx.Idp.Okta.models {
+﻿namespace Bmx.Idp.Okta.Models {
 	public struct AuthenticateOptions {
 		public string Username { get; set; }
 		public string Password { get; set; }

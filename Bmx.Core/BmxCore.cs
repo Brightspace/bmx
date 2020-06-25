@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,44 +10,35 @@ namespace Bmx.Core {
 		public event PromptUserPasswordHandler PromptUserPassword;
 		public event PromptMfaTypeHandler PromptMfaType;
 		public event PromptMfaInputHandler PromptMfaInput;
+		public event PromptAccountSelectHandler PromptAccountSelection;
 		public event PromptRoleSelectionHandler PromptRoleSelection;
 		public event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
 
-		private string _account;
-		private string _org;
-		private string _role;
-		private string _user;
-		private string _output;
 
 		public BmxCore( IIdentityProvider identityProvider ) {
 			_identityProvider = identityProvider;
 		}
 
-		public void Print( string account, string org, string role = null, string user = null,
+		public void Print( string org, string account = null, string role = null, string user = null,
 			string output = "powershell" ) {
-			_output = output;
-			DoCoreBmx( account, org, role, user ).Wait();
+			DoCoreBmx( org, account, role, user ).Wait();
 		}
 
-		private async Task DoCoreBmx( string account, string org, string role = null, string user = null ) {
-			_account = account;
-			_org = org;
-			_role = role;
-			_user = user;
-
+		private async Task DoCoreBmx( string org, string account = null, string role = null, string user = null ) {
 			Debug.Assert( PromptUserName != null, nameof(PromptUserName) + " != null" );
 			Debug.Assert( PromptUserPassword != null, nameof(PromptUserPassword) + " != null" );
 			Debug.Assert( PromptMfaType != null, nameof(PromptMfaType) + " != null" );
 			Debug.Assert( PromptMfaInput != null, nameof(PromptMfaInput) + " != null" );
+			Debug.Assert( PromptAccountSelection != null, nameof(PromptAccountSelection) + " != null" );
 			Debug.Assert( PromptRoleSelection != null, nameof(PromptRoleSelection) + " != null" );
 
 			if( user == null ) {
-				_user = PromptUserName( _identityProvider.Name );
+				user = PromptUserName( _identityProvider.Name );
 			}
 
 			// TODO: Handle case creds wrong / user mia
 			var mfaOptions =
-				await _identityProvider.Authenticate( _user, PromptUserPassword( _identityProvider.Name ) );
+				await _identityProvider.Authenticate( user, PromptUserPassword( _identityProvider.Name ) );
 
 			// TODO: Identify if non MFA use is possible with current setup for BMX, if so skip MFA steps
 			// Okta for example has many MFA types (https://developer.okta.com/docs/reference/api/factors/#factor-type)
@@ -70,7 +62,25 @@ namespace Bmx.Core {
 				// TODO: Remove need for input here, Push style flows have no user input on app here
 				// ex: https://developer.okta.com/docs/reference/api/authn/#response-example-waiting
 				PromptMfaInput( selectedMfa.Name );
+				throw new NotImplementedException();
 			}
+
+
+			// TODO: Decouple this more, there is an implicit understanding its an Okta AWS app
+			var accounts = await _identityProvider.GetAccounts( "amazon_aws" );
+			account = account?.ToLower();
+
+			int selectedAccountIndex = -1;
+
+			if( account != null ) {
+				selectedAccountIndex = Array.IndexOf( accounts.Select( s => s.ToLower() ).ToArray(), account );
+			}
+
+			if( account == null || selectedAccountIndex == -1 ) {
+				selectedAccountIndex = PromptAccountSelection( accounts );
+			}
+
+			Console.WriteLine( $"Selected account: {accounts[selectedAccountIndex]}" );
 		}
 	}
 }
