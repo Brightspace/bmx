@@ -32,6 +32,8 @@ namespace Bmx.Core {
 			Debug.Assert( PromptAccountSelection != null, nameof(PromptAccountSelection) + " != null" );
 			Debug.Assert( PromptRoleSelection != null, nameof(PromptRoleSelection) + " != null" );
 
+			_identityProvider.SetOrganization( org );
+
 			if( user == null ) {
 				user = PromptUserName( _identityProvider.Name );
 			}

@@ -14,7 +14,7 @@ namespace Bmx.CommandLine {
 
 		public CommandLine() {
 			// TODO: Fix this :| (ref: Program.cs)
-			_bmx = new BmxCore( new OktaClient( "d2l" ) );
+			_bmx = new BmxCore( new OktaClient(), new AwsClient() );
 			_cmdLineParser = BuildCommandLine().UseDefaults().Build();
 
 			_bmx.PromptUserName += GetUser;
