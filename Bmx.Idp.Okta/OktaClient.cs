@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using Bmx.Core;
 using Bmx.Idp.Okta.Models;
 
@@ -75,8 +77,26 @@ namespace Bmx.Idp.Okta {
 			return _oktaApps.Where( app => app.AppName == accountType ).Select( app => app.Label ).ToArray();
 		}
 
+		public async Task<string> GetServiceProviderSaml( int selectedAccountIndex ) {
+			var account = _oktaApps[selectedAccountIndex];
+			var accountPage = await GetAccountOkta( new Uri( account.LinkUrl ) );
+			return ExtractAwsSaml( accountPage );
+		}
+
 		private void AddSession( string sessionId ) {
 			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
+		}
+
+		private string ExtractAwsSaml( string htmlResponse ) {
+			// HTML page is fairly malformed, grab just the <input> with the SAML data for further processing
+			var inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
+			var inputRegex = new Regex( inputRegexPattern, RegexOptions.Compiled );
+
+			// Access the SAML data from the parsed <input>
+			var inputXml = new XmlDocument();
+			inputXml.LoadXml( inputRegex.Match( htmlResponse ).Value );
+
+			return inputXml.SelectSingleNode( "//@value" ).InnerText;
 		}
 
 		// TODO: Consider consolidating this kind of thing, ex: to a OktaHttpClient
@@ -110,6 +130,11 @@ namespace Bmx.Idp.Okta {
 			var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
 			return await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
 				_serializeOptions );
+		}
+
+		private async Task<string> GetAccountOkta( Uri linkUri ) {
+			var resp = await _httpClient.GetAsync( linkUri );
+			return await resp.Content.ReadAsStringAsync();
 		}
 	}
 }

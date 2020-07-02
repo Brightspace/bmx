@@ -80,7 +80,7 @@ namespace Bmx.Core {
 				selectedAccountIndex = PromptAccountSelection( accounts );
 			}
 
-			Console.WriteLine( $"Selected account: {accounts[selectedAccountIndex]}" );
+			var accountCredentials = _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
 		}
 	}
 }

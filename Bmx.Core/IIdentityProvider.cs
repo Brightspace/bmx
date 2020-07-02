@@ -6,5 +6,6 @@ namespace Bmx.Core {
 		Task<MfaOption[]> Authenticate( string username, string password );
 		Task<bool> ChallengeMfa( int selectedMfaIndex, string challengeResponse );
 		Task<string[]> GetAccounts( string accountType );
+		Task<string> GetServiceProviderSaml( int selectedAccountIndex );
 	}
 }
