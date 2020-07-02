@@ -24,16 +24,18 @@ namespace Bmx.Idp.Okta {
 		private OktaMfaFactor[] _oktaMfaFactors;
 		private OktaApp[] _oktaApps;
 
-		public OktaClient( string organization ) {
+		public OktaClient() {
 			_cookieContainer = new CookieContainer();
 			_httpClient = new HttpClient( new HttpClientHandler {CookieContainer = _cookieContainer} );
-
-			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
 			_httpClient.Timeout = TimeSpan.FromSeconds( 30 );
 			_httpClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
 		}
 
 		public string Name => "Okta";
+
+		public void SetOrganization( string organization ) {
+			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
+		}
 
 		public async Task<MfaOption[]> Authenticate( string username, string password ) {
 			var authResp = await AuthenticateOkta( new AuthenticateOptions( username, password ) );

@@ -34,6 +34,8 @@ namespace Bmx.Core {
 			Debug.Assert( PromptAccountSelection != null, nameof(PromptAccountSelection) + " != null" );
 			Debug.Assert( PromptRoleSelection != null, nameof(PromptRoleSelection) + " != null" );
 
+			_identityProvider.SetOrganization( org );
+
 			if( user == null ) {
 				user = PromptUserName( _identityProvider.Name );
 			}
@@ -84,7 +86,21 @@ namespace Bmx.Core {
 
 			var accountCredentials = await _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
 
-			var roles = _cloudProvider.GetRoles( );
+			_cloudProvider.SetSamlToken( accountCredentials );
+			var roles = _cloudProvider.GetRoles();
+			role = role?.ToLower();
+
+			int selectedRoleIndex = -1;
+
+			if( role != null ) {
+				selectedRoleIndex = Array.IndexOf( roles.Select( s => s.ToLower() ).ToArray(), role );
+			}
+
+			if( role == null || selectedRoleIndex == -1 ) {
+				selectedRoleIndex = PromptRoleSelection( roles );
+			}
+
+			var tokens = await _cloudProvider.GetTokens( selectedRoleIndex );
 		}
 	}
 }
