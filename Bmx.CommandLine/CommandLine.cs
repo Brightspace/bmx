@@ -5,17 +5,14 @@ using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using Bmx.Core;
-using Bmx.Idp.Okta;
-using Bmx.Service.Aws;
 
 namespace Bmx.CommandLine {
 	public class CommandLine {
-		private BmxCore _bmx;
+		private IBmxCore _bmx;
 		private readonly Parser _cmdLineParser;
 
-		public CommandLine() {
-			// TODO: Fix this :| (ref: Program.cs)
-			_bmx = new BmxCore( new OktaClient(), new AwsClient() );
+		public CommandLine(IBmxCore bmx) {
+			_bmx = bmx;
 			_cmdLineParser = BuildCommandLine().UseDefaults().Build();
 
 			_bmx.PromptUserName += GetUser;
