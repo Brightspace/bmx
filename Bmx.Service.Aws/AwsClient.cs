@@ -5,22 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Xml;
+using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Bmx.Core;
 using Bmx.Service.Aws.Models;
 
 namespace Bmx.Service.Aws {
 	public class AwsClient : ICloudProvider {
-		private readonly IAwsStsClient _stsClient;
+		private readonly IAmazonSecurityTokenService _stsClient;
 
 		private string _samlString;
 		private XmlDocument _samlToken;
 		private List<AwsRole> _awsRoles;
 
-		public AwsClient( IAwsStsClient stsClient = null ) {
-			if( stsClient == null ) {
-				_stsClient = new AwsStsClient();
-			}
+		public AwsClient( IAmazonSecurityTokenService stsClient ) {
+			_stsClient = stsClient;
 		}
 
 		public void SetSamlToken( string encodedSaml ) {

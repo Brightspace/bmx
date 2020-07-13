@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Bmx.Idp.Okta.Models;
 
 namespace Bmx.Idp.Okta {
-	internal class OktaApi : IOktaApi {
+	public class OktaApi : IOktaApi {
 		private readonly JsonSerializerOptions _serializeOptions =
 			new JsonSerializerOptions {PropertyNamingPolicy = JsonNamingPolicy.CamelCase,};
 

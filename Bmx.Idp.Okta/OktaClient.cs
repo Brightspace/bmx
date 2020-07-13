@@ -14,10 +14,8 @@ namespace Bmx.Idp.Okta {
 		private OktaMfaFactor[] _oktaMfaFactors;
 		private OktaApp[] _oktaApps;
 
-		public OktaClient( IOktaApi oktaApi = null ) {
-			if( oktaApi == null ) {
-				_oktaApi = new OktaApi();
-			}
+		public OktaClient( IOktaApi oktaApi ) {
+			_oktaApi = oktaApi;
 		}
 
 		public string Name => "Okta";

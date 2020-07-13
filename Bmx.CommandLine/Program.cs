@@ -1,4 +1,5 @@
-﻿using Bmx.Core;
+﻿using Amazon.SecurityToken;
+using Bmx.Core;
 using Bmx.Idp.Okta;
 using Bmx.Service.Aws;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,10 @@ namespace Bmx.CommandLine {
 
 		private static IServiceCollection ConfigureServices() {
 			IServiceCollection services = new ServiceCollection();
+
+			services.AddSingleton<IOktaApi, OktaApi>();
+			services.AddSingleton<IAmazonSecurityTokenService, AmazonSecurityTokenServiceClient>();
+
 			// TODO: Move state out to BmxCore and make these two transient
 			services.AddSingleton<IIdentityProvider, OktaClient>();
 			services.AddSingleton<ICloudProvider, AwsClient>();
