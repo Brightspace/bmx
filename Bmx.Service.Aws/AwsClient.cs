@@ -12,14 +12,14 @@ using Bmx.Service.Aws.Models;
 
 namespace Bmx.Service.Aws {
 	public class AwsClient : ICloudProvider {
-		private readonly AmazonSecurityTokenServiceClient _stsClient;
+		private readonly IAmazonSecurityTokenService _stsClient;
 
 		private string _samlString;
 		private XmlDocument _samlToken;
 		private List<AwsRole> _awsRoles;
 
-		public AwsClient() {
-			_stsClient = new AmazonSecurityTokenServiceClient();
+		public AwsClient( IAmazonSecurityTokenService stsClient ) {
+			_stsClient = stsClient;
 		}
 
 		public void SetSamlToken( string encodedSaml ) {

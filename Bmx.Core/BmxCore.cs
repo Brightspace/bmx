@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Bmx.Core {
-	public class BmxCore {
+	public class BmxCore : IBmxCore {
 		private readonly IIdentityProvider _identityProvider;
 		private readonly ICloudProvider _cloudProvider;
 		public event PromptUserNameHandler PromptUserName;
