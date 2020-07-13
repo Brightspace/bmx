@@ -1,16 +1,25 @@
 ﻿using Bmx.Core;
 using Bmx.Idp.Okta;
 using Bmx.Service.Aws;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bmx.CommandLine {
 	class Program {
-		// TODO: Try https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
 		static void Main( string[] args ) {
-			var okta = new OktaClient();
-			var aws = new AwsClient();
-			var bmx = new BmxCore(okta, aws);
-			var cmdLine = new CommandLine(bmx);
+			var services = ConfigureServices().BuildServiceProvider();
+			var cmdLine = new CommandLine( services.GetRequiredService<IBmxCore>() );
 			cmdLine.InvokeAsync( args ).Wait();
+		}
+
+
+		private static IServiceCollection ConfigureServices() {
+			IServiceCollection services = new ServiceCollection();
+			// TODO: Move state out to BmxCore and make these two transient
+			services.AddSingleton<IIdentityProvider, OktaClient>();
+			services.AddSingleton<ICloudProvider, AwsClient>();
+
+			services.AddSingleton<IBmxCore, BmxCore>();
+			return services;
 		}
 	}
 }
