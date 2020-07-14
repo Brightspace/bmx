@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Bmx.CommandLine {
 	class Program {
 		static void Main( string[] args ) {
+			var config = new IniConfiguration();
 			var services = ConfigureServices().BuildServiceProvider();
 			var cmdLine = new CommandLine( services.GetRequiredService<IBmxCore>() );
 			cmdLine.InvokeAsync( args ).Wait();
