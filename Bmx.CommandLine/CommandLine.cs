@@ -8,11 +8,13 @@ using Bmx.Core;
 
 namespace Bmx.CommandLine {
 	public class CommandLine {
-		private IBmxCore _bmx;
+		private readonly IBmxCore _bmx;
+		private readonly IBmxConfig _bmxConfig;
 		private readonly Parser _cmdLineParser;
 
-		public CommandLine(IBmxCore bmx) {
+		public CommandLine( IBmxCore bmx, IBmxConfig bmxConfig ) {
 			_bmx = bmx;
+			_bmxConfig = bmxConfig;
 			_cmdLineParser = BuildCommandLine().UseDefaults().Build();
 
 			_bmx.PromptUserName += GetUser;
@@ -63,8 +65,18 @@ namespace Bmx.CommandLine {
 			};
 		}
 
+
+		private static void BindConfiguration( IBmxConfig config, ref string org, ref string account, ref string role,
+			ref string user ) {
+			org ??= config.Org;
+			user ??= config.User;
+			account ??= config.Account;
+			role ??= config.Role;
+		}
+
 		private void ExecutePrint( string org, string account = null, string role = null, string user = null,
 			string output = null ) {
+			BindConfiguration( _bmxConfig, ref org, ref account, ref role, ref user );
 			_bmx.Print( org, account, role, user, output );
 		}
 

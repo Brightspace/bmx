@@ -9,7 +9,7 @@ namespace Bmx.CommandLine {
 		static void Main( string[] args ) {
 			var config = new IniConfiguration();
 			var services = ConfigureServices().BuildServiceProvider();
-			var cmdLine = new CommandLine( services.GetRequiredService<IBmxCore>() );
+			var cmdLine = new CommandLine( services.GetRequiredService<IBmxCore>(), config );
 			cmdLine.InvokeAsync( args ).Wait();
 		}
 
