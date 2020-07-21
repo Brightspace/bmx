@@ -21,7 +21,7 @@ namespace Bmx.Core {
 		public event PromptMfaInputHandler PromptMfaInput;
 		public event PromptAccountSelectHandler PromptAccountSelection;
 		public event PromptRoleSelectionHandler PromptRoleSelection;
-		public event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
+		public event InformUnknownMfaTypesHandler InformUnknownMfaTypes;
 
 
 		public BmxCore( IIdentityProvider<TAuthenticateState, TAuthenticatedState, TAccountState> identityProvider,
@@ -59,7 +59,7 @@ namespace Bmx.Core {
 			// Okta for example has many MFA types (https://developer.okta.com/docs/reference/api/factors/#factor-type)
 			// BMX might not handle all, warn user and try to use as a MFA of challenge type (has token user enters)
 			if( mfaOptions.Any( option => option.Type == MfaType.Unknown ) ) {
-				InformUnknownMfaTypesHandler?.Invoke( mfaOptions.Where( option => option.Type == MfaType.Unknown )
+				InformUnknownMfaTypes?.Invoke( mfaOptions.Where( option => option.Type == MfaType.Unknown )
 					.Select( option => option.Name ).ToArray() );
 			}
 

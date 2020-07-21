@@ -12,7 +12,7 @@ namespace Bmx.Core {
 		event PromptMfaInputHandler PromptMfaInput;
 		event PromptAccountSelectHandler PromptAccountSelection;
 		event PromptRoleSelectionHandler PromptRoleSelection;
-		event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
+		event InformUnknownMfaTypesHandler InformUnknownMfaTypes;
 
 		void Print( string org, string account = null, string role = null, string user = null,
 			string output = "powershell" );
