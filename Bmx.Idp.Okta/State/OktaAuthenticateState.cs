@@ -8,10 +8,7 @@ namespace Bmx.Idp.Okta.State {
 		public OktaAuthenticateState( string oktaStateToken, OktaMfaFactor[] oktaMfaFactors ) {
 			OktaStateToken = oktaStateToken;
 			OktaMfaFactors = oktaMfaFactors;
-		}
-
-		public MfaOption[] MfaOptions {
-			get => OktaMfaFactors.Select( factor => {
+			MfaOptions = OktaMfaFactors.Select( factor => {
 				if( factor.FactorType.Contains( "token" ) || factor.FactorType.Contains( "sms" ) ) {
 					return new MfaOption( factor.FactorType, MfaType.Challenge );
 				}
@@ -24,6 +21,7 @@ namespace Bmx.Idp.Okta.State {
 			} ).ToArray();
 		}
 
+		public MfaOption[] MfaOptions { get; }
 		// Store auth state for later steps (MFA challenge verify etc...)
 		internal string OktaStateToken { get; }
 		internal OktaMfaFactor[] OktaMfaFactors { get; }

@@ -8,9 +8,10 @@ namespace Bmx.Service.Aws.State {
 		public AwsRoleState( List<AwsRole> awsRoles, string samlString ) {
 			AwsRoles = awsRoles;
 			SamlString = samlString;
+			Roles = AwsRoles.Select( role => role.RoleName ).ToArray();
 		}
 
-		public string[] Roles => AwsRoles.Select( role => role.RoleName ).ToArray();
+		public string[] Roles { get; }
 		internal List<AwsRole> AwsRoles { get; }
 		internal string SamlString { get; }
 	}
