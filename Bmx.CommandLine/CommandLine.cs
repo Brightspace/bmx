@@ -5,14 +5,20 @@ using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
 using Bmx.Core;
+using Bmx.Core.State;
 
 namespace Bmx.CommandLine {
-	public class CommandLine {
-		private readonly IBmxCore _bmx;
+	public class CommandLine<TAuthenticateState, TAuthenticatedState, TAccountState, TRoleState>
+		where TAuthenticateState : IAuthenticateState
+		where TAuthenticatedState : IAuthenticatedState
+		where TAccountState : IAccountState
+		where TRoleState : IRoleState {
+		private readonly IBmxCore<TAuthenticateState, TAuthenticatedState, TAccountState, TRoleState> _bmx;
 		private readonly IBmxConfig _bmxConfig;
 		private readonly Parser _cmdLineParser;
 
-		public CommandLine( IBmxCore bmx, IBmxConfig bmxConfig ) {
+		public CommandLine( IBmxCore<TAuthenticateState, TAuthenticatedState, TAccountState, TRoleState> bmx,
+			IBmxConfig bmxConfig ) {
 			_bmx = bmx;
 			_bmxConfig = bmxConfig;
 			_cmdLineParser = BuildCommandLine().UseDefaults().Build();

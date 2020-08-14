@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using Bmx.Core;
 using Bmx.Idp.Okta.Models;
+using Bmx.Idp.Okta.State;
 
 namespace Bmx.Idp.Okta {
-	public class OktaClient : IIdentityProvider {
+	public class OktaClient : IIdentityProvider<OktaAuthenticateState, OktaAuthenticatedState, OktaAccountState> {
 		private readonly IOktaApi _oktaApi;
-		private string _oktaStateToken;
-		private string _oktaSessionToken;
-		private OktaMfaFactor[] _oktaMfaFactors;
-		private OktaApp[] _oktaApps;
 
 		public OktaClient( IOktaApi oktaApi ) {
 			_oktaApi = oktaApi;
@@ -24,50 +20,35 @@ namespace Bmx.Idp.Okta {
 			_oktaApi.SetOrganization( organization );
 		}
 
-		public async Task<MfaOption[]> Authenticate( string username, string password ) {
+		public async Task<OktaAuthenticateState> Authenticate( string username, string password ) {
 			var authResp = await _oktaApi.AuthenticateOkta( new AuthenticateOptions( username, password ) );
-
-			// Store auth state for later steps (MFA challenge verify etc...)
-			_oktaStateToken = authResp.StateToken;
-			_oktaMfaFactors = authResp.Embedded.Factors;
-
-			return _oktaMfaFactors.Select( factor => {
-				if( factor.FactorType.Contains( "token" ) || factor.FactorType.Contains( "sms" ) ) {
-					return new MfaOption( factor.FactorType, MfaType.Challenge );
-				}
-
-				if( factor.FactorType.Contains( "push" ) ) {
-					return new MfaOption( factor.FactorType, MfaType.Verify );
-				}
-
-				return new MfaOption( factor.FactorType, MfaType.Unknown );
-			} ).ToArray();
+			return new OktaAuthenticateState( authResp.StateToken, authResp.Embedded.Factors );
 		}
 
-		public async Task<bool> ChallengeMfa( int selectedMfaIndex, string challengeResponse ) {
-			var mfaFactor = _oktaMfaFactors[selectedMfaIndex];
+		public async Task<OktaAuthenticatedState> ChallengeMfa( OktaAuthenticateState state, int selectedMfaIndex,
+			string challengeResponse ) {
+			var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 
 			var authResp =
 				await _oktaApi.AuthenticateChallengeMfaOkta(
-					new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, _oktaStateToken ) );
-
-			_oktaSessionToken = authResp.SessionToken;
+					new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken ) );
 
 			// TODO: Check for auth successes and return state
-			return true;
+			return new OktaAuthenticatedState( true, authResp.SessionToken );
 		}
 
-		public async Task<string[]> GetAccounts( string accountType ) {
+		public async Task<OktaAccountState> GetAccounts( OktaAuthenticatedState state, string accountType ) {
 			// TODO: Use existing session if it exists in ~/.bmx and isn't expired
-			var sessionResp = await _oktaApi.CreateSessionOkta( new SessionOptions( _oktaSessionToken ) );
+			var sessionResp = await _oktaApi.CreateSessionOkta( new SessionOptions( state.OktaSessionToken ) );
+			// TODO: Consider making OktaAPI stateless as well (?)
 			_oktaApi.AddSession( sessionResp.Id );
 
-			_oktaApps = await _oktaApi.GetAccountsOkta( sessionResp.UserId );
-			return _oktaApps.Where( app => app.AppName == accountType ).Select( app => app.Label ).ToArray();
+			var apps = await _oktaApi.GetAccountsOkta( sessionResp.UserId );
+			return new OktaAccountState( apps, accountType );
 		}
 
-		public async Task<string> GetServiceProviderSaml( int selectedAccountIndex ) {
-			var account = _oktaApps[selectedAccountIndex];
+		public async Task<string> GetServiceProviderSaml( OktaAccountState state, int selectedAccountIndex ) {
+			var account = state.OktaApps[selectedAccountIndex];
 			var accountPage = await _oktaApi.GetAccountOkta( new Uri( account.LinkUrl ) );
 			return ExtractAwsSaml( accountPage );
 		}

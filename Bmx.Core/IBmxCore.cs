@@ -1,7 +1,11 @@
-﻿namespace Bmx.Core
-{
-	public interface IBmxCore
-	{
+﻿using Bmx.Core.State;
+
+namespace Bmx.Core {
+	public interface IBmxCore<TAuthenticateState, TAuthenticatedState, TAccountState, TRoleState>
+		where TAuthenticateState : IAuthenticateState
+		where TAuthenticatedState : IAuthenticatedState
+		where TAccountState : IAccountState
+		where TRoleState : IRoleState {
 		event PromptUserNameHandler PromptUserName;
 		event PromptUserPasswordHandler PromptUserPassword;
 		event PromptMfaTypeHandler PromptMfaType;

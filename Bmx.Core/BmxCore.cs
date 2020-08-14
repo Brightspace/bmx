@@ -2,11 +2,19 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Bmx.Core.State;
 
 namespace Bmx.Core {
-	public class BmxCore : IBmxCore {
-		private readonly IIdentityProvider _identityProvider;
-		private readonly ICloudProvider _cloudProvider;
+	public class
+		BmxCore<TAuthenticateState, TAuthenticatedState, TAccountState, TRoleState> : IBmxCore<TAuthenticateState,
+			TAuthenticatedState, TAccountState, TRoleState>
+		where TAuthenticateState : IAuthenticateState
+		where TAuthenticatedState : IAuthenticatedState
+		where TAccountState : IAccountState
+		where TRoleState : IRoleState {
+		private readonly IIdentityProvider<TAuthenticateState, TAuthenticatedState, TAccountState> _identityProvider;
+		private readonly ICloudProvider<TRoleState> _cloudProvider;
+
 		public event PromptUserNameHandler PromptUserName;
 		public event PromptUserPasswordHandler PromptUserPassword;
 		public event PromptMfaTypeHandler PromptMfaType;
@@ -16,7 +24,8 @@ namespace Bmx.Core {
 		public event PromptRoleSelectionHandler InformUnknownMfaTypesHandler;
 
 
-		public BmxCore( IIdentityProvider identityProvider, ICloudProvider cloudProvider ) {
+		public BmxCore( IIdentityProvider<TAuthenticateState, TAuthenticatedState, TAccountState> identityProvider,
+			ICloudProvider<TRoleState> cloudProvider ) {
 			_identityProvider = identityProvider;
 			_cloudProvider = cloudProvider;
 		}
@@ -34,6 +43,7 @@ namespace Bmx.Core {
 			Debug.Assert( PromptAccountSelection != null, nameof(PromptAccountSelection) + " != null" );
 			Debug.Assert( PromptRoleSelection != null, nameof(PromptRoleSelection) + " != null" );
 
+			// TODO: Remove this stateful behaviour
 			_identityProvider.SetOrganization( org );
 
 			if( user == null ) {
@@ -41,8 +51,9 @@ namespace Bmx.Core {
 			}
 
 			// TODO: Handle case creds wrong / user mia
-			var mfaOptions =
+			TAuthenticateState authState =
 				await _identityProvider.Authenticate( user, PromptUserPassword( _identityProvider.Name ) );
+			var mfaOptions = authState.MfaOptions;
 
 			// TODO: Identify if non MFA use is possible with current setup for BMX, if so skip MFA steps
 			// Okta for example has many MFA types (https://developer.okta.com/docs/reference/api/factors/#factor-type)
@@ -55,11 +66,13 @@ namespace Bmx.Core {
 			var selectedMfaIndex = PromptMfaType( mfaOptions.Select( option => option.Name ).ToArray() );
 			var selectedMfa = mfaOptions[selectedMfaIndex];
 
+			TAuthenticatedState authenticatedState = default;
+
 			// Handle unknown MFA types like Challenge MFAs
 			if( selectedMfa.Type == MfaType.Challenge || selectedMfa.Type == MfaType.Unknown ) {
 				// TODO: Handle retry for MFA challenge
-				bool isAuthSuccess =
-					await _identityProvider.ChallengeMfa( selectedMfaIndex, PromptMfaInput( selectedMfa.Name ) );
+				authenticatedState = await _identityProvider.ChallengeMfa( authState, selectedMfaIndex,
+					PromptMfaInput( selectedMfa.Name ) );
 			} else if( selectedMfa.Type == MfaType.Verify ) {
 				// Identical to Code based workflow for now (capture same behaviour as BMX current)
 
@@ -71,7 +84,8 @@ namespace Bmx.Core {
 
 
 			// TODO: Decouple this more, there is an implicit understanding its an Okta AWS app
-			var accounts = await _identityProvider.GetAccounts( "amazon_aws" );
+			TAccountState accountState = await _identityProvider.GetAccounts( authenticatedState, "amazon_aws" );
+			var accounts = accountState.Accounts;
 			account = account?.ToLower();
 
 			int selectedAccountIndex = -1;
@@ -84,10 +98,11 @@ namespace Bmx.Core {
 				selectedAccountIndex = PromptAccountSelection( accounts );
 			}
 
-			var accountCredentials = await _identityProvider.GetServiceProviderSaml( selectedAccountIndex );
+			string accountCredentials =
+				await _identityProvider.GetServiceProviderSaml( accountState, selectedAccountIndex );
 
-			_cloudProvider.SetSamlToken( accountCredentials );
-			var roles = _cloudProvider.GetRoles();
+			TRoleState roleState = _cloudProvider.GetRoles( accountCredentials );
+			var roles = roleState.Roles;
 			role = role?.ToLower();
 
 			int selectedRoleIndex = -1;
@@ -100,7 +115,7 @@ namespace Bmx.Core {
 				selectedRoleIndex = PromptRoleSelection( roles );
 			}
 
-			var tokens = await _cloudProvider.GetTokens( selectedRoleIndex );
+			var tokens = await _cloudProvider.GetTokens( roleState, selectedRoleIndex );
 		}
 	}
 }

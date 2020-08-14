@@ -44,7 +44,8 @@ namespace Bmx.CommandLine {
 				// Default file provider ignores files prefixed with ".", we need to provide our own as a result
 				var fileProvider =
 					new PhysicalFileProvider( Path.GetDirectoryName( projectConfigPath ), ExclusionFilters.None );
-				config.AddIniFile( fileProvider, Path.GetFileName( projectConfigPath ), optional: false, reloadOnChange: false );
+				config.AddIniFile( fileProvider, Path.GetFileName( projectConfigPath ), optional: false,
+					reloadOnChange: false );
 			}
 
 			return config.Build();
