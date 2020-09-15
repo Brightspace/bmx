@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bmx.Service.Aws", "Bmx.Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bmx.Core.Test", "Bmx.Core.Test\Bmx.Core.Test.csproj", "{5257C936-7E1F-4C64-B611-6819A9723D82}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bmx.Idp.Okta.Test", "Bmx.Idp.Okta.Test\Bmx.Idp.Okta.Test.csproj", "{ECBF5915-C75C-48B5-9CDC-7A031FF06947}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,5 +88,17 @@ Global
 		{5257C936-7E1F-4C64-B611-6819A9723D82}.Release|x64.Build.0 = Release|Any CPU
 		{5257C936-7E1F-4C64-B611-6819A9723D82}.Release|x86.ActiveCfg = Release|Any CPU
 		{5257C936-7E1F-4C64-B611-6819A9723D82}.Release|x86.Build.0 = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|x64.Build.0 = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Debug|x86.Build.0 = Debug|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|x64.ActiveCfg = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|x64.Build.0 = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|x86.ActiveCfg = Release|Any CPU
+		{ECBF5915-C75C-48B5-9CDC-7A031FF06947}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
