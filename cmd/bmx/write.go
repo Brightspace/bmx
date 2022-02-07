@@ -42,7 +42,7 @@ func init() {
 	}
 
 	if userConfig.Profile == "" {
-		writeCmd.MarkFlagRequired("profile")
+		userConfig.Profile = "default"
 	}
 
 	rootCmd.AddCommand(writeCmd)
