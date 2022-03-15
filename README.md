@@ -93,3 +93,111 @@ allow_project_configs=true
 org=my_okta_org
 user=my_user
 ```
+
+## How to use bmx and the AWS cli 🚲 - Opinionated Workflow
+
+### Pre-requisites
+- [Install the aws cli](https://aws.amazon.com/cli/)
+- Install and configure the d2l bmx tool
+  - [Guide on how to install bmx](https://github.com/Brightspace/bmx/wiki/Quick-Start)
+
+
+### Step 1 - Add this alias to your bashrc
+
+```bash
+# bashrc
+export OKTA_USER={YOUR_OKTA-USER_HERE}
+alias bmxAwsAdmin='
+    export AWS_PROFILE=dev-profile
+    bmx write --org my_okta_org --user $OKTA_USER --account YOUR-ACCOUNT-HERE --role YOUR-ROLE-HERE --profile dev-profile'
+alias bmxAwsReadOnly='
+    export AWS_PROFILE=dev-profile
+    bmx write --org my_okta_org --user $OKTA_USER --account YOUR-ACCOUNT-HERE --role YOUR-ROLE-HERE-ReadOnly --profile dev-profile'
+```
+
+Note: Be sure to restart your shell or run `source ~/.bashrc` to make the alias available in the shell
+Note: Be sure to replace `--account` and `--role` flags with the account and role you want to have credentials for
+
+Alternatively, the `--org` and `--user` flags above can be dropped if you prefer to define those values in the `~/.bmx/config` file. See [Recommended configuration file](https://github.com/Brightspace/bmx/wiki/Quick-Start#recommended-configuration-file) 
+
+
+#### What does this do?
+
+- Sets the aws profile env variable to the profile bmx is about to create
+- runs bmx to log in using okta, then retrieve credentials and write them to the credentials file in `~/.aws/credentials`
+
+You can verfiy this was done correctly by removing the credentials file and confirming the command creates and populates the file with the profile `dev-profile`.
+```bash
+rm -f ~/.aws/credentials
+cat ~/.aws/credentials
+bmxAwsReadOnly
+cat ~/.aws/credentials
+
+```
+
+### Step 2 - Setting the default region
+
+There are two ways to get default region when using the aws cli.
+1. Set the environment variable `export AWS_DEFAULT_REGION={YOUR_DESIRED_REGION}`
+2. run `aws configure`
+   1. hit enter when prompted for Key ID
+   2. hit enter when prompted for Access Key
+   3. **Enter region name** and hit enter (i.e. `us-east-1`)
+   4. hit enter one last time
+
+Note: Option 2 will write the default value set to the `~/.aws/config` file. This value will now be the default every time you connect with that profile. This can be changed by running 2 once more or removed by deleting the config file.
+
+Note: Environment variables will take precendence over any settings in config files.
+
+
+### Step 3 - Confirm things are working properly
+
+There are a few useful checks you can do to make sure things are working properly.
+
+#### Check the configured values
+This can be done by running
+```bash
+aws configure list
+#       Name                    Value             Type    Location
+#       ----                    -----             ----    --------
+#    profile                  dev-profile              env    ['AWS_PROFILE', 'AWS_DEFAULT_PROFILE']
+# access_key     ****************O7GY shared-credentials-file
+# secret_key     ****************1ch7 shared-credentials-file
+#     region                us-east-1              env    ['AWS_REGION', 'AWS_DEFAULT_REGION']
+```
+
+#### Run a basic AWS cli command
+
+You can list all IAM users available with the following:
+
+```bash
+aws iam list-users
+# {
+#     "Users": [
+#         {
+#             "Path": "/",
+#             "UserName": "Okta",
+#             "UserId": "mEq2N2JQvzMUG44ZJDQQ",
+#             "Arn": "arn:aws:iam::123123123123:user/Okta",
+#             "CreateDate": "2018-07-09T19:40:10+00:00"
+#         }
+#     ]
+# }
+
+aws sts get-caller-identity
+# {
+#     "UserId": "mEq2N2JQvzMUG44ZJDQQ:oktauser@domain.com",
+#     "Account": "123123123123",
+#     "Arn": "arn:aws:sts::123123123123:assumed-role/YOUR-ROLE-HERE/oktauser@domain.com"
+# }
+```
+
+If the profile is not properly setup you may see an error like this...
+
+```bash
+aws iam list-users
+
+# Unable to locate credentials. You can configure credentials by running "aws configure".
+
+```
+
