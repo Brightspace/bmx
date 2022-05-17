@@ -28,6 +28,7 @@ load this file automatically and populate the parameters where appropriate.
 * account : The AWS account to retrieve credentials for.
 * role : The AWS role to assume.
 * profile : The profile to `write` in `~/.aws/credentials`.
+* default_duration : Duration of session in minutes (defaults to 60)
 
 ### Project Scoped Configurations
 A project configuration scope can be defined by creating a `.bmx` file anywhere in your project's directory structure. 
