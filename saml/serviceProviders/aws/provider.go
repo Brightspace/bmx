@@ -54,7 +54,7 @@ type AwsServiceProvider struct {
 	UserOutput  *os.File
 }
 
-func (a AwsServiceProvider) GetCredentials(saml string, desiredRole string) *sts.Credentials {
+func (a AwsServiceProvider) GetCredentials(saml string, desiredRole string, durationInMinutes int) *sts.Credentials {
 	decodedSaml, err := base64.StdEncoding.DecodeString(saml)
 	if err != nil {
 		log.Fatal(err)
@@ -76,9 +76,10 @@ func (a AwsServiceProvider) GetCredentials(saml string, desiredRole string) *sts
 	}
 
 	samlInput := &sts.AssumeRoleWithSAMLInput{
-		PrincipalArn:  aws.String(role.Principal),
-		RoleArn:       aws.String(role.ARN),
-		SAMLAssertion: aws.String(saml),
+		DurationSeconds: aws.Int64(int64(durationInMinutes) * 60),
+		PrincipalArn:    aws.String(role.Principal),
+		RoleArn:         aws.String(role.ARN),
+		SAMLAssertion:   aws.String(saml),
 	}
 
 	out, err := a.StsClient.AssumeRoleWithSAML(samlInput)

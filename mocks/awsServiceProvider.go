@@ -25,7 +25,7 @@ import (
 
 type AwsServiceProviderMock struct{}
 
-func (a *AwsServiceProviderMock) GetCredentials(saml string, desiredRole string) *sts.Credentials {
+func (a *AwsServiceProviderMock) GetCredentials(saml string, desiredRole string, durationInMinutes int) *sts.Credentials {
 	return &sts.Credentials{
 		AccessKeyId:     aws.String("access_key_id"),
 		SecretAccessKey: aws.String("secrest_access_key"),

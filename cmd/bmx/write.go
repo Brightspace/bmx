@@ -34,6 +34,7 @@ func init() {
 	writeCmd.Flags().StringVar(&writeOptions.User, "user", "", "the user to authenticate with")
 	writeCmd.Flags().StringVar(&writeOptions.Account, "account", "", "the account name to auth against")
 	writeCmd.Flags().StringVar(&writeOptions.Role, "role", "", "the desired role to assume")
+	writeCmd.Flags().IntVar(&writeOptions.Duration, "duration", 60, "duration of session in minutes")
 	writeCmd.Flags().StringVar(&writeOptions.Output, "output", "", "write to the specified file instead of ~/.aws/credentials")
 	writeCmd.Flags().BoolVar(&writeOptions.NoMask, "nomask", false, "set to not mask the password. this helps with debugging.")
 
