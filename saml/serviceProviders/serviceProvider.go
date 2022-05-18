@@ -21,5 +21,5 @@ import (
 )
 
 type ServiceProvider interface {
-	GetCredentials(saml string, desiredRole string) *sts.Credentials
+	GetCredentials(saml string, desiredRole string, durationInMinutes int) *sts.Credentials
 }

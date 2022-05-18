@@ -44,6 +44,7 @@ type PrintCmdOptions struct {
 	Org      string
 	User     string
 	Account  string
+	Duration int
 	NoMask   bool
 	Password string
 	Role     string
@@ -71,7 +72,7 @@ func Print(idProvider identityProviders.IdentityProvider, printOptions PrintCmdO
 		log.Fatal(err)
 	}
 
-	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role)
+	creds := AwsServiceProvider.GetCredentials(saml, printOptions.Role, printOptions.Duration)
 	command := printCommand(printOptions, creds)
 	return command
 }

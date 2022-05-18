@@ -39,11 +39,13 @@ type UserConfig struct {
 	Account             string
 	Role                string
 	Profile             string
+	DefaultDuration     int
 }
 
 func NewUserConfig() UserConfig {
 	config := UserConfig{
 		AllowProjectConfigs: false,
+		DefaultDuration:     60,
 	}
 
 	return config
