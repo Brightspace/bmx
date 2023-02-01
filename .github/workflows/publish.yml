@@ -36,5 +36,3 @@ jobs:
             sudo apk add clang build-base zlib-dev
         - name: publish
           run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release
-
-
