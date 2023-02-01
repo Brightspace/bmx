@@ -10,6 +10,13 @@ on:
       - '.github/workflows/publish.yml'
     branches:
       - main
+  pull_request:
+    paths:
+      - 'Bmx.CommandLine/**'
+      - 'Bmx.Core/**'
+      - 'Bmx.Idp.Okta/**'
+      - 'Bmx.Service.Aws/**'
+      - '.github/workflows/publish.yml'
 
 jobs:
   build:
@@ -28,8 +35,8 @@ jobs:
     timeout-minutes: 5
     steps:
         - name: checkout
-          uses: Brightspace/third-party-actions@actions/checkout
-        - name: install prequisites
+          uses: actions/checkout@v1
+        - name: install linux prerequisites
           if: matrix.platform == "linux"
           run: |
             sudo apt-get install clang zlib1g-dev
