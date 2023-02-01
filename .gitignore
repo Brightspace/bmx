@@ -1,7 +1,0 @@
-# DotNet7
-**/bin
-**/obj
-**/.vs
-
-# Rider
-.idea/
