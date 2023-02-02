@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<PublishAot>true</PublishAot>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+		<PackageReference Include="runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+		<PackageReference Include="runtime.osx-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+		<PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+	</ItemGroup>
+
+</Project>
