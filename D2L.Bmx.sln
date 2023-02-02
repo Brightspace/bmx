@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "D2L.Bmx", "D2L.Bmx.csproj", "{6CE18A2F-E585-4DC7-9761-3D5CF26E7B1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "D2L.Bmx", "src\D2L.Bmx.csproj", "{DFACA1A3-6CD4-412A-9841-50468E3E8EF4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6CE18A2F-E585-4DC7-9761-3D5CF26E7B1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6CE18A2F-E585-4DC7-9761-3D5CF26E7B1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6CE18A2F-E585-4DC7-9761-3D5CF26E7B1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6CE18A2F-E585-4DC7-9761-3D5CF26E7B1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFACA1A3-6CD4-412A-9841-50468E3E8EF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFACA1A3-6CD4-412A-9841-50468E3E8EF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFACA1A3-6CD4-412A-9841-50468E3E8EF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFACA1A3-6CD4-412A-9841-50468E3E8EF4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
