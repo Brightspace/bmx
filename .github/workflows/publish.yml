@@ -3,20 +3,14 @@ name: publish
 on:
   push:
     paths:
-      - 'Bmx.CommandLine/**'
-      - 'Bmx.Core/**'
-      - 'Bmx.Idp.Okta/**'
-      - 'Bmx.Service.Aws/**'
-      - '.github/workflows/publish.yml'
+      - "src/**"
+      - ".github/workflows/publish.yml"
     branches:
       - main
   pull_request:
     paths:
-      - 'Bmx.CommandLine/**'
-      - 'Bmx.Core/**'
-      - 'Bmx.Idp.Okta/**'
-      - 'Bmx.Service.Aws/**'
-      - '.github/workflows/publish.yml'
+      - "src/**"
+      - ".github/workflows/publish.yml"
 
 jobs:
   build:
@@ -34,12 +28,12 @@ jobs:
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 5
     steps:
-        - name: checkout
-          uses: actions/checkout@v1
-        - name: install linux prerequisites
-          if: matrix.platform == "linux"
-          run: |
-            sudo apt-get install clang zlib1g-dev
-            sudo apk add clang build-base zlib-dev
-        - name: publish
-          run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: install linux prerequisites
+        if: matrix.platform == "linux"
+        run: |
+          sudo apt-get install clang zlib1g-dev
+          sudo apk add clang build-base zlib-dev
+      - name: publish
+        run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release

@@ -1,22 +1,22 @@
 language/csharp:
-- '**/*.cs'
-- '**/*.csproj'
+  - "**/*.cs"
+  - "**/*.csproj"
 
 language/js:
-- '**/*.js'
-- '**/package.json*'
-- '**/*.ts'
-- '**/*.vue'
+  - "**/*.js"
+  - "**/package.json*"
+  - "**/*.ts"
+  - "**/*.vue"
 
 language/sql:
-- '**/*.sql'
+  - "**/*.sql"
 
 language/terraform:
-- '**/*.tf'
+  - "**/*.tf"
 
 language/powershell:
-- '**/*.ps1'
-- '**/*.psm1'
+  - "**/*.ps1"
+  - "**/*.psm1"
 
 area/github-actions:
-- '.github/workflows/**'
+  - ".github/workflows/**"
