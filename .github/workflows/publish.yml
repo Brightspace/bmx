@@ -35,4 +35,5 @@ jobs:
         run: |
           sudo apt-get install clang zlib1g-dev
       - name: publish
+        working-directory: src
         run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release
