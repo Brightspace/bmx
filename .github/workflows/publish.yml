@@ -34,6 +34,5 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get install clang zlib1g-dev
-          sudo apk add clang build-base zlib-dev
       - name: publish
         run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release
