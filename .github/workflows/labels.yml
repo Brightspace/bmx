@@ -3,7 +3,7 @@ on:
   - pull_request
 jobs:
   label:
-    runs-on: [self-hosted, Linux, AWS]
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - uses: Brightspace/third-party-actions@actions/labeler
