@@ -36,4 +36,4 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
           ARCHITECTURE: ${{ matrix.architecture }}
         working-directory: src/D2L.Bmx
-        run: dotnet publish -r ${PLATFORM}-${ARCHITECTURE} -c Release
+        run: dotnet publish -r $env:PLATFORM-$env:ARCHITECTURE -c Release
