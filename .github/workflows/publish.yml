@@ -1,0 +1,38 @@
+name: publish
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - ".github/workflows/publish.yml"
+    branches:
+      - main
+  pull_request:
+    paths:
+      - "src/**"
+      - ".github/workflows/publish.yml"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        architecture: [x64]
+        include:
+          - machine: windows-latest
+            platform: win
+          - machine: macos-latest
+            platform: osx
+          - machine: ubuntu-20.04
+            platform: linux
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 5
+    steps:
+      - name: checkout
+        uses: Brightspace/third-party-actions@actions/checkout
+      - name: publish
+        shell: pwsh
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCHITECTURE: ${{ matrix.architecture }}
+        working-directory: src/D2L.Bmx
+        run: dotnet publish -r $env:PLATFORM-$env:ARCHITECTURE -c Release
