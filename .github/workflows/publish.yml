@@ -16,7 +16,6 @@ jobs:
   build:
     strategy:
       matrix:
-        machine: [windows-latest, macos-latest, ubuntu-20.04]
         architecture: [x64]
         include:
           - machine: windows-latest
