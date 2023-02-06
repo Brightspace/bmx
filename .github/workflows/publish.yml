@@ -29,7 +29,11 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: checkout
-        uses: actions/checkout@v1
+        uses: Brightspace/third-party-actions@actions/checkout
       - name: publish
+        shell: pwsh
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          ARCHITECTURE: ${{ matrix.architecture }}
         working-directory: src
-        run: dotnet publish -r ${{ matrix.platform }}-${{ matrix.architecture }} -c Release
+        run: dotnet publish -r ${PLATFORM}-${ARCHITECTURE} -c Release
