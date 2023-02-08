@@ -111,7 +111,7 @@ func (o *OktaClient) Authenticate(username, password, org string) (string, error
 		eResp := &errorResponse{}
 		err = json.Unmarshal(z, &eResp)
 		if err != nil {
-			return "", fmt.Errorf("Received invalid response from okta.\nReponse code: %q\nBody:%s", authResponse.Status, body)
+			return "", fmt.Errorf("Received invalid response from okta.\nReponse code: %q", authResponse.Status)
 		}
 		return "", fmt.Errorf("%s. Response code: %q", eResp.Summary, authResponse.Status)
 	}
