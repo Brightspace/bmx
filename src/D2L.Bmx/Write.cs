@@ -4,23 +4,23 @@ public class Write {
 		// TODO: Get values of org, user, account, role and profile from the config file and assign them locally. This way we can check if
 		// values are null to see if they have been set through the commandline or config file
 
-		var requiredUnsetFlags = new List<string>();
+		var unsetFlags = new List<string>();
 
 		// ask user to input org if org flag isn't set
 		if( string.IsNullOrEmpty( org ) ) {
-			requiredUnsetFlags.Add( "\"org\"" );
+			unsetFlags.Add( "\"org\"" );
 		};
 
 		// check if profile flag has been set
 		if( string.IsNullOrEmpty( profile ) ) {
-			requiredUnsetFlags.Add( "\"profile\"" );
+			unsetFlags.Add( "\"profile\"" );
 		}
 
-		if( requiredUnsetFlags.Count != 0 ) {
+		if( unsetFlags.Count != 0 ) {
 			Console.Write( "Error: required flag(s) " );
-			for( int i = 0; i < requiredUnsetFlags.Count; i++ ) {
-				Console.Write( requiredUnsetFlags.ElementAt( i ) );
-				if( i < requiredUnsetFlags.Count - 1 ) {
+			for( int i = 0; i < unsetFlags.Count; i++ ) {
+				Console.Write( unsetFlags.ElementAt( i ) );
+				if( i < unsetFlags.Count - 1 ) {
 					Console.Write( ", " );
 				} else {
 					Console.WriteLine( " not set" );
