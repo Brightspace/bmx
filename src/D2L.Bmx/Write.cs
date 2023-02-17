@@ -1,6 +1,16 @@
+namespace D2L.Bmx;
 
 public class Write {
-	public static void WriteHandler( string? org, string? user, string? account, string? role, int? duration, bool nomask, string? output, string? profile ) {
+	public static void WriteHandler(
+		string? org,
+		string? user,
+		string? account,
+		string? role,
+		int? duration,
+		bool nomask,
+		string? output,
+		string? profile
+	) {
 		// TODO: Get values of org, user, account, role and profile from the config file and assign them locally. This way we can check if
 		// values are null to see if they have been set through the commandline or config file
 
@@ -81,7 +91,13 @@ public class Write {
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and write them to credentials file
-		Console.WriteLine( $" Org: {org}\n Profile: {profile}\n User: {user}\n Account: {account}\n Role: {role}\n Duration: {duration}\n nomask: {nomask}" );
+		Console.WriteLine( string.Join( '\n',
+			$"Org: {org}",
+			$"Profile: {profile}",
+			$"User: {user}",
+			$"Account: {account}",
+			$"Role: {role}",
+			$"Duration: {duration}",
+			$"nomask: {nomask}" ) );
 	}
-
 }
