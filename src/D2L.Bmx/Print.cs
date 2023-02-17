@@ -1,6 +1,15 @@
-public class Print {
+namespace D2L.Bmx;
 
-	public static void PrintHandler( string? org, string? user, string? account, string? role, int? duration, bool nomask, string? output ) {
+public class Print {
+	public static void PrintHandler(
+		string? org,
+		string? user,
+		string? account,
+		string? role,
+		int? duration,
+		bool nomask,
+		string? output
+	) {
 
 		// TODO: Get values of org, user, account, and role from the config file and assign them locally. This way we can check if
 		// values are null to see if they have been set through the commandline or config file
@@ -63,8 +72,12 @@ public class Print {
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and print them on screen
-		Console.WriteLine( $" Org: {org}\n User: {user}\n Account: {account}\n Role: {role}\n Duration: {duration}\n nomask: {nomask}" );
+		Console.WriteLine( string.Join( '\n',
+			$"Org: {org}",
+			$"User: {user}",
+			$"Account: {account}",
+			$"Role: {role}",
+			$"Duration: {duration}",
+			$"nomask: {nomask}" ) );
 	}
-
-
 }

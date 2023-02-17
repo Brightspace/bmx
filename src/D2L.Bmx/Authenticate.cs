@@ -1,3 +1,5 @@
+namespace D2L.Bmx;
+
 public class Authenticator {
 	public static void Authenticate( string? org, string? user, bool nomask ) {
 		// TODO: Add authenticating from cache

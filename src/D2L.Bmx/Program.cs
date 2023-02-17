@@ -1,4 +1,5 @@
 using System.CommandLine;
+using D2L.Bmx;
 
 var orgOption = new Option<string?>(
 	name: "--org",
@@ -14,12 +15,12 @@ var roleOption = new Option<string?>(
 	description: "the desired role to assume" );
 var durationOption = new Option<int?>(
 	name: "--duration",
-	description: "duration of session in minutes",
-	getDefaultValue: () => 60 );
+	getDefaultValue: () => 60,
+	description: "duration of session in minutes" );
 var nomaskOption = new Option<bool>(
 	name: "--nomask",
-	description: "set to not mask the password, helps with debugging",
-	getDefaultValue: () => false );
+	getDefaultValue: () => false,
+	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string?>(
 	name: "--output",
 	description: "the output format [bash|powershell]" );
