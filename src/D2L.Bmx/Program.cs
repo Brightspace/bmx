@@ -69,5 +69,5 @@ writeCommand.SetHandler(
 
 rootCommand.Add( writeCommand );
 
-// version and help commands are not implemented because they can be called as flags (--version and --help respectively)
+// version and help commands are not implemented. they can be called as flags (--version and --help respectively). However they can be added later if necessary
 return await rootCommand.InvokeAsync( args );
