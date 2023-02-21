@@ -41,15 +41,11 @@ public class Print {
 				Console.WriteLine( $"[{i + 1}] {accounts[i]}" );
 			}
 			Console.Write( "Select an account: " );
-			if( int.TryParse( Console.ReadLine(), out int index ) ) {
-				if( index > accounts.Length || index < 1 ) {
-					Console.WriteLine( "Error: Invalid selection" );
-					return;
-				}
-				account = accounts[index - 1];
-			} else {
-				Console.WriteLine( "Error: Please enter an integer" );
+			if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
+				Console.WriteLine( "Error: Invalid selection" );
 				return;
+			} else {
+				account = accounts[index - 1];
 			}
 		}
 
@@ -59,15 +55,11 @@ public class Print {
 				Console.WriteLine( $"[{i + 1}] {roles[i]}" );
 			}
 			Console.Write( "Select a role: " );
-			if( int.TryParse( Console.ReadLine(), out int index ) ) {
-				if( index > roles.Length || index < 1 ) {
-					Console.WriteLine( "Invalid selection" );
-					return;
-				}
-				role = roles[index - 1];
-			} else {
-				Console.WriteLine( "Please enter an integer" );
+			if( !int.TryParse( Console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
+				Console.WriteLine( "Error: Invalid selection" );
 				return;
+			} else {
+				role = roles[index - 1];
 			}
 		}
 
