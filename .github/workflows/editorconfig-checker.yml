@@ -4,7 +4,7 @@ on: pull_request
 
 jobs:
   eclint:
-    runs-on: [self-hosted, Linux, AWS]
+    runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
       - uses: Brightspace/third-party-actions@actions/checkout
