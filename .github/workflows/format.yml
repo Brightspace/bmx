@@ -18,11 +18,6 @@ jobs:
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
           dotnet-version: 7.0.x
-      - name: add CodeArtifact NuGet source
-        uses: Brightspace/codeartifact-actions/nuget/add-source@v1.4.0
-        with:
-          nuget-config-path: '../nuget.config'
-          role-arn: arn:aws:iam::569998014834:role/d2l-codeartifact-packages-reader
 
       - name: format
         id: format
