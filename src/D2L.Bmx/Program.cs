@@ -47,7 +47,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 printCommand.SetHandler(
 	Print.PrintHandler,
 	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, printOutputOption
- );
+	);
 
 rootCommand.Add( printCommand );
 
@@ -66,7 +66,7 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 writeCommand.SetHandler(
 	Write.WriteHandler,
 	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, writeOutputOption, profileOption
- );
+	);
 
 rootCommand.Add( writeCommand );
 

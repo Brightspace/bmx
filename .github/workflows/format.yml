@@ -1,0 +1,69 @@
+name: format
+
+on:
+  pull_request:
+    paths:
+      - "**.cs"
+
+jobs:
+  dotnet_format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: checkout
+        uses: Brightspace/third-party-actions@actions/checkout
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - name: set up dotnet
+        uses: Brightspace/third-party-actions@actions/setup-dotnet
+        with:
+          dotnet-version: 7.0.x
+
+      - name: format
+        id: format
+        env:
+          SLN_OR_CSPROJ: src/D2L.Bmx/D2L.Bmx.csproj
+          GIT_AUTHOR_NAME: DotNet Format Bot
+          GIT_AUTHOR_EMAIL: dotnet-format-bot@github.d2l
+          GIT_COMMITTER_NAME: DotNet Format Bot
+          GIT_COMMITTER_EMAIL: dotnet-format-bot@github.d2l
+        run: |
+          dotnet restore "$SLN_OR_CSPROJ"
+          if ( dotnet format "$SLN_OR_CSPROJ" --no-restore --verify-no-changes ); then
+            exit 0
+          fi
+          dotnet format "$SLN_OR_CSPROJ" --no-restore
+          git add .
+          git commit -m 'auto format'
+          randomStr=$( head /dev/urandom | tr -dc A-Za-z0-9 | head -c 4 )
+          git push origin "HEAD:refs/heads/auto-format-$randomStr"
+          echo "auto_format_branch=auto-format-$randomStr" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: create PR and comment
+        if: failure() && steps.format.outputs.auto_format_branch
+        uses: Brightspace/third-party-actions@actions/github-script
+        env:
+          AUTO_FORMAT_BRANCH: ${{ steps.format.outputs.auto_format_branch }}
+          BASE_REF: ${{ github.head_ref || github.ref }}
+        with:
+          script: |
+            const { data: newPr } = await github.rest.pull7.s.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Auto format ${process.env.BASE_REF}`,
+              body: `Auto format ${process.env.BASE_REF}`,
+              head: process.env.AUTO_FORMAT_BRANCH,
+              base: process.env.BASE_REF,
+              draft: true,
+            });
+            if (context.issue.number) {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `PR #${newPr.number} created to format .cs files.`,
+              });
+            } else {
+              console.log("::warning::Please trigger format-cs workflow on pull_request events for best results.");
+            }

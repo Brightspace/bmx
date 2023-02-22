@@ -1,0 +1,14 @@
+name: editorconfig-checker
+
+on: pull_request
+
+jobs:
+  eclint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: Brightspace/third-party-actions@actions/checkout
+      - uses: Brightspace/third-party-actions@actions/setup-node
+        with:
+          node-version: '18'
+      - run: npx editorconfig-checker
