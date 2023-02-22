@@ -47,7 +47,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 printCommand.SetHandler(
 	Print.PrintHandler,
 	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, printOutputOption
- 	);
+	);
 
 rootCommand.Add( printCommand );
 
