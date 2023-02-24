@@ -33,9 +33,10 @@
 // the last two are not (but share the same eTLD+1: "google.com").
 //
 // All of these domains have the same eTLD+1:
-//  - "www.books.amazon.co.uk"
-//  - "books.amazon.co.uk"
-//  - "amazon.co.uk"
+//   - "www.books.amazon.co.uk"
+//   - "books.amazon.co.uk"
+//   - "amazon.co.uk"
+//
 // Specifically, the eTLD+1 is "amazon.co.uk", because the eTLD is "co.uk".
 //
 // There is no closed form algorithm to calculate the eTLD of a domain.
@@ -72,20 +73,24 @@ func (list) String() string {
 // publicsuffix.org database compiled into the library.
 //
 // icann is whether the public suffix is managed by the Internet Corporation
-// for Assigned Names and Numbers. If not, the public suffix is privately
-// managed. For example, foo.org and foo.co.uk are ICANN domains,
-// foo.dyndns.org and foo.blogspot.co.uk are private domains.
+// for Assigned Names and Numbers. If not, the public suffix is either a
+// privately managed domain (and in practice, not a top level domain) or an
+// unmanaged top level domain (and not explicitly mentioned in the
+// publicsuffix.org list). For example, "foo.org" and "foo.co.uk" are ICANN
+// domains, "foo.dyndns.org" and "foo.blogspot.co.uk" are private domains and
+// "cromulent" is an unmanaged top level domain.
 //
-// Use cases for distinguishing ICANN domains like foo.com from private
-// domains like foo.appspot.com can be found at
+// Use cases for distinguishing ICANN domains like "foo.com" from private
+// domains like "foo.appspot.com" can be found at
 // https://wiki.mozilla.org/Public_Suffix_List/Use_Cases
 func PublicSuffix(domain string) (publicSuffix string, icann bool) {
 	lo, hi := uint32(0), uint32(numTLD)
-	s, suffix, wildcard := domain, len(domain), false
+	s, suffix, icannNode, wildcard := domain, len(domain), false, false
 loop:
 	for {
 		dot := strings.LastIndex(s, ".")
 		if wildcard {
+			icann = icannNode
 			suffix = 1 + dot
 		}
 		if lo == hi {
@@ -96,8 +101,8 @@ loop:
 			break
 		}
 
-		u := nodes[f] >> (nodesBitsTextOffset + nodesBitsTextLength)
-		icann = u&(1<<nodesBitsICANN-1) != 0
+		u := uint32(nodeValue(f) >> (nodesBitsTextOffset + nodesBitsTextLength))
+		icannNode = u&(1<<nodesBitsICANN-1) != 0
 		u >>= nodesBitsICANN
 		u = children[u&(1<<nodesBitsChildren-1)]
 		lo = u & (1<<childrenBitsLo - 1)
@@ -113,6 +118,9 @@ loop:
 		}
 		u >>= childrenBitsNodeType
 		wildcard = u&(1<<childrenBitsWildcard-1) != 0
+		if !wildcard {
+			icann = icannNode
+		}
 
 		if dot == -1 {
 			break
@@ -146,9 +154,18 @@ func find(label string, lo, hi uint32) uint32 {
 	return notFound
 }
 
+func nodeValue(i uint32) uint64 {
+	off := uint64(i * (nodesBits / 8))
+	return uint64(nodes[off])<<32 |
+		uint64(nodes[off+1])<<24 |
+		uint64(nodes[off+2])<<16 |
+		uint64(nodes[off+3])<<8 |
+		uint64(nodes[off+4])
+}
+
 // nodeLabel returns the label for the i'th node.
 func nodeLabel(i uint32) string {
-	x := nodes[i]
+	x := nodeValue(i)
 	length := x & (1<<nodesBitsTextLength - 1)
 	x >>= nodesBitsTextLength
 	offset := x & (1<<nodesBitsTextOffset - 1)
@@ -158,6 +175,10 @@ func nodeLabel(i uint32) string {
 // EffectiveTLDPlusOne returns the effective top level domain plus one more
 // label. For example, the eTLD+1 for "foo.bar.golang.org" is "golang.org".
 func EffectiveTLDPlusOne(domain string) (string, error) {
+	if strings.HasPrefix(domain, ".") || strings.HasSuffix(domain, ".") || strings.Contains(domain, "..") {
+		return "", fmt.Errorf("publicsuffix: empty label in domain %q", domain)
+	}
+
 	suffix, _ := PublicSuffix(domain)
 	if len(domain) <= len(suffix) {
 		return "", fmt.Errorf("publicsuffix: cannot derive eTLD+1 for domain %q", domain)
