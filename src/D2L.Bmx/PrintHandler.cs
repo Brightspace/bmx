@@ -1,7 +1,13 @@
 namespace D2L.Bmx;
 
-public class Print {
-	public static void PrintHandler(
+internal class PrintHandler {
+
+	private readonly IConsole _console;
+
+	public PrintHandler( IConsole console ) {
+		_console = console;
+	}
+	public void Handle(
 		string? org,
 		string? user,
 		string? account,
@@ -44,9 +50,8 @@ public class Print {
 			if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
 				Console.WriteLine( "Error: Invalid selection" );
 				return;
-			} else {
-				account = accounts[index - 1];
 			}
+			account = accounts[index - 1];
 		}
 
 		if( string.IsNullOrEmpty( role ) ) {
@@ -58,9 +63,8 @@ public class Print {
 			if( !int.TryParse( Console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
 				Console.WriteLine( "Error: Invalid selection" );
 				return;
-			} else {
-				role = roles[index - 1];
 			}
+			role = roles[index - 1];
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and print them on screen

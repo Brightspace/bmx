@@ -1,7 +1,13 @@
 namespace D2L.Bmx;
 
-public class Write {
-	public static void WriteHandler(
+internal class WriteHandler {
+
+	private readonly IConsole _console;
+
+	public WriteHandler( IConsole console ) {
+		_console = console;
+	}
+	public void Handle(
 		string? org,
 		string? user,
 		string? account,
@@ -63,9 +69,8 @@ public class Write {
 			if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
 				Console.WriteLine( "Error: Invalid selection" );
 				return;
-			} else {
-				account = accounts[index - 1];
 			}
+			account = accounts[index - 1];
 		}
 
 		if( string.IsNullOrEmpty( role ) ) {
@@ -77,9 +82,8 @@ public class Write {
 			if( !int.TryParse( Console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
 				Console.WriteLine( "Error: Invalid selection" );
 				return;
-			} else {
-				role = roles[index - 1];
 			}
+			role = roles[index - 1];
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and write them to credentials file
