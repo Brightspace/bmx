@@ -1,4 +1,5 @@
 using System.CommandLine;
+using D2L.Bmx;
 
 var orgOption = new Option<string?>(
 	name: "--org",
@@ -14,12 +15,12 @@ var roleOption = new Option<string?>(
 	description: "the desired role to assume" );
 var durationOption = new Option<int?>(
 	name: "--duration",
-	description: "duration of session in minutes",
-	getDefaultValue: () => 60 );
+	getDefaultValue: () => 60,
+	description: "duration of session in minutes" );
 var nomaskOption = new Option<bool>(
 	name: "--nomask",
-	description: "set to not mask the password, helps with debugging",
-	getDefaultValue: () => false );
+	getDefaultValue: () => false,
+	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string?>(
 	name: "--output",
 	description: "the output format [bash|powershell]" );
@@ -46,7 +47,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 printCommand.SetHandler(
 	Print.PrintHandler,
 	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, printOutputOption
- );
+	);
 
 rootCommand.Add( printCommand );
 
@@ -65,9 +66,9 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 writeCommand.SetHandler(
 	Write.WriteHandler,
 	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, writeOutputOption, profileOption
- );
+	);
 
 rootCommand.Add( writeCommand );
 
-// version and help commands are not implemented because they can be called as flags (--version and --help respectively)
+// version and help commands are not implemented. they can be called as flags (--version and --help respectively). However they can be added later if necessary
 return await rootCommand.InvokeAsync( args );

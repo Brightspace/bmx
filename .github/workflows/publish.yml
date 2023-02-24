@@ -16,7 +16,6 @@ jobs:
   build:
     strategy:
       matrix:
-        architecture: [x64]
         include:
           - machine: windows-latest
             platform: win
@@ -33,6 +32,5 @@ jobs:
         shell: pwsh
         env:
           PLATFORM: ${{ matrix.platform }}
-          ARCHITECTURE: ${{ matrix.architecture }}
         working-directory: src/D2L.Bmx
-        run: dotnet publish -r $env:PLATFORM-$env:ARCHITECTURE -c Release
+        run: dotnet publish -r $env:PLATFORM-x64 -c Release
