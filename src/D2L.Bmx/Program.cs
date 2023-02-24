@@ -55,7 +55,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nomask: context.ParseResult.GetValueForOption( nomaskOption ),
-		output: context.ParseResult.GetValueForOption( writeOutputOption )
+		output: context.ParseResult.GetValueForOption( printOutputOption )
 	);
 } );
 
