@@ -33,13 +33,13 @@ internal class WriteHandler {
 		}
 
 		if( unsetFlags.Count != 0 ) {
-			Console.Write( "Error: required flag(s) " );
+			_console.Write( "Error: required flag(s) " );
 			for( int i = 0; i < unsetFlags.Count; i++ ) {
-				Console.Write( unsetFlags.ElementAt( i ) );
+				_console.Write( unsetFlags.ElementAt( i ) );
 				if( i < unsetFlags.Count - 1 ) {
-					Console.Write( ", " );
+					_console.Write( ", " );
 				} else {
-					Console.WriteLine( " not set" );
+					_console.WriteLine( " not set" );
 				}
 			}
 			// Also print the output of the help command
@@ -48,9 +48,9 @@ internal class WriteHandler {
 
 		// ask user to input username if user flag isn't set
 		if( string.IsNullOrEmpty( user ) ) {
-			Console.Write( "Okta Username: " );
+			_console.Write( "Okta Username: " );
 			// there is currently no input validation for the username in the golang build, but it can be added
-			user = Console.ReadLine();
+			user = _console.ReadLine();
 		};
 
 		// Asks for user password input, or logs them in through caches
@@ -61,33 +61,33 @@ internal class WriteHandler {
 		var roles = new[] { "Dev-Slims-ReadOnly", "Dev-Slims-Admin" };
 
 		if( string.IsNullOrEmpty( account ) ) {
-			Console.WriteLine( "Available accounts:" );
+			_console.WriteLine( "Available accounts:" );
 			for( int i = 0; i < accounts.Length; i++ ) {
-				Console.WriteLine( $"[{i + 1}] {accounts[i]}" );
+				_console.WriteLine( $"[{i + 1}] {accounts[i]}" );
 			}
-			Console.Write( "Select an account: " );
-			if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
-				Console.WriteLine( "Error: Invalid selection" );
+			_console.Write( "Select an account: " );
+			if( !int.TryParse( _console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
+				_console.WriteLine( "Error: Invalid selection" );
 				return;
 			}
 			account = accounts[index - 1];
 		}
 
 		if( string.IsNullOrEmpty( role ) ) {
-			Console.WriteLine( "Available roles:" );
+			_console.WriteLine( "Available roles:" );
 			for( int i = 0; i < roles.Length; i++ ) {
-				Console.WriteLine( $"[{i + 1}] {roles[i]}" );
+				_console.WriteLine( $"[{i + 1}] {roles[i]}" );
 			}
-			Console.Write( "Select a role: " );
-			if( !int.TryParse( Console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
-				Console.WriteLine( "Error: Invalid selection" );
+			_console.Write( "Select a role: " );
+			if( !int.TryParse( _console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
+				_console.WriteLine( "Error: Invalid selection" );
 				return;
 			}
 			role = roles[index - 1];
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and write them to credentials file
-		Console.WriteLine( string.Join( '\n',
+		_console.WriteLine( string.Join( '\n',
 			$"Org: {org}",
 			$"Profile: {profile}",
 			$"User: {user}",
