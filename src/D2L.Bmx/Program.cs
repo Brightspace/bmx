@@ -47,7 +47,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 	};
 
 printCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new PrintHandler( new ConsoleWrapper() );
+	var handler = new PrintHandler();
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
@@ -74,7 +74,7 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 	};
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new WriteHandler( new ConsoleWrapper() );
+	var handler = new WriteHandler();
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
