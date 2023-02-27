@@ -1,19 +1,21 @@
 using System.CommandLine;
+using System.CommandLine.Invocation;
+using System.CommandLine.Parsing;
 using D2L.Bmx;
 
-var orgOption = new Option<string?>(
+var orgOption = new Option<string>(
 	name: "--org",
 	description: "the okta org api to target" );
-var userOption = new Option<string?>(
+var userOption = new Option<string>(
 	name: "--user",
 	description: "the user to authenticate with" );
-var accountOption = new Option<string?>(
+var accountOption = new Option<string>(
 	name: "--account",
 	description: "the account name to auth against" );
-var roleOption = new Option<string?>(
+var roleOption = new Option<string>(
 	name: "--role",
 	description: "the desired role to assume" );
-var durationOption = new Option<int?>(
+var durationOption = new Option<int>(
 	name: "--duration",
 	getDefaultValue: () => 60,
 	description: "duration of session in minutes" );
@@ -21,13 +23,13 @@ var nomaskOption = new Option<bool>(
 	name: "--nomask",
 	getDefaultValue: () => false,
 	description: "set to not mask the password, helps with debugging" );
-var printOutputOption = new Option<string?>(
+var printOutputOption = new Option<string>(
 	name: "--output",
 	description: "the output format [bash|powershell]" );
-var writeOutputOption = new Option<string?>(
+var writeOutputOption = new Option<string>(
 	name: "--output",
 	description: "write to the specified file instead of ~/.aws/credentials" );
-var profileOption = new Option<string?>(
+var profileOption = new Option<string>(
 	name: "--profile",
 	description: "aws profile name" );
 
@@ -44,10 +46,18 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 		userOption,
 	};
 
-printCommand.SetHandler(
-	Print.PrintHandler,
-	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, printOutputOption
+printCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new PrintHandler();
+	handler.Handle(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption ),
+		account: context.ParseResult.GetValueForOption( accountOption ),
+		role: context.ParseResult.GetValueForOption( roleOption ),
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nomask: context.ParseResult.GetValueForOption( nomaskOption ),
+		output: context.ParseResult.GetValueForOption( printOutputOption )
 	);
+} );
 
 rootCommand.Add( printCommand );
 
@@ -63,10 +73,19 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 		userOption,
 	};
 
-writeCommand.SetHandler(
-	Write.WriteHandler,
-	orgOption, userOption, accountOption, roleOption, durationOption, nomaskOption, writeOutputOption, profileOption
+writeCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new WriteHandler();
+	handler.Handle(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption ),
+		account: context.ParseResult.GetValueForOption( accountOption ),
+		role: context.ParseResult.GetValueForOption( roleOption ),
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nomask: context.ParseResult.GetValueForOption( nomaskOption ),
+		output: context.ParseResult.GetValueForOption( writeOutputOption ),
+		profile: context.ParseResult.GetValueForOption( profileOption )
 	);
+} );
 
 rootCommand.Add( writeCommand );
 
