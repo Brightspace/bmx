@@ -1,7 +1,8 @@
 namespace D2L.Bmx;
 
-public class Print {
-	public static void PrintHandler(
+internal class PrintHandler {
+
+	public void Handle(
 		string? org,
 		string? user,
 		string? account,
@@ -41,16 +42,11 @@ public class Print {
 				Console.WriteLine( $"[{i + 1}] {accounts[i]}" );
 			}
 			Console.Write( "Select an account: " );
-			if( int.TryParse( Console.ReadLine(), out int index ) ) {
-				if( index > accounts.Length || index < 1 ) {
-					Console.WriteLine( "Error: Invalid selection" );
-					return;
-				}
-				account = accounts[index - 1];
-			} else {
-				Console.WriteLine( "Error: Please enter an integer" );
+			if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
+				Console.WriteLine( "Error: Invalid selection" );
 				return;
 			}
+			account = accounts[index - 1];
 		}
 
 		if( string.IsNullOrEmpty( role ) ) {
@@ -59,16 +55,11 @@ public class Print {
 				Console.WriteLine( $"[{i + 1}] {roles[i]}" );
 			}
 			Console.Write( "Select a role: " );
-			if( int.TryParse( Console.ReadLine(), out int index ) ) {
-				if( index > roles.Length || index < 1 ) {
-					Console.WriteLine( "Invalid selection" );
-					return;
-				}
-				role = roles[index - 1];
-			} else {
-				Console.WriteLine( "Please enter an integer" );
+			if( !int.TryParse( Console.ReadLine(), out int index ) || index > roles.Length || index < 1 ) {
+				Console.WriteLine( "Error: Invalid selection" );
 				return;
 			}
+			role = roles[index - 1];
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and print them on screen
