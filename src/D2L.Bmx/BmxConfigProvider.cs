@@ -59,23 +59,18 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		DirectoryInfo? currentDirectory = new( Directory.GetCurrentDirectory() );
 
 		while( currentDirectory is not null ) {
-			try {
-				var bmxConfigFiles = currentDirectory.GetFiles( ".bmx" );
+			var bmxConfigFiles = currentDirectory.GetFiles( ".bmx" );
 
-				if( bmxConfigFiles.Length > 1 ) {
-					// TODO: Log this
-					return null;
-				}
-
-				if( bmxConfigFiles.Length == 1 ) {
-					return bmxConfigFiles[0];
-				}
-
-				currentDirectory = currentDirectory.Parent;
-			} catch( SecurityException ) {
+			if( bmxConfigFiles.Length > 1 ) {
 				// TODO: Log this
 				return null;
 			}
+
+			if( bmxConfigFiles.Length == 1 ) {
+				return bmxConfigFiles[0];
+			}
+
+			currentDirectory = currentDirectory.Parent;
 		}
 
 		return null;
