@@ -61,8 +61,7 @@ internal class PrintHandler {
 			}
 		}
 
-		// if duration equals zero, then the duration flag is not set. Users cannot set duration to 0 because of flag validation
-		if( duration == 0 ) {
+		if( duration is null ) {
 			if( config.DefaultDuration is not null ) {
 				duration = config.DefaultDuration;
 			} else {
