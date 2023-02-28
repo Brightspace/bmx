@@ -61,8 +61,8 @@ internal class WriteHandler {
 
 		// if duration equals zero, then the duration flag is not set. Users cannot set duration to 0 because of flag validation
 		if( duration == 0 ) {
-			if( config.Duration is not null ) {
-				duration = config.Duration;
+			if( config.DefaultDuration is not null ) {
+				duration = config.DefaultDuration;
 			} else {
 				duration = 60;
 			}

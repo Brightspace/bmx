@@ -51,7 +51,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Account: config["account"],
 			Role: config["role"],
 			Profile: config["profile"],
-			Duration: defaultDuration
+			DefaultDuration: defaultDuration
 		);
 	}
 
