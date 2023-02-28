@@ -20,23 +20,22 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 		bool.TryParse( configBuilder.Build()["allow_project_configs"], out bool shouldReadProjectConfig );
 
-		string? projectConfigPath = null;
+		FileInfo? projectConfigInfo = null;
 
 		if( shouldReadProjectConfig ) {
-			projectConfigPath = GetProjectConfigPath();
+			projectConfigInfo = GetProjectConfigFileInfo();
 		}
 
-		if( shouldReadProjectConfig && !string.IsNullOrEmpty( projectConfigPath ) ) {
+		if( shouldReadProjectConfig && projectConfigInfo is not null ) {
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
 			var fileProvider =
-				new PhysicalFileProvider( Path.GetDirectoryName( projectConfigPath )!, ExclusionFilters.None );
-			configBuilder.AddIniFile( fileProvider, Path.GetFileName( projectConfigPath ), optional: false,
+				new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
+			configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
 				reloadOnChange: false );
 		}
 
 		var config = configBuilder.Build();
 
-		// checking if config["default_duration] is null or empty so that exception is not thrown when default duration is not set in config
 		int? defaultDuration = null;
 		if( !string.IsNullOrEmpty( config["default_duration"] ) ) {
 			if( ( !int.TryParse( config["default_duration"], out int configDuration ) || configDuration < 1 ) ) {
@@ -56,8 +55,8 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file
-	private static string? GetProjectConfigPath() {
-		DirectoryInfo? currentDirectory = new DirectoryInfo( Directory.GetCurrentDirectory() );
+	private static FileInfo? GetProjectConfigFileInfo() {
+		DirectoryInfo? currentDirectory = new( Directory.GetCurrentDirectory() );
 
 		while( currentDirectory is not null ) {
 			try {
@@ -69,7 +68,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 				}
 
 				if( bmxConfigFiles.Length == 1 ) {
-					return bmxConfigFiles[0].FullName;
+					return bmxConfigFiles[0];
 				}
 
 				currentDirectory = currentDirectory.Parent;
