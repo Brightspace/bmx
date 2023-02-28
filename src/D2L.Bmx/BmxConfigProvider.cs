@@ -1,4 +1,3 @@
-#nullable enable
 using System.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
@@ -8,6 +7,7 @@ namespace D2L.Bmx;
 internal interface IBmxConfigProvider {
 	BmxConfig GetConfiguration();
 }
+
 internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {

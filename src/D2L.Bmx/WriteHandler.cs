@@ -64,7 +64,6 @@ internal class WriteHandler {
 			if( config.Duration is not null ) {
 				duration = config.Duration;
 			} else {
-				// maybe set as some global variable
 				duration = 60;
 			}
 		}
