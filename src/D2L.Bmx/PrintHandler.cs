@@ -7,6 +7,7 @@ internal class PrintHandler {
 	public PrintHandler( IBmxConfigProvider configProvider ) {
 		_configProvider = configProvider;
 	}
+
 	public void Handle(
 		string? org,
 		string? user,

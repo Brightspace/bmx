@@ -6,6 +6,7 @@ internal class WriteHandler {
 	public WriteHandler( IBmxConfigProvider configProvider ) {
 		_configProvider = configProvider;
 	}
+
 	public void Handle(
 		string? org,
 		string? user,

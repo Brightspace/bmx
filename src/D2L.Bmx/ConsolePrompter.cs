@@ -11,6 +11,7 @@ internal static class ConsolePrompter {
 
 		return org;
 	}
+
 	public static string PromptProfile() {
 		Console.Write( "AWS profile: " );
 		var profile = Console.ReadLine();
