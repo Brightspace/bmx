@@ -63,7 +63,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 			output: context.ParseResult.GetValueForOption( printOutputOption )
 		);
 	} catch( BmxException e ) {
-		Console.WriteLine( e.Message );
+		Console.Error.WriteLine( e.Message );
 		context.ExitCode = 1;
 	}
 } );
@@ -96,7 +96,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 			profile: context.ParseResult.GetValueForOption( profileOption )
 		);
 	} catch( BmxException e ) {
-		Console.WriteLine( e.Message );
+		Console.Error.WriteLine( e.Message );
 		context.ExitCode = 1;
 	}
 } );
