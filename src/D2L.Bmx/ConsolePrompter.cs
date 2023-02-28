@@ -39,6 +39,7 @@ internal static class ConsolePrompter {
 		}
 		Console.Write( "Select an account: " );
 		if( !int.TryParse( Console.ReadLine(), out int index ) || index > accounts.Length || index < 1 ) {
+			throw new BmxException( "Invalid account selection" );
 		}
 
 		return accounts[index - 1];
