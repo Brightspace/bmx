@@ -15,10 +15,14 @@ var accountOption = new Option<string>(
 var roleOption = new Option<string>(
 	name: "--role",
 	description: "the desired role to assume" );
-var durationOption = new Option<int>(
+var durationOption = new Option<int?>(
 	name: "--duration",
-	getDefaultValue: () => 60,
 	description: "duration of session in minutes" );
+durationOption.AddValidator( result => {
+	if( result.GetValueForOption( durationOption ) < 1 ) {
+		result.ErrorMessage = "Invalid duration";
+	}
+} );
 var nomaskOption = new Option<bool>(
 	name: "--nomask",
 	getDefaultValue: () => false,
@@ -47,16 +51,21 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 	};
 
 printCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new PrintHandler();
-	handler.Handle(
-		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption ),
-		account: context.ParseResult.GetValueForOption( accountOption ),
-		role: context.ParseResult.GetValueForOption( roleOption ),
-		duration: context.ParseResult.GetValueForOption( durationOption ),
-		nomask: context.ParseResult.GetValueForOption( nomaskOption ),
-		output: context.ParseResult.GetValueForOption( printOutputOption )
-	);
+	var handler = new PrintHandler( new BmxConfigProvider() );
+	try {
+		handler.Handle(
+			org: context.ParseResult.GetValueForOption( orgOption ),
+			user: context.ParseResult.GetValueForOption( userOption ),
+			account: context.ParseResult.GetValueForOption( accountOption ),
+			role: context.ParseResult.GetValueForOption( roleOption ),
+			duration: context.ParseResult.GetValueForOption( durationOption ),
+			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
+			output: context.ParseResult.GetValueForOption( printOutputOption )
+		);
+	} catch( BmxException e ) {
+		Console.Error.WriteLine( e.Message );
+		context.ExitCode = 1;
+	}
 } );
 
 rootCommand.Add( printCommand );
@@ -74,17 +83,22 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 	};
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new WriteHandler();
-	handler.Handle(
-		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption ),
-		account: context.ParseResult.GetValueForOption( accountOption ),
-		role: context.ParseResult.GetValueForOption( roleOption ),
-		duration: context.ParseResult.GetValueForOption( durationOption ),
-		nomask: context.ParseResult.GetValueForOption( nomaskOption ),
-		output: context.ParseResult.GetValueForOption( writeOutputOption ),
-		profile: context.ParseResult.GetValueForOption( profileOption )
-	);
+	var handler = new WriteHandler( new BmxConfigProvider() );
+	try {
+		handler.Handle(
+			org: context.ParseResult.GetValueForOption( orgOption ),
+			user: context.ParseResult.GetValueForOption( userOption ),
+			account: context.ParseResult.GetValueForOption( accountOption ),
+			role: context.ParseResult.GetValueForOption( roleOption ),
+			duration: context.ParseResult.GetValueForOption( durationOption ),
+			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
+			output: context.ParseResult.GetValueForOption( writeOutputOption ),
+			profile: context.ParseResult.GetValueForOption( profileOption )
+		);
+	} catch( BmxException e ) {
+		Console.Error.WriteLine( e.Message );
+		context.ExitCode = 1;
+	}
 } );
 
 rootCommand.Add( writeCommand );

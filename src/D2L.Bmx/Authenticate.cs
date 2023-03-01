@@ -3,10 +3,10 @@ namespace D2L.Bmx;
 internal class Authenticator {
 	public static void Authenticate( string? org, string? user, bool nomask ) {
 		// TODO: Add authenticating from cache
-		// Testing format workflow
 
 		Console.Write( "Okta Password: " );
 		var password = "";
+
 		if( nomask ) {
 			password = Console.ReadLine();
 		} else {
