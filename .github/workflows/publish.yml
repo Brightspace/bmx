@@ -21,8 +21,6 @@ jobs:
             platform: win
           - machine: macos-latest
             platform: osx
-          - machine: ubuntu-20.04
-            platform: linux
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 5
     steps:
