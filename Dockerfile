@@ -2,10 +2,6 @@ ARG TAG
 FROM mcr.microsoft.com/dotnet/sdk:${TAG} AS build
 
 ARG OS
-# Install NativeAOT build prerequisites
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       clang zlib1g-dev
 
 WORKDIR /source
 
