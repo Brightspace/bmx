@@ -23,7 +23,7 @@ jobs:
             file: Dockerfile
           - tag: 6.0-focal # Ubuntu 20.04
             file: Dockerfile
-          - tag: 7.0-alpine
+          - tag: 7.0-alpine # Alpine 3.17
             file: Dockerfile.alpine
           - tag: 7.0-alpine3.16
             file: Dockerfile.alpine
@@ -40,5 +40,4 @@ jobs:
           TAG: ${{ matrix.tag }}
           DOCKERFILE: ${{ matrix.file }}
         run: |
-          $DOCKER_BUILTKIT = 1
           docker buildx build --build-arg "TAG=$env:TAG" -f $env:DOCKERFILE -o out .
