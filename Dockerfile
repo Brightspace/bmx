@@ -10,7 +10,7 @@ RUN apt-get update \
 WORKDIR /source
 
 COPY . .
-RUN dotnet publish -c release -r linux-x64 -o app/${OS}
+RUN dotnet publish -c release -r linux-x64 -o app
 
 FROM scratch as export
 COPY --from=build /source/app /

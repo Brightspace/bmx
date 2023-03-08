@@ -31,4 +31,4 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
-        run: dotnet publish -r $env:PLATFORM-x64 -c Release
+        run: dotnet publish -r $env:PLATFORM-x64 -c Release -o out
