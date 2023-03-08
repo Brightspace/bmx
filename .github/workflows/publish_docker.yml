@@ -44,5 +44,5 @@ jobs:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           $DOCKER_BUILTKIT = 1
-          docker buildx build --build-arg "TAG=$env:TAG" --build-arg "OS=$env:OS" -f $env:DOCKERFILE .
+          docker buildx build --build-arg "TAG=$env:TAG" --build-arg "OS=$env:OS" -f $env:DOCKERFILE -o out .
           ls
