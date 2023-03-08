@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v2
       - name: publish
         shell: pwsh
         env:
@@ -42,4 +44,5 @@ jobs:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           $DOCKER_BUILTKIT = 1
-          docker build --build-arg "TAG=$env:TAG" --build-arg "OS=$env:OS" -f $env:DOCKERFILE .
+          docker buildx build --build-arg "TAG=$env:TAG" --build-arg "OS=$env:OS" -f $env:DOCKERFILE .
+          ls
