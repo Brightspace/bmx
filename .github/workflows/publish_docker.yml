@@ -17,17 +17,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: Debian11
-            tag: 7.0
+          - tag: 7.0
             file: Dockerfile
-          - os: Alpine3.17
-            tag: 7.0-alpine
+          - tag: 7.0-alpine
             file: Dockerfile.alpine
-          - os: Alpine3.16
-            tag: 7.0-alpine3.16
+          - tag: 7.0-alpine3.16
             file: Dockerfile.alpine
-          - os: Ubuntu22.04
-            tag: 7.0-jammy
+          - tag: 7.0-jammy
             file: Dockerfile
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -39,9 +35,8 @@ jobs:
       - name: publish
         shell: pwsh
         env:
-          OS: ${{ matrix.os }}
           TAG: ${{ matrix.tag }}
           DOCKERFILE: ${{ matrix.file }}
         run: |
           $DOCKER_BUILTKIT = 1
-          docker buildx build --build-arg "TAG=$env:TAG" --build-arg "OS=$env:OS" -f $env:DOCKERFILE -o out .
+          docker buildx build --build-arg "TAG=$env:TAG" -f $env:DOCKERFILE -o out .

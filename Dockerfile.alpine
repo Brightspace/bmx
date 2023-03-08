@@ -1,6 +1,5 @@
 ARG TAG=7.0-alpine
 FROM mcr.microsoft.com/dotnet/sdk:${TAG} AS build
-ARG OS=alpine3.17
 
 # Install NativeAOT build prerequisites
 RUN apk update \

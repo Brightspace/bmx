@@ -1,6 +1,5 @@
 ARG TAG=7.0
 FROM mcr.microsoft.com/dotnet/sdk:${TAG} AS build
-ARG OS=debian11
 
 # Install NativeAOT build prerequisites
 RUN apt-get update \
