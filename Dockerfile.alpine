@@ -1,0 +1,16 @@
+ARG TAG=7.0-alpine
+FROM mcr.microsoft.com/dotnet/sdk:${TAG} AS build
+ARG OS=alpine3.17
+
+# Install NativeAOT build prerequisites
+RUN apk update \
+    && apk add clang build-base zlib-dev \
+       clang zlib-dev
+
+WORKDIR /source
+
+COPY . .
+RUN dotnet publish -c release -r linux-musl-x64 -o app/${OS}
+
+FROM scratch as export
+COPY --from=build /source/app /
