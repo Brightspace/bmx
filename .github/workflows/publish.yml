@@ -22,7 +22,7 @@ jobs:
           - machine: macos-latest
             platform: osx
     runs-on: ${{ matrix.machine }}
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
