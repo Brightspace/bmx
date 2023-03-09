@@ -32,3 +32,23 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
         run: dotnet publish -r $env:PLATFORM-x64 -c Release -o out
+  build_docker:
+    strategy:
+      matrix:
+        include:
+          - file: Dockerfile
+          - file: Dockerfile.ubuntu
+          - file: Dockerfile.alpine
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: checkout
+        uses: Brightspace/third-party-actions@actions/checkout
+      - name: setup docker buildx
+        uses: docker/setup-buildx-action@v2
+      - name: publish
+        shell: pwsh
+        env:
+          DOCKERFILE: ${{ matrix.file }}
+        run: |
+          docker buildx build --build-arg -f $env:DOCKERFILE -o out .
