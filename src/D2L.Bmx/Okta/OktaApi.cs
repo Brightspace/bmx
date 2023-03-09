@@ -17,8 +17,6 @@ public interface IOktaApi {
 	Task<string> GetAccountOkta( Uri linkUri );
 }
 
-
-
 public class OktaApi : IOktaApi {
 	private readonly JsonSerializerOptions _serializeOptions =
 		new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
