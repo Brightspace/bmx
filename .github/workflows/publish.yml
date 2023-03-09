@@ -51,4 +51,4 @@ jobs:
         env:
           DOCKERFILE: ${{ matrix.file }}
         run: |
-          docker buildx build --build-arg -f $env:DOCKERFILE -o out .
+          docker buildx build -f $env:DOCKERFILE -o out .
