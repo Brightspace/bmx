@@ -1,0 +1,19 @@
+FROM ubuntu:18.04 AS build
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb \
+    --no-check-certificate -O packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb
+RUN rm packages-microsoft-prod.deb
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       dotnet-sdk-7.0 clang zlib1g-dev
+
+WORKDIR /source
+
+COPY . .
+RUN dotnet publish -c release -r linux-x64 -o app
+
+FROM scratch as export
+COPY --from=build /source/app /
