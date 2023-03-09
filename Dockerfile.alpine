@@ -1,10 +1,14 @@
-ARG TAG=7.0-alpine
-FROM mcr.microsoft.com/dotnet/sdk:${TAG} AS build
+FROM amd64/alpine:3.15 AS build
 
-# Install NativeAOT build prerequisites
 RUN apk update \
-    && apk add clang build-base zlib-dev \
-       clang zlib-dev
+    && apk add clang build-base bash icu-libs krb5-libs \
+    libgcc libintl libssl1.1 libstdc++ zlib zlib-dev
+
+RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+RUN wget https://dot.net/v1/dotnet-install.sh \
+    && chmod +x ./dotnet-install.sh \
+    && ./dotnet-install.sh --channel 7.0 --install-dir /usr/share/dotnet
 
 WORKDIR /source
 

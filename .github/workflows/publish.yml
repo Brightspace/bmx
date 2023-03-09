@@ -36,7 +36,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - file: Dockerfile
           - file: Dockerfile.ubuntu
           - file: Dockerfile.alpine
     runs-on: ubuntu-latest
