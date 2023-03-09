@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 namespace D2L.Bmx;
 public struct AuthenticateChallengeMfaOptions {
 	public string FactorId { get; set; }

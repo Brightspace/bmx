@@ -1,8 +1,33 @@
-using System;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 namespace D2L.Bmx;
+
+public interface IAuthenticatedState {
+	bool SuccessfulAuthentication { get; }
+}
+
+public interface IAuthenticateState {
+	MfaOption[] MfaOptions { get; }
+}
+
+public interface IAccountState {
+	string[] Accounts { get; }
+}
+
+public interface IIdentityProvider<TAuthenticateState, TAuthenticatedState, TAccountState>
+	where TAuthenticateState : IAuthenticateState
+	where TAuthenticatedState : IAuthenticatedState
+	where TAccountState : IAccountState {
+	public string Name { get; }
+	void SetOrganization( string organization );
+	Task<TAuthenticateState> Authenticate( string username, string password );
+
+	Task<TAuthenticatedState> ChallengeMfa( TAuthenticateState state, int selectedMfaIndex,
+		string challengeResponse );
+
+	Task<TAccountState> GetAccounts( TAuthenticatedState state, string accountType );
+	Task<string> GetServiceProviderSaml( TAccountState state, int selectedAccountIndex );
+}
 public class OktaClient : IIdentityProvider<OktaAuthenticateState, OktaAuthenticatedState, OktaAccountState> {
 	private readonly IOktaApi _oktaApi;
 
