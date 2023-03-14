@@ -39,7 +39,7 @@ public class AwsClient : ICloudProvider<AwsRoleState> {
 
 		var roles = new List<AwsRole>();
 
-		if( roleNodes is null ) {
+		if( roleNodes is not null ) {
 			foreach( XmlElement roleNode in roleNodes ) {
 				// SAML has value: <principal-arn>, <role-arn>
 				// The last part of the role-arn is a human readable name
