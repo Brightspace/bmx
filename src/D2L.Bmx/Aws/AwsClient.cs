@@ -1,35 +1,21 @@
 using System.Text;
-using System.Web;
+using System.Net;
 using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 
 namespace D2L.Bmx.Aws;
 
-public interface ICloudProvider<TRoleState> where TRoleState : IRoleState {
-	TRoleState GetRoles( string encodedSaml );
-	Task<Dictionary<string, string>> GetTokensAsync( TRoleState state, int selectedRoleIndex );
+internal interface IAwsClient {
+	AwsRoleState GetRoles( string encodedSaml );
+	Task<Dictionary<string, string>> GetTokensAsync( AwsRoleState state, int selectedRoleIndex );
 }
-public class AwsClient : ICloudProvider<AwsRoleState> {
+
+internal class AwsClient : IAwsClient {
 	private readonly IAmazonSecurityTokenService _stsClient;
 
 	public AwsClient( IAmazonSecurityTokenService stsClient ) {
 		_stsClient = stsClient;
-	}
-
-	private XmlDocument ParseSamlToken( string encodedSaml ) {
-		var samlStatements = encodedSaml.Split( ";" );
-		// Process the B64 Encoded SAML string to get valid XML doc
-		var samlString = new StringBuilder();
-		foreach( var inputValueString in samlStatements ) {
-			samlString.Append( HttpUtility.HtmlDecode( inputValueString ) );
-		}
-
-		var samlData = Convert.FromBase64String( samlString.ToString() );
-
-		var samlToken = new XmlDocument();
-		samlToken.LoadXml( Encoding.UTF8.GetString( samlData ) );
-		return samlToken;
 	}
 
 	public AwsRoleState GetRoles( string encodedSaml ) {
@@ -71,5 +57,19 @@ public class AwsClient : ICloudProvider<AwsRoleState> {
 				{"AWS_ACCESS_KEY_ID", authResp.Credentials.AccessKeyId},
 				{"AWS_SECRET_ACCESS_KEY", authResp.Credentials.SecretAccessKey}
 			};
+	}
+	private XmlDocument ParseSamlToken( string encodedSaml ) {
+		var samlStatements = encodedSaml.Split( ";" );
+		// Process the B64 Encoded SAML string to get valid XML doc
+		var samlString = new StringBuilder();
+		foreach( var inputValueString in samlStatements ) {
+			samlString.Append( WebUtility.HtmlDecode( inputValueString ) );
+		}
+
+		var samlData = Convert.FromBase64String( samlString.ToString() );
+
+		var samlToken = new XmlDocument();
+		samlToken.LoadXml( Encoding.UTF8.GetString( samlData ) );
+		return samlToken;
 	}
 }
