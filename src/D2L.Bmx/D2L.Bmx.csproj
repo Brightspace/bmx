@@ -10,6 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.22" />
 		<PackageReference Include="Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="7.0.0" />
