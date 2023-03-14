@@ -4,11 +4,11 @@ using System.Web;
 using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-namespace D2L.Bmx;
+namespace D2L.Bmx.Aws;
 
 public interface ICloudProvider<TRoleState> where TRoleState : IRoleState {
 	TRoleState GetRoles( string encodedSaml );
-	Task<Dictionary<string, string>> GetTokens( TRoleState state, int selectedRoleIndex );
+	Task<Dictionary<string, string>> GetTokensAsync( TRoleState state, int selectedRoleIndex );
 }
 public class AwsClient : ICloudProvider<AwsRoleState> {
 	private readonly IAmazonSecurityTokenService _stsClient;
@@ -53,7 +53,7 @@ public class AwsClient : ICloudProvider<AwsRoleState> {
 		return new AwsRoleState( roles, encodedSaml );
 	}
 
-	public async Task<Dictionary<string, string>> GetTokens( AwsRoleState state, int selectedRoleIndex ) {
+	public async Task<Dictionary<string, string>> GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
 		var role = state.AwsRoles[selectedRoleIndex];
 
 		// Generate access keys valid for 1 hour (default)

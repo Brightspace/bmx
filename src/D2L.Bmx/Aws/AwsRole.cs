@@ -1,4 +1,4 @@
-namespace D2L.Bmx;
+namespace D2L.Bmx.Aws;
 
 public struct AwsRole {
 	public string RoleName { get; set; }

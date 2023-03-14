@@ -1,4 +1,5 @@
-namespace D2L.Bmx;
+
+namespace D2L.Bmx.Aws;
 
 public interface IRoleState {
 	string[] Roles { get; }
