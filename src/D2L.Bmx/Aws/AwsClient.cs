@@ -4,6 +4,7 @@ using System.Web;
 using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
+
 namespace D2L.Bmx.Aws;
 
 public interface ICloudProvider<TRoleState> where TRoleState : IRoleState {
@@ -38,7 +39,7 @@ public class AwsClient : ICloudProvider<AwsRoleState> {
 
 		var roles = new List<AwsRole>();
 
-		if( roleNodes != null ) {
+		if( roleNodes is null ) {
 			foreach( XmlElement roleNode in roleNodes ) {
 				// SAML has value: <principal-arn>, <role-arn>
 				// The last part of the role-arn is a human readable name
