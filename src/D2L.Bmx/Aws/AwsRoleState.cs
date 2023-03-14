@@ -1,4 +1,3 @@
-
 namespace D2L.Bmx.Aws;
 
 public interface IRoleState {
