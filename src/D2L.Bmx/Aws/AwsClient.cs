@@ -30,11 +30,11 @@ internal class AwsClient : IAwsClient {
 				// The last part of the role-arn is a human readable name
 				var nodeContents = roleNode.InnerText.Split( "," );
 
-				roles.Add( new AwsRole {
-					PrincipalArn = nodeContents[0],
-					RoleArn = nodeContents[1],
-					RoleName = nodeContents[1].Split( "/" )[1]
-				} );
+				roles.Add( new AwsRole(
+					PrincipalArn: nodeContents[0],
+					RoleArn: nodeContents[1],
+					RoleName: nodeContents[1].Split( "/" )[1]
+					) );
 			}
 		} else {
 			throw new BmxException( "Failed to retrieve roles" );
