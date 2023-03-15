@@ -31,9 +31,9 @@ internal class AwsClient : IAwsClient {
 				var nodeContents = roleNode.InnerText.Split( "," );
 
 				roles.Add( new AwsRole(
+					RoleName: nodeContents[1].Split( "/" )[1],
 					PrincipalArn: nodeContents[0],
-					RoleArn: nodeContents[1],
-					RoleName: nodeContents[1].Split( "/" )[1]
+					RoleArn: nodeContents[1]
 					) );
 			}
 		} else {
