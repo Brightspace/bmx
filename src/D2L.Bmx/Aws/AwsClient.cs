@@ -8,7 +8,7 @@ namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
 	AwsRoleState GetRoles( string encodedSaml );
-	Task<Dictionary<string, string>> GetTokensAsync( AwsRoleState state, int selectedRoleIndex );
+	Task<AwsCredentials> GetTokensAsync( AwsRoleState state, int selectedRoleIndex );
 }
 
 internal class AwsClient : IAwsClient {
@@ -42,7 +42,7 @@ internal class AwsClient : IAwsClient {
 		return new AwsRoleState( roles, encodedSaml );
 	}
 
-	public async Task<Dictionary<string, string>> GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
+	public async Task<AwsCredentials> GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
 		var role = state.AwsRoles[selectedRoleIndex];
 
 		// Generate access keys valid for 1 hour (default)
@@ -52,11 +52,11 @@ internal class AwsClient : IAwsClient {
 			SAMLAssertion = state.SamlString
 		} );
 
-		return new Dictionary<string, string> {
-				{"AWS_SESSION_TOKEN", authResp.Credentials.SessionToken},
-				{"AWS_ACCESS_KEY_ID", authResp.Credentials.AccessKeyId},
-				{"AWS_SECRET_ACCESS_KEY", authResp.Credentials.SecretAccessKey}
-			};
+		return new AwsCredentials(
+				AwsSessionToken: authResp.Credentials.SessionToken,
+				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
+				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+				);
 	}
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
 		var samlStatements = encodedSaml.Split( ";" );
