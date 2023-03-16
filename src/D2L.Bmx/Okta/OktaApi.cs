@@ -2,25 +2,9 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
-
-[JsonSerializable( typeof( AuthenticateOptions ) )]
-internal partial class AuthOptionsJsonContext : JsonSerializerContext {
-}
-[JsonSerializable( typeof( AuthenticateResponseInital ) )]
-internal partial class AuthResponseInitialJsonContext : JsonSerializerContext {
-}
-[JsonSerializable( typeof( AuthenticateResponseSuccess ) )]
-internal partial class AuthResponseSuccessJsonContext : JsonSerializerContext {
-}
-[JsonSerializable( typeof( OktaApp ) )]
-internal partial class OktaAppJsonContext : JsonSerializerContext {
-}
-[JsonSerializable( typeof( OktaSession ) )]
-internal partial class OktaSessionJsonContext : JsonSerializerContext {
-}
 
 internal interface IOktaApi {
 	void SetOrganization( string organization );
@@ -34,7 +18,10 @@ internal interface IOktaApi {
 
 internal class OktaApi : IOktaApi {
 	private readonly JsonSerializerOptions _serializeOptions =
-		new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
+		new JsonSerializerOptions {
+			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+			TypeInfoResolver = default
+		};
 
 	private readonly CookieContainer _cookieContainer;
 	private readonly HttpClient _httpClient;
