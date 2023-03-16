@@ -47,7 +47,9 @@ internal class OktaApi : IOktaApi {
 
 	public async Task<AuthenticateResponseInital> AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
-			new StringContent( JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateOptions ), Encoding.Default,
+			new StringContent(
+				JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateOptions ),
+				Encoding.Default,
 				"application/json" ) );
 		return await JsonSerializer.DeserializeAsync(
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
@@ -56,7 +58,9 @@ internal class OktaApi : IOktaApi {
 	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
 		AuthenticateChallengeMfaOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
-			new StringContent( JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ), Encoding.Default,
+			new StringContent(
+				JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
+				Encoding.Default,
 				"application/json" ) );
 		return await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
@@ -64,7 +68,9 @@ internal class OktaApi : IOktaApi {
 
 	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
-			new StringContent( JsonSerializer.Serialize( sessionOptions!, SourceGenerationContext.Default.SessionOptions ), Encoding.Default,
+			new StringContent(
+				JsonSerializer.Serialize( sessionOptions!, SourceGenerationContext.Default.SessionOptions ),
+				Encoding.Default,
 				"application/json" ) );
 		return await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaSession );
