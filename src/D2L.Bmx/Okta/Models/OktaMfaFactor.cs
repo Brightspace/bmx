@@ -1,7 +1,8 @@
-namespace D2L.Bmx;
-public struct OktaMfaFactor {
-	public string Id { get; set; }
-	public string FactorType { get; set; }
-	public string Provider { get; set; }
-	public string VendorName { get; set; }
-}
+namespace D2L.Bmx.Okta.Models;
+
+internal record OktaMfaFactor(
+	string Id,
+	string FactorType,
+	string Provider,
+	string VendorName
+);

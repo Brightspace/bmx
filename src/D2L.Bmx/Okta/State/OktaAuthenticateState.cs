@@ -1,6 +1,7 @@
-namespace D2L.Bmx;
+using D2L.Bmx.Okta.Models;
+namespace D2L.Bmx.Okta.State;
 
-public class OktaAuthenticateState : IAuthenticateState {
+internal class OktaAuthenticateState {
 	public OktaAuthenticateState( string oktaStateToken, OktaMfaFactor[] oktaMfaFactors ) {
 		OktaStateToken = oktaStateToken;
 		OktaMfaFactors = oktaMfaFactors;

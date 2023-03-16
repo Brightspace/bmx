@@ -1,7 +1,8 @@
-namespace D2L.Bmx;
-public struct OktaApp {
-	public string Id { get; set; }
-	public string Label { get; set; }
-	public string AppName { get; set; }
-	public string LinkUrl { get; set; }
-}
+namespace D2L.Bmx.Okta.Models;
+
+internal record OktaApp(
+	string Id,
+	string Label,
+	string AppName,
+	string LinkUrl
+);

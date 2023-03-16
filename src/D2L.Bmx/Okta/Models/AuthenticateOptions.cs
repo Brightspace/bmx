@@ -1,10 +1,7 @@
-namespace D2L.Bmx;
-public struct AuthenticateOptions {
-	public string Username { get; set; }
-	public string Password { get; set; }
+using D2L.Bmx.Okta;
+namespace D2L.Bmx.Okta.Models;
 
-	public AuthenticateOptions( string username, string password ) {
-		Username = username;
-		Password = password;
-	}
-}
+internal record AuthenticateOptions(
+	string Username,
+	string Password
+);

@@ -1,7 +1,8 @@
-namespace D2L.Bmx;
-public struct OktaSession {
-	public string Id { get; set; }
-	public string UserId { get; set; }
-	public DateTimeOffset CreatedAt { get; set; }
-	public DateTimeOffset ExpiresAt { get; set; }
-}
+namespace D2L.Bmx.Okta.Models;
+
+internal record OktaSession(
+	string Id,
+	string UserId,
+	DateTimeOffset CreatedAt,
+	DateTimeOffset ExpiresAt
+);

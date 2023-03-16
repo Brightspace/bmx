@@ -2,9 +2,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-namespace D2L.Bmx;
+using D2L.Bmx.Okta.Models;
+namespace D2L.Bmx.Okta;
 
-public interface IOktaApi {
+internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
 	Task<AuthenticateResponseInital> AuthenticateOkta( AuthenticateOptions authOptions );
@@ -14,7 +15,7 @@ public interface IOktaApi {
 	Task<string> GetAccountOkta( Uri linkUri );
 }
 
-public class OktaApi : IOktaApi {
+internal class OktaApi : IOktaApi {
 	private readonly JsonSerializerOptions _serializeOptions =
 		new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, };
 

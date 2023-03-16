@@ -1,8 +1,5 @@
-namespace D2L.Bmx;
-public struct SessionOptions {
-	public string SessionToken { get; set; }
+namespace D2L.Bmx.Okta.Models;
 
-	public SessionOptions( string sessionToken ) {
-		SessionToken = sessionToken;
-	}
-}
+internal record SessionOptions(
+	string SessionToken
+);

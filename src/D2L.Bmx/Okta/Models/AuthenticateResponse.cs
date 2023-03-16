@@ -1,27 +1,27 @@
 using System.Text.Json.Serialization;
-namespace D2L.Bmx;
-public class AuthenticateResponse {
+namespace D2L.Bmx.Okta.Models;
+
+internal class AuthenticateResponse {
 	public DateTimeOffset ExpiresAt { get; set; }
 
 	[JsonConverter( typeof( JsonStringEnumConverter ) )]
 	public AuthenticationStatus Status { get; set; }
 }
 
-public class AuthenticateResponseInital : AuthenticateResponse {
+internal class AuthenticateResponseInital : AuthenticateResponse {
 	public string StateToken { get; set; }
 	[JsonPropertyName( "_embedded" )] public AuthenticateResponseEmbeddedInitial Embedded { get; set; }
 }
 
-
-public class AuthenticateResponseSuccess : AuthenticateResponse {
+internal class AuthenticateResponseSuccess : AuthenticateResponse {
 	public string SessionToken { get; set; }
 }
 
-public struct AuthenticateResponseEmbeddedInitial {
+internal struct AuthenticateResponseEmbeddedInitial {
 	public OktaMfaFactor[] Factors { get; set; }
 }
 
-public enum AuthenticationStatus {
+internal enum AuthenticationStatus {
 	UNKNOWN,
 	PASSWORD_WARN,
 	SUCCESS,

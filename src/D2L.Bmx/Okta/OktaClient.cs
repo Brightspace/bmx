@@ -1,34 +1,21 @@
 using System.Text.RegularExpressions;
 using System.Xml;
-namespace D2L.Bmx;
+using D2L.Bmx.Okta.Models;
+using D2L.Bmx.Okta.State;
+namespace D2L.Bmx.Okta;
 
-public interface IAuthenticatedState {
-	bool SuccessfulAuthentication { get; }
-}
-
-public interface IAuthenticateState {
-	MfaOption[] MfaOptions { get; }
-}
-
-public interface IAccountState {
-	string[] Accounts { get; }
-}
-
-public interface IIdentityProvider<TAuthenticateState, TAuthenticatedState, TAccountState>
-	where TAuthenticateState : IAuthenticateState
-	where TAuthenticatedState : IAuthenticatedState
-	where TAccountState : IAccountState {
+internal interface IOktaClient {
 	public string Name { get; }
 	void SetOrganization( string organization );
-	Task<TAuthenticateState> Authenticate( string username, string password );
+	Task<OktaAuthenticateState> Authenticate( string username, string password );
 
-	Task<TAuthenticatedState> ChallengeMfa( TAuthenticateState state, int selectedMfaIndex,
+	Task<OktaAuthenticatedState> ChallengeMfa( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
 
-	Task<TAccountState> GetAccounts( TAuthenticatedState state, string accountType );
-	Task<string> GetServiceProviderSaml( TAccountState state, int selectedAccountIndex );
+	Task<OktaAccountState> GetAccounts( OktaAuthenticatedState state, string accountType );
+	Task<string> GetServiceProviderSaml( OktaAccountState state, int selectedAccountIndex );
 }
-public class OktaClient : IIdentityProvider<OktaAuthenticateState, OktaAuthenticatedState, OktaAccountState> {
+internal class OktaClient : IOktaClient {
 	private readonly IOktaApi _oktaApi;
 
 	public OktaClient( IOktaApi oktaApi ) {

@@ -1,4 +1,4 @@
-namespace D2L.Bmx;
+namespace D2L.Bmx.Okta.Models;
 
 public struct MfaOption {
 	public string Name { get; set; }

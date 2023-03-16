@@ -1,6 +1,7 @@
-namespace D2L.Bmx;
+using D2L.Bmx.Okta.Models;
+namespace D2L.Bmx.Okta.State;
 
-public class OktaAccountState : IAccountState {
+internal class OktaAccountState {
 	public OktaAccountState( OktaApp[] oktaApps, string accountType ) {
 		OktaApps = oktaApps;
 		AccountType = accountType;
