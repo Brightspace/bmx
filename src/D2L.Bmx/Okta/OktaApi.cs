@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -37,6 +38,8 @@ internal class OktaApi : IOktaApi {
 		_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
 	}
 
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public async Task<AuthenticateResponseInital> AuthenticateOkta( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent( JsonSerializer.Serialize( authOptions, _serializeOptions ), Encoding.Default,
@@ -46,6 +49,8 @@ internal class OktaApi : IOktaApi {
 			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
 	}
 
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOkta(
 		AuthenticateChallengeMfaOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
@@ -55,6 +60,7 @@ internal class OktaApi : IOktaApi {
 			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
 	}
 
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public async Task<OktaSession> CreateSessionOkta( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent( JsonSerializer.Serialize( sessionOptions, _serializeOptions ), Encoding.Default,
@@ -63,6 +69,7 @@ internal class OktaApi : IOktaApi {
 			_serializeOptions );
 	}
 
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.DeserializeAsync<TValue>(Stream, JsonSerializerOptions, CancellationToken)" )]
 	public async Task<OktaApp[]> GetAccountsOkta( string userId ) {
 		var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
 		return await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
