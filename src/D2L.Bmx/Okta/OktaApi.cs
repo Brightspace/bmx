@@ -2,17 +2,34 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
+
+[JsonSerializable( typeof( AuthenticateOptions ) )]
+internal partial class AuthOptionsJsonContext : JsonSerializerContext {
+}
+[JsonSerializable( typeof( AuthenticateResponseInital ) )]
+internal partial class AuthResponseInitialJsonContext : JsonSerializerContext {
+}
+[JsonSerializable( typeof( AuthenticateResponseSuccess ) )]
+internal partial class AuthResponseSuccessJsonContext : JsonSerializerContext {
+}
+[JsonSerializable( typeof( OktaApp ) )]
+internal partial class OktaAppJsonContext : JsonSerializerContext {
+}
+[JsonSerializable( typeof( OktaSession ) )]
+internal partial class OktaSessionJsonContext : JsonSerializerContext {
+}
 
 internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
-	Task<AuthenticateResponseInital> AuthenticateOkta( AuthenticateOptions authOptions );
-	Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOkta( AuthenticateChallengeMfaOptions authOptions );
-	Task<OktaSession> CreateSessionOkta( SessionOptions sessionOptions );
-	Task<OktaApp[]> GetAccountsOkta( string userId );
-	Task<string> GetAccountOkta( Uri linkUri );
+	Task<AuthenticateResponseInital> AuthenticateOktaAsync( AuthenticateOptions authOptions );
+	Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync( AuthenticateChallengeMfaOptions authOptions );
+	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
+	Task<OktaApp[]> GetAccountsOktaAsync( string userId );
+	Task<string> GetAccountOktaAsync( Uri linkUri );
 }
 
 internal class OktaApi : IOktaApi {
@@ -37,16 +54,16 @@ internal class OktaApi : IOktaApi {
 		_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
 	}
 
-	public async Task<AuthenticateResponseInital> AuthenticateOkta( AuthenticateOptions authOptions ) {
+	public async Task<AuthenticateResponseInital> AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent( JsonSerializer.Serialize( authOptions, _serializeOptions ), Encoding.Default,
 				"application/json" ) );
-
+		// return await JsonSerializer.DeserializeAsync<AuthenticateResponseInital>( await resp.Content.ReadAsStreamAsync(), AuthResponseInitialJsonContext.Default.AuthenticateResponseInital, _serializeOptions );
 		return await JsonSerializer.DeserializeAsync<AuthenticateResponseInital>(
 			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
 	}
 
-	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOkta(
+	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
 		AuthenticateChallengeMfaOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent( JsonSerializer.Serialize( authOptions, _serializeOptions ), Encoding.Default,
@@ -55,7 +72,7 @@ internal class OktaApi : IOktaApi {
 			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
 	}
 
-	public async Task<OktaSession> CreateSessionOkta( SessionOptions sessionOptions ) {
+	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent( JsonSerializer.Serialize( sessionOptions, _serializeOptions ), Encoding.Default,
 				"application/json" ) );
@@ -63,13 +80,13 @@ internal class OktaApi : IOktaApi {
 			_serializeOptions );
 	}
 
-	public async Task<OktaApp[]> GetAccountsOkta( string userId ) {
+	public async Task<OktaApp[]> GetAccountsOktaAsync( string userId ) {
 		var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
 		return await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
 			_serializeOptions );
 	}
 
-	public async Task<string> GetAccountOkta( Uri linkUri ) {
+	public async Task<string> GetAccountOktaAsync( Uri linkUri ) {
 		var resp = await _httpClient.GetAsync( linkUri );
 		return await resp.Content.ReadAsStringAsync();
 	}
