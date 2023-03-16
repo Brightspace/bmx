@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
@@ -16,11 +16,16 @@ internal interface IOktaApi {
 	Task<string> GetAccountOktaAsync( Uri linkUri );
 }
 
+[JsonSerializable( typeof( AuthenticateResponseInital ) )]
+[JsonSerializable( typeof( AuthenticateResponseSuccess ) )]
+[JsonSerializable( typeof( OktaSession ) )]
+[JsonSerializable( typeof( OktaApp[] ) )]
+internal partial class SourceGenerationContext : JsonSerializerContext {
+}
 internal class OktaApi : IOktaApi {
 	private readonly JsonSerializerOptions _serializeOptions =
 		new JsonSerializerOptions {
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-			TypeInfoResolver = default
 		};
 
 	private readonly CookieContainer _cookieContainer;
@@ -45,9 +50,8 @@ internal class OktaApi : IOktaApi {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent( JsonSerializer.Serialize( authOptions, _serializeOptions ), Encoding.Default,
 				"application/json" ) );
-		// return await JsonSerializer.DeserializeAsync<AuthenticateResponseInital>( await resp.Content.ReadAsStreamAsync(), AuthResponseInitialJsonContext.Default.AuthenticateResponseInital, _serializeOptions );
-		return await JsonSerializer.DeserializeAsync<AuthenticateResponseInital>(
-			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
+		return await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync()!, SourceGenerationContext.Default.AuthenticateResponseInital );
 	}
 
 	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
@@ -56,7 +60,7 @@ internal class OktaApi : IOktaApi {
 			new StringContent( JsonSerializer.Serialize( authOptions, _serializeOptions ), Encoding.Default,
 				"application/json" ) );
 		return await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
-			await resp.Content.ReadAsStreamAsync(), _serializeOptions );
+			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
 	}
 
 	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
@@ -64,13 +68,13 @@ internal class OktaApi : IOktaApi {
 			new StringContent( JsonSerializer.Serialize( sessionOptions, _serializeOptions ), Encoding.Default,
 				"application/json" ) );
 		return await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),
-			_serializeOptions );
+			SourceGenerationContext.Default.OktaSession );
 	}
 
 	public async Task<OktaApp[]> GetAccountsOktaAsync( string userId ) {
 		var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
 		return await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
-			_serializeOptions );
+			SourceGenerationContext.Default.OktaAppArray );
 	}
 
 	public async Task<string> GetAccountOktaAsync( Uri linkUri ) {

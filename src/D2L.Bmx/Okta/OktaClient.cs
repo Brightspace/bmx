@@ -29,7 +29,7 @@ internal class OktaClient : IOktaClient {
 	}
 
 	public async Task<OktaAuthenticateState> AuthenticateAsync( string username, string password ) {
-		var authResp = await _oktaApi.AuthenticateOkta( new AuthenticateOptions( username, password ) );
+		var authResp = await _oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( username, password ) );
 		return new OktaAuthenticateState( authResp.StateToken, authResp.Embedded.Factors );
 	}
 
@@ -38,7 +38,7 @@ internal class OktaClient : IOktaClient {
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 
 		var authResp =
-			await _oktaApi.AuthenticateChallengeMfaOkta(
+			await _oktaApi.AuthenticateChallengeMfaOktaAsync(
 				new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken ) );
 
 		// TODO: Check for auth successes and return state
@@ -47,17 +47,17 @@ internal class OktaClient : IOktaClient {
 
 	public async Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
 		// TODO: Use existing session if it exists in ~/.bmx and isn't expired
-		var sessionResp = await _oktaApi.CreateSessionOkta( new SessionOptions( state.OktaSessionToken ) );
+		var sessionResp = await _oktaApi.CreateSessionOktaAsync( new SessionOptions( state.OktaSessionToken ) );
 		// TODO: Consider making OktaAPI stateless as well (?)
 		_oktaApi.AddSession( sessionResp.Id );
 
-		var apps = await _oktaApi.GetAccountsOkta( sessionResp.UserId );
+		var apps = await _oktaApi.GetAccountsOktaAsync( sessionResp.UserId );
 		return new OktaAccountState( apps, accountType );
 	}
 
 	public async Task<string> GetServiceProviderSamlAsync( OktaAccountState state, int selectedAccountIndex ) {
 		var account = state.OktaApps[selectedAccountIndex];
-		var accountPage = await _oktaApi.GetAccountOkta( new Uri( account.LinkUrl ) );
+		var accountPage = await _oktaApi.GetAccountOktaAsync( new Uri( account.LinkUrl ) );
 		return ExtractAwsSaml( accountPage );
 	}
 
