@@ -18,7 +18,7 @@ internal class AwsClient : IAwsClient {
 		_stsClient = stsClient;
 	}
 
-	public AwsRoleState GetRoles( string encodedSaml ) {
+	AwsRoleState IAwsClient.GetRoles( string encodedSaml ) {
 		var samlToken = ParseSamlToken( encodedSaml );
 		var roleNodes = samlToken.SelectNodes( "//*[@Name=\"https://aws.amazon.com/SAML/Attributes/Role\"]/*" );
 
@@ -42,7 +42,7 @@ internal class AwsClient : IAwsClient {
 		return new AwsRoleState( roles, encodedSaml );
 	}
 
-	public async Task<AwsCredentials> GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
+	async Task<AwsCredentials> IAwsClient.GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
 		var role = state.AwsRoles[selectedRoleIndex];
 
 		// Generate access keys valid for 1 hour (default)
@@ -53,11 +53,12 @@ internal class AwsClient : IAwsClient {
 		} );
 
 		return new AwsCredentials(
-				AwsSessionToken: authResp.Credentials.SessionToken,
-				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
-				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
-				);
+			AwsSessionToken: authResp.Credentials.SessionToken,
+			AwsAccessKeyId: authResp.Credentials.AccessKeyId,
+			AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+		);
 	}
+
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
 		var samlStatements = encodedSaml.Split( ";" );
 		// Process the B64 Encoded SAML string to get valid XML doc
