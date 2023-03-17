@@ -53,11 +53,12 @@ internal class AwsClient : IAwsClient {
 		} );
 
 		return new AwsCredentials(
-				AwsSessionToken: authResp.Credentials.SessionToken,
-				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
-				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
-				);
+			AwsSessionToken: authResp.Credentials.SessionToken,
+			AwsAccessKeyId: authResp.Credentials.AccessKeyId,
+			AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+		);
 	}
+
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
 		var samlStatements = encodedSaml.Split( ";" );
 		// Process the B64 Encoded SAML string to get valid XML doc
