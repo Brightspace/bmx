@@ -30,7 +30,11 @@ internal class OktaClient : IOktaClient {
 
 	public async Task<OktaAuthenticateState> AuthenticateAsync( string username, string password ) {
 		var authResp = await _oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( username, password ) );
-		return new OktaAuthenticateState( authResp.StateToken, authResp.Embedded.Factors );
+
+		if( authResp.StateToken is not null ) {
+			return new OktaAuthenticateState( authResp.StateToken, authResp.Embedded.Factors );
+		}
+		throw new BmxException( "Error authenticating from Okta" );
 	}
 
 	public async Task<OktaAuthenticatedState> ChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
@@ -42,7 +46,10 @@ internal class OktaClient : IOktaClient {
 				new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken ) );
 
 		// TODO: Check for auth successes and return state
-		return new OktaAuthenticatedState( true, authResp.SessionToken );
+		if( authResp.SessionToken is not null ) {
+			return new OktaAuthenticatedState( true, authResp.SessionToken );
+		}
+		throw new BmxException( "Error authenticating challenge Mfa from Okta" );
 	}
 
 	public async Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
