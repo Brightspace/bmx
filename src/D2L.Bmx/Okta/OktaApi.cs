@@ -59,9 +59,8 @@ internal class OktaApi : IOktaApi {
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
 		if( authInitial is not null ) {
 			return authInitial;
-		} else {
-			throw new BmxException( "Error authenticating Okta" );
 		}
+		throw new BmxException( "Error authenticating Okta" );
 	}
 
 	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
@@ -75,9 +74,8 @@ internal class OktaApi : IOktaApi {
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
 		if( authSuccess is not null ) {
 			return authSuccess;
-		} else {
-			throw new BmxException( "Error authenticating Okta challenge MFA" );
 		}
+		throw new BmxException( "Error authenticating Okta challenge MFA" );
 	}
 
 	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
@@ -90,9 +88,8 @@ internal class OktaApi : IOktaApi {
 			SourceGenerationContext.Default.OktaSession );
 		if( session is not null ) {
 			return session;
-		} else {
-			throw new BmxException( "Error creating Okta session" );
 		}
+		throw new BmxException( "Error creating Okta session" );
 	}
 
 	public async Task<OktaApp[]> GetAccountsOktaAsync( string userId ) {
@@ -101,9 +98,8 @@ internal class OktaApi : IOktaApi {
 			SourceGenerationContext.Default.OktaAppArray );
 		if( accounts is not null ) {
 			return accounts;
-		} else {
-			throw new BmxException( "Error retrieving Okta accounts" );
 		}
+		throw new BmxException( "Error retrieving Okta accounts" );
 	}
 
 	public async Task<string> GetAccountOktaAsync( Uri linkUri ) {
