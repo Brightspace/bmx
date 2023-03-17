@@ -75,9 +75,8 @@ internal class OktaClient : IOktaClient {
 
 		if( samlData is not null ) {
 			return samlData.InnerText;
-		} else {
-			throw new BmxException( "Error extracting SAML data" );
 		}
+		throw new BmxException( "Error extracting SAML data" );
 
 	}
 }
