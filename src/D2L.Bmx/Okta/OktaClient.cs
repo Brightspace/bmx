@@ -24,11 +24,11 @@ internal class OktaClient : IOktaClient {
 
 	public string Name => "Okta";
 
-	public void SetOrganization( string organization ) {
+	void IOktaClient.SetOrganization( string organization ) {
 		_oktaApi.SetOrganization( organization );
 	}
 
-	public async Task<OktaAuthenticateState> AuthenticateAsync( string username, string password ) {
+	async Task<OktaAuthenticateState> IOktaClient.AuthenticateAsync( string username, string password ) {
 		var authResp = await _oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( username, password ) );
 
 		if( authResp.StateToken is not null ) {
@@ -37,7 +37,7 @@ internal class OktaClient : IOktaClient {
 		throw new BmxException( "Error authenticating from Okta" );
 	}
 
-	public async Task<OktaAuthenticatedState> ChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
+	async Task<OktaAuthenticatedState> IOktaClient.ChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 
@@ -52,7 +52,7 @@ internal class OktaClient : IOktaClient {
 		throw new BmxException( "Error authenticating challenge Mfa from Okta" );
 	}
 
-	public async Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
+	async Task<OktaAccountState> IOktaClient.GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
 		// TODO: Use existing session if it exists in ~/.bmx and isn't expired
 		var sessionResp = await _oktaApi.CreateSessionOktaAsync( new SessionOptions( state.OktaSessionToken ) );
 		// TODO: Consider making OktaAPI stateless as well (?)
@@ -62,7 +62,7 @@ internal class OktaClient : IOktaClient {
 		return new OktaAccountState( apps, accountType );
 	}
 
-	public async Task<string> GetServiceProviderSamlAsync( OktaAccountState state, int selectedAccountIndex ) {
+	async Task<string> IOktaClient.GetServiceProviderSamlAsync( OktaAccountState state, int selectedAccountIndex ) {
 		var account = state.OktaApps[selectedAccountIndex];
 		var accountPage = await _oktaApi.GetAccountOktaAsync( new Uri( account.LinkUrl ) );
 		return ExtractAwsSaml( accountPage );
