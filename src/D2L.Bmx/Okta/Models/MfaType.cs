@@ -1,14 +1,9 @@
 namespace D2L.Bmx.Okta.Models;
 
-public struct MfaOption {
-	public string Name { get; set; }
-	public MfaType Type { get; set; }
-
-	public MfaOption( string name, MfaType type ) {
-		Name = name;
-		Type = type;
-	}
-}
+internal record MfaOption(
+	string Name,
+	MfaType Type
+);
 
 // TODO: More robust / generic way of handling MFA Types
 public enum MfaType {
