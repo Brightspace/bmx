@@ -39,11 +39,11 @@ internal class OktaApi : IOktaApi {
 		_httpClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
 	}
 
-	public void SetOrganization( string organization ) {
+	void IOktaApi.SetOrganization( string organization ) {
 		_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
 	}
 
-	public void AddSession( string sessionId ) {
+	void IOktaApi.AddSession( string sessionId ) {
 		if( _httpClient.BaseAddress is not null ) {
 			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
 		} else {
@@ -51,7 +51,7 @@ internal class OktaApi : IOktaApi {
 		}
 	}
 
-	public async Task<AuthenticateResponseInital> AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
+	async Task<AuthenticateResponseInital> IOktaApi.AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent(
 				JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateOptions ),
@@ -65,7 +65,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta" );
 	}
 
-	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
+	async Task<AuthenticateResponseSuccess> IOktaApi.AuthenticateChallengeMfaOktaAsync(
 		AuthenticateChallengeMfaOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent(
@@ -80,7 +80,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta challenge MFA" );
 	}
 
-	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
+	async Task<OktaSession> IOktaApi.CreateSessionOktaAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent(
 				JsonSerializer.Serialize( sessionOptions!, SourceGenerationContext.Default.SessionOptions ),
@@ -94,7 +94,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error creating Okta session" );
 	}
 
-	public async Task<OktaApp[]> GetAccountsOktaAsync( string userId ) {
+	async Task<OktaApp[]> IOktaApi.GetAccountsOktaAsync( string userId ) {
 		var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
 		var accounts = await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaAppArray );
@@ -104,7 +104,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error retrieving Okta accounts" );
 	}
 
-	public async Task<string> GetAccountOktaAsync( Uri linkUri ) {
+	async Task<string> IOktaApi.GetAccountOktaAsync( Uri linkUri ) {
 		var resp = await _httpClient.GetAsync( linkUri );
 		return await resp.Content.ReadAsStringAsync();
 	}
