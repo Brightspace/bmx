@@ -9,6 +9,6 @@ internal class OktaAccountState {
 	}
 
 	public string[] Accounts { get; }
-	internal string AccountType { get; }
-	internal OktaApp[] OktaApps { get; }
+	public string AccountType { get; }
+	public OktaApp[] OktaApps { get; }
 }

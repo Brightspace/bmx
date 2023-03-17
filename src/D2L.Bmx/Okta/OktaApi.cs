@@ -16,17 +16,6 @@ internal interface IOktaApi {
 	Task<string> GetAccountOktaAsync( Uri linkUri );
 }
 
-[JsonSourceGenerationOptions( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
-[JsonSerializable( typeof( AuthenticateOptions ) )]
-[JsonSerializable( typeof( AuthenticateChallengeMfaOptions ) )]
-[JsonSerializable( typeof( SessionOptions ) )]
-[JsonSerializable( typeof( AuthenticateResponseInital ) )]
-[JsonSerializable( typeof( AuthenticateResponseSuccess ) )]
-[JsonSerializable( typeof( OktaSession ) )]
-[JsonSerializable( typeof( OktaApp[] ) )]
-internal partial class SourceGenerationContext : JsonSerializerContext {
-}
-
 internal class OktaApi : IOktaApi {
 
 	private readonly CookieContainer _cookieContainer;
@@ -54,7 +43,7 @@ internal class OktaApi : IOktaApi {
 	async Task<AuthenticateResponseInital> IOktaApi.AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent(
-				JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateOptions ),
+				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions ),
 				Encoding.Default,
 				"application/json" ) );
 		var authInitial = await JsonSerializer.DeserializeAsync(
@@ -69,7 +58,7 @@ internal class OktaApi : IOktaApi {
 		AuthenticateChallengeMfaOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent(
-				JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
+				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
 				Encoding.Default,
 				"application/json" ) );
 		var authSuccess = await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
@@ -83,7 +72,7 @@ internal class OktaApi : IOktaApi {
 	async Task<OktaSession> IOktaApi.CreateSessionOktaAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent(
-				JsonSerializer.Serialize( sessionOptions!, SourceGenerationContext.Default.SessionOptions ),
+				JsonSerializer.Serialize( sessionOptions, SourceGenerationContext.Default.SessionOptions ),
 				Encoding.Default,
 				"application/json" ) );
 		var session = await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),

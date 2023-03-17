@@ -5,7 +5,6 @@ using D2L.Bmx.Okta.State;
 namespace D2L.Bmx.Okta;
 
 internal interface IOktaClient {
-	public string Name { get; }
 	void SetOrganization( string organization );
 	Task<OktaAuthenticateState> AuthenticateAsync( string username, string password );
 
@@ -15,14 +14,13 @@ internal interface IOktaClient {
 	Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetServiceProviderSamlAsync( OktaAccountState state, int selectedAccountIndex );
 }
+
 internal class OktaClient : IOktaClient {
 	private readonly IOktaApi _oktaApi;
 
 	public OktaClient( IOktaApi oktaApi ) {
 		_oktaApi = oktaApi;
 	}
-
-	public string Name => "Okta";
 
 	void IOktaClient.SetOrganization( string organization ) {
 		_oktaApi.SetOrganization( organization );
