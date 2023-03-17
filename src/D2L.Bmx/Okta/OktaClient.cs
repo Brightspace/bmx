@@ -71,6 +71,13 @@ internal class OktaClient : IOktaClient {
 		var inputXml = new XmlDocument();
 		inputXml.LoadXml( inputRegex.Match( htmlResponse ).Value );
 
-		return inputXml.SelectSingleNode( "//@value" ).InnerText;
+		var samlData = inputXml.SelectSingleNode( "//@value" );
+
+		if( samlData is not null ) {
+			return samlData.InnerText;
+		} else {
+			throw new BmxException( "Error extracting SAML data" );
+		}
+
 	}
 }

@@ -42,15 +42,24 @@ internal class OktaApi : IOktaApi {
 	}
 
 	public void AddSession( string sessionId ) {
-		_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
+		if( _httpClient.BaseAddress is not null ) {
+			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
+		} else {
+			throw new BmxException( "Error adding session: http client base address is not defined" );
+		}
 	}
 
 	public async Task<AuthenticateResponseInital> AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent( JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateOptions ), Encoding.Default,
 				"application/json" ) );
-		return await JsonSerializer.DeserializeAsync(
+		var authInitial = await JsonSerializer.DeserializeAsync(
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
+		if( authInitial is not null ) {
+			return authInitial;
+		} else {
+			throw new BmxException( "Error authenticating Okta" );
+		}
 	}
 
 	public async Task<AuthenticateResponseSuccess> AuthenticateChallengeMfaOktaAsync(
@@ -58,22 +67,37 @@ internal class OktaApi : IOktaApi {
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent( JsonSerializer.Serialize( authOptions!, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ), Encoding.Default,
 				"application/json" ) );
-		return await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
+		var authSuccess = await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
+		if( authSuccess is not null ) {
+			return authSuccess;
+		} else {
+			throw new BmxException( "Error authenticating Okta challenge MFA" );
+		}
 	}
 
 	public async Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent( JsonSerializer.Serialize( sessionOptions!, SourceGenerationContext.Default.SessionOptions ), Encoding.Default,
 				"application/json" ) );
-		return await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),
+		var session = await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaSession );
+		if( session is not null ) {
+			return session;
+		} else {
+			throw new BmxException( "Error creating Okta session" );
+		}
 	}
 
 	public async Task<OktaApp[]> GetAccountsOktaAsync( string userId ) {
 		var resp = await _httpClient.GetAsync( $"users/{userId}/appLinks" );
-		return await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
+		var accounts = await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaAppArray );
+		if( accounts is not null ) {
+			return accounts;
+		} else {
+			throw new BmxException( "Error retrieving Okta accounts" );
+		}
 	}
 
 	public async Task<string> GetAccountOktaAsync( Uri linkUri ) {
