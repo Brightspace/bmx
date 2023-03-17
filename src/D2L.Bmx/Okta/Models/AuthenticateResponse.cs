@@ -9,12 +9,12 @@ internal class AuthenticateResponse {
 }
 
 internal class AuthenticateResponseInital : AuthenticateResponse {
-	public string StateToken { get; set; }
+	public string? StateToken { get; set; }
 	[JsonPropertyName( "_embedded" )] public AuthenticateResponseEmbeddedInitial Embedded { get; set; }
 }
 
 internal class AuthenticateResponseSuccess : AuthenticateResponse {
-	public string SessionToken { get; set; }
+	public string? SessionToken { get; set; }
 }
 
 internal struct AuthenticateResponseEmbeddedInitial {
