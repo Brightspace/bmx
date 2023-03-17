@@ -48,7 +48,7 @@ jobs:
           BASE_REF: ${{ github.head_ref || github.ref }}
         with:
           script: |
-            const { data: newPr } = await github.rest.pull7.s.create({
+            const { data: newPr } = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Auto format ${process.env.BASE_REF}`,
