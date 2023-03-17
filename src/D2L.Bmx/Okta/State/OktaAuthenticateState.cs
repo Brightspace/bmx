@@ -1,25 +1,20 @@
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta.State;
 
-internal class OktaAuthenticateState {
-	public OktaAuthenticateState( string oktaStateToken, OktaMfaFactor[] oktaMfaFactors ) {
-		OktaStateToken = oktaStateToken;
-		OktaMfaFactors = oktaMfaFactors;
-		MfaOptions = OktaMfaFactors.Select( factor => {
-			if( factor.FactorType.Contains( "token" ) || factor.FactorType.Contains( "sms" ) ) {
-				return new MfaOption( factor.FactorType, MfaType.Challenge );
-			}
+internal record OktaAuthenticateState( string oktaStateToken, OktaMfaFactor[] oktaMfaFactors ) {
 
-			if( factor.FactorType.Contains( "push" ) ) {
-				return new MfaOption( factor.FactorType, MfaType.Verify );
-			}
+	public MfaOption[] MfaOptions => OktaMfaFactors.Select( factor => {
+		if( factor.FactorType.Contains( "token" ) || factor.FactorType.Contains( "sms" ) ) {
+			return new MfaOption( factor.FactorType, MfaType.Challenge );
+		}
 
-			return new MfaOption( factor.FactorType, MfaType.Unknown );
-		} ).ToArray();
-	}
+		if( factor.FactorType.Contains( "push" ) ) {
+			return new MfaOption( factor.FactorType, MfaType.Verify );
+		}
 
-	public MfaOption[] MfaOptions { get; }
+		return new MfaOption( factor.FactorType, MfaType.Unknown );
+	} ).ToArray();
 	// Store auth state for later steps (MFA challenge verify etc...)
-	internal string OktaStateToken { get; }
-	internal OktaMfaFactor[] OktaMfaFactors { get; }
+	internal string OktaStateToken = oktaStateToken;
+	internal OktaMfaFactor[] OktaMfaFactors = oktaMfaFactors;
 }
