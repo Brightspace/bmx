@@ -15,6 +15,7 @@ internal interface IOktaApi {
 	Task<OktaApp[]> GetAccountsOktaAsync( string userId );
 	Task<string> GetAccountOktaAsync( Uri linkUri );
 }
+
 [JsonSourceGenerationOptions( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
 [JsonSerializable( typeof( AuthenticateOptions ) )]
 [JsonSerializable( typeof( AuthenticateChallengeMfaOptions ) )]
@@ -25,6 +26,7 @@ internal interface IOktaApi {
 [JsonSerializable( typeof( OktaApp[] ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }
+
 internal class OktaApi : IOktaApi {
 
 	private readonly CookieContainer _cookieContainer;
