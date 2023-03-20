@@ -2,7 +2,7 @@ namespace D2L.Bmx.Okta.Models;
 
 internal record OktaError(
 	string ErrorCode,
-	string ErrorSumamry,
+	string ErrorSummary,
 	string ErrorLink,
 	string ErrorId
 );

@@ -6,7 +6,7 @@ internal record MfaOption(
 );
 
 // TODO: More robust / generic way of handling MFA Types
-public enum MfaType {
+internal enum MfaType {
 	Challenge, // Ex: totp
 	Verify, // Ex: Push to verify
 	Unknown // Okta for example supports more MFA types that BMX might be unable to handle, class this as unknown
