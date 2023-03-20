@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
