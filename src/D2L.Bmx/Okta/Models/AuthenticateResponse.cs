@@ -1,21 +1,21 @@
 using System.Text.Json.Serialization;
 namespace D2L.Bmx.Okta.Models;
 
-internal class AuthenticateResponse {
-	public DateTimeOffset ExpiresAt { get; set; }
+internal record AuthenticateResponseInital(
+	DateTimeOffset ExpiresAt,
+	[property: JsonConverter( typeof( JsonStringEnumConverter ) )]
+	AuthenticationStatus Status,
+	string? StateToken,
+	[property: JsonPropertyName( "_embedded" )]
+	AuthenticateResponseEmbeddedInitial Embedded
+);
 
-	[JsonConverter( typeof( JsonStringEnumConverter ) )]
-	public AuthenticationStatus Status { get; set; }
-}
-
-internal class AuthenticateResponseInital : AuthenticateResponse {
-	public string? StateToken { get; set; }
-	[JsonPropertyName( "_embedded" )] public AuthenticateResponseEmbeddedInitial Embedded { get; set; }
-}
-
-internal class AuthenticateResponseSuccess : AuthenticateResponse {
-	public string? SessionToken { get; set; }
-}
+internal record AuthenticateResponseSuccess(
+	DateTimeOffset ExpiresAt,
+	[property: JsonConverter( typeof( JsonStringEnumConverter ) )]
+	AuthenticationStatus Status,
+	string? SessionToken
+);
 
 internal struct AuthenticateResponseEmbeddedInitial {
 	public OktaMfaFactor[] Factors { get; set; }
