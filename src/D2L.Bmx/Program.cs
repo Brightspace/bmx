@@ -1,7 +1,10 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using Amazon.SecurityToken;
 using D2L.Bmx;
+using D2L.Bmx.Aws;
+using D2L.Bmx.Okta;
 
 var orgOption = new Option<string>(
 	name: "--org",
@@ -51,7 +54,10 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 	};
 
 printCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new PrintHandler( new BmxConfigProvider() );
+	var handler = new PrintHandler(
+		new BmxConfigProvider(),
+		new OktaApi(),
+		new AwsClient( new AmazonSecurityTokenServiceClient() ) );
 	try {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -83,7 +89,10 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 	};
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new WriteHandler( new BmxConfigProvider() );
+	var handler = new WriteHandler(
+		new BmxConfigProvider(),
+		new OktaApi(),
+		new AwsClient( new AmazonSecurityTokenServiceClient() ) );
 	try {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),

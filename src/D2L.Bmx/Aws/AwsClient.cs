@@ -8,7 +8,7 @@ namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
 	AwsRoleState GetRoles( string encodedSaml );
-	Task<AwsCredentials> GetTokensAsync( AwsRoleState state, int selectedRoleIndex );
+	Task<AwsCredentials> GetTokensAsync( AwsRoleState state, string selectedRole );
 }
 
 internal class AwsClient : IAwsClient {
@@ -42,21 +42,25 @@ internal class AwsClient : IAwsClient {
 		return new AwsRoleState( roles, encodedSaml );
 	}
 
-	async Task<AwsCredentials> IAwsClient.GetTokensAsync( AwsRoleState state, int selectedRoleIndex ) {
-		var role = state.AwsRoles[selectedRoleIndex];
+	async Task<AwsCredentials> IAwsClient.GetTokensAsync( AwsRoleState state, string selectedRole ) {
 
-		// Generate access keys valid for 1 hour (default)
-		var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
-			PrincipalArn = role.PrincipalArn,
-			RoleArn = role.RoleArn,
-			SAMLAssertion = state.SamlString
-		} );
+		var role = state.AwsRoles.Find( role => role.RoleName == selectedRole );
 
-		return new AwsCredentials(
-			AwsSessionToken: authResp.Credentials.SessionToken,
-			AwsAccessKeyId: authResp.Credentials.AccessKeyId,
-			AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
-		);
+		if( role is not null ) {
+			// Generate access keys valid for 1 hour (default)
+			var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
+				PrincipalArn = role.PrincipalArn,
+				RoleArn = role.RoleArn,
+				SAMLAssertion = state.SamlString
+			} );
+
+			return new AwsCredentials(
+				AwsSessionToken: authResp.Credentials.SessionToken,
+				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
+				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+			);
+		}
+		throw new BmxException( "Invalid role selection" );
 	}
 
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
