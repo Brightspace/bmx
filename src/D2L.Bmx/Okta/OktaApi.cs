@@ -48,20 +48,15 @@ internal class OktaApi : IOktaApi {
 
 		Console.WriteLine(
 			$"Resp: {JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions )}" );
-
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent(
 				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions ),
 				Encoding.Default,
 				"application/json" ) );
 
-		AuthenticateResponseInital? authInitial = default;
-		if( resp.IsSuccessStatusCode ) {
-			authInitial = await JsonSerializer.DeserializeAsync(
-			   await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
-		} else {
-			Console.Write( resp );
-		}
+		var authInitial = await JsonSerializer.DeserializeAsync(
+		   await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
+
 
 		if( authInitial?.StateToken is not null ) {
 			return new OktaAuthenticateState(
