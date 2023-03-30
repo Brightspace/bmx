@@ -36,7 +36,8 @@ internal class Authenticator {
 
 		Console.WriteLine( $"User: {user}" );
 
-		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) );
+		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
+			.ConfigureAwait( false ); ;
 
 		Console.WriteLine( "Stopping here line 39" );
 
