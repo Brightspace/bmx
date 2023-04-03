@@ -14,7 +14,7 @@ internal class PrintHandler {
 		_awsClient = awsClient;
 	}
 
-	public async void Handle(
+	public async Task<bool> HandleAsync(
 		string? org,
 		string? user,
 		string? account,
@@ -93,5 +93,7 @@ internal class PrintHandler {
 			$"Role: {role}",
 			$"Duration: {duration}",
 			$"nomask: {nomask}" ) );
+
+		return true;
 	}
 }

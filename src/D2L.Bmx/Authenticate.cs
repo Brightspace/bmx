@@ -41,22 +41,23 @@ internal class Authenticator {
 
 		Console.WriteLine( "Stopping here line 39" );
 
-		var mfaOptions = authState.MfaOptions;
-		var sessionOptions = new SessionOptions( authState.OktaStateToken );
-
 		OktaAuthenticatedState? authenticatedState = default;
 
 		// write mfa later
-		if( authState.OktaSessionToken is null ) {
+		if( authState.OktaStateToken is not null ) {
+
+			var mfaOptions = authState.MfaOptions;
+			var sessionOptions = new SessionOptions( authState.OktaStateToken );
+
 			var selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
 
-			if( selectedMfa.Type == MfaType.Challenge || selectedMfa.Type == MfaType.Unknown ) {
+			if( selectedMfa.Type == MfaType.Challenge ) {
 				// TODO: Handle retry for MFA challenge
 				string mfaInput = PromptMfaInput( selectedMfa.Name );
-				authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex,
+				authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1,
 					mfaInput );
-			} else if( selectedMfa.Type == MfaType.Verify ) {
+			} else if( selectedMfa.Type == MfaType.Verify || selectedMfa.Type == MfaType.Unknown ) {
 				// Identical to Code based workflow for now (capture same behaviour as BMX current)
 
 				// TODO: Remove need for input here, Push style flows have no user input on app here
@@ -64,7 +65,7 @@ internal class Authenticator {
 				PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
-		} else {
+		} else if( authState.OktaSessionToken is not null ) {
 			authenticatedState = new OktaAuthenticatedState( true, authState.OktaSessionToken );
 		}
 

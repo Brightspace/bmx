@@ -53,13 +53,13 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 		userOption,
 	};
 
-printCommand.SetHandler( ( InvocationContext context ) => {
+printCommand.SetHandler( async ( InvocationContext context ) => {
 	var handler = new PrintHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
 		new AwsClient( new AmazonSecurityTokenServiceClient() ) );
 	try {
-		handler.Handle(
+		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
 			account: context.ParseResult.GetValueForOption( accountOption ),

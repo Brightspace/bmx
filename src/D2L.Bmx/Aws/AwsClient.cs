@@ -48,6 +48,10 @@ internal class AwsClient : IAwsClient {
 
 		if( role is not null ) {
 			// Generate access keys valid for 1 hour (default)
+			Console.WriteLine( role );
+			Console.WriteLine( state.SamlString );
+
+
 			var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
 				PrincipalArn = role.PrincipalArn,
 				RoleArn = role.RoleArn,
@@ -64,6 +68,7 @@ internal class AwsClient : IAwsClient {
 	}
 
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
+		Console.Write( $"encodedSaml: {encodedSaml}" );
 		var samlStatements = encodedSaml.Split( ";" );
 		// Process the B64 Encoded SAML string to get valid XML doc
 		var samlString = new StringBuilder();

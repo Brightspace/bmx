@@ -44,7 +44,7 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<OktaAuthenticateState> IOktaApi.AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
-		Console.WriteLine( $"auth options:{authOptions}" );
+		// Console.WriteLine( $"auth options:{authOptions}" );
 
 		Console.WriteLine(
 			$"Resp: {JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions )}" );
@@ -53,12 +53,14 @@ internal class OktaApi : IOktaApi {
 				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions ),
 				Encoding.Default,
 				"application/json" ) );
-
 		var authInitial = await JsonSerializer.DeserializeAsync(
 		   await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
 
+		Console.WriteLine( resp );
 
-		if( authInitial?.StateToken is not null ) {
+		Console.WriteLine( authInitial );
+
+		if( authInitial?.StateToken is not null || authInitial?.SessionToken is not null ) {
 			return new OktaAuthenticateState(
 				OktaStateToken: authInitial.StateToken,
 				OktaSessionToken: authInitial.SessionToken,
@@ -71,9 +73,12 @@ internal class OktaApi : IOktaApi {
 		OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 
+		// Console.Write( state.OktaMfaFactors );
+		// Console.Write( $"selecedMfaIndex{selectedMfaIndex}" );
+
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 
-		var authOptions = new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken );
+		var authOptions = new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken! );
 
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent(
@@ -134,6 +139,7 @@ internal class OktaApi : IOktaApi {
 	}
 
 	private string ExtractAwsSaml( string htmlResponse ) {
+		Console.WriteLine( $"html response{htmlResponse}" );
 		// HTML page is fairly malformed, grab just the <input> with the SAML data for further processing
 		var inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
 		var inputRegex = new Regex( inputRegexPattern, RegexOptions.Compiled );
