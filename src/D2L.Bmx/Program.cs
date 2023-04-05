@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using Amazon.Runtime;
 using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
@@ -57,7 +58,7 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 	var handler = new PrintHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient() ) );
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
 		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -92,7 +93,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new WriteHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient() ) );
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),

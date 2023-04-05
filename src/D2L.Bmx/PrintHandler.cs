@@ -85,6 +85,23 @@ internal class PrintHandler {
 
 		Console.WriteLine( tokens );
 
+		if( string.IsNullOrEmpty( output ) ) {
+			Console.WriteLine( string.Join( ' ',
+				$"$env:AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
+				$"$env:AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
+				$"$env:AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
+		} else if( output == "bash" ) {
+			Console.WriteLine( string.Join( '\n',
+				$"export AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
+				$"export AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
+				$"export AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
+		} else if( output == "powershell" ) {
+			Console.WriteLine( string.Join( ' ',
+				$"$env:AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
+				$"$env:AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
+				$"$env:AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
+		}
+
 		// TODO: Replace with call to function to get AWS credentials and print them on screen
 		Console.WriteLine( string.Join( '\n',
 			$"Org: {org}",
