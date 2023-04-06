@@ -35,6 +35,13 @@ var printOutputOption = new Option<string>(
 	name: "--output",
 	description: "the output format [bash|powershell]"
 	);
+printOutputOption.AddValidator( result => {
+	var output = result.GetValueForOption( printOutputOption );
+	if( !string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase )
+		&& !string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
+		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
+	}
+} );
 var writeOutputOption = new Option<string>(
 	name: "--output",
 	description: "write to the specified file instead of ~/.aws/credentials" );
