@@ -50,9 +50,8 @@ internal class AwsClient : IAwsClient {
 			.Find( role => string.Equals( role.RoleName, selectedRole, StringComparison.OrdinalIgnoreCase ) );
 
 		if( role is not null ) {
+
 			// Generate access keys valid for 1 hour (default)
-
-
 			var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
 				PrincipalArn = role.PrincipalArn,
 				RoleArn = role.RoleArn,
