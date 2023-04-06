@@ -14,7 +14,7 @@ internal class PrintHandler {
 		_awsClient = awsClient;
 	}
 
-	public async Task<bool> HandleAsync(
+	public async Task HandleAsync(
 		string? org,
 		string? user,
 		string? account,
@@ -78,7 +78,7 @@ internal class PrintHandler {
 			}
 		}
 
-		var tokens = await _awsClient.GetTokensAsync( roleState, role, (int)duration );
+		var tokens = await _awsClient.GetTokensAsync( roleState, role, duration.GetValueOrDefault() );
 
 		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( tokens );
@@ -91,17 +91,6 @@ internal class PrintHandler {
 				PrintBash( tokens );
 			}
 		}
-
-		// TODO: Replace with call to function to get AWS credentials and print them on screen
-		Console.WriteLine( string.Join( '\n',
-			$"Org: {org}",
-			$"User: {user}",
-			$"Account: {account}",
-			$"Role: {role}",
-			$"Duration: {duration}",
-			$"nomask: {nomask}" ) );
-
-		return true;
 	}
 
 	private void PrintBash( AwsCredentials credentials ) {
