@@ -106,4 +106,3 @@ internal class PrintHandler {
 			$"$env:AWS_SECRET_KEY_ID='{credentials.AwsSecretAccessKey}';" ) );
 	}
 }
-

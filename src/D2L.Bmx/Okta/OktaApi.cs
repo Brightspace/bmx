@@ -51,7 +51,7 @@ internal class OktaApi : IOktaApi {
 				Encoding.Default,
 				"application/json" ) );
 		var authInitial = await JsonSerializer.DeserializeAsync(
-		   await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
+			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
 
 		if( authInitial?.StateToken is not null || authInitial?.SessionToken is not null ) {
 			return new OktaAuthenticateState(
