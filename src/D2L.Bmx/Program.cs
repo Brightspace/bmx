@@ -19,7 +19,7 @@ var accountOption = new Option<string>(
 var roleOption = new Option<string>(
 	name: "--role",
 	description: "the desired role to assume" );
-var durationOption = new Option<int>(
+var durationOption = new Option<int?>(
 	name: "--duration",
 	description: "duration of session in minutes" );
 durationOption.AddValidator( result => {

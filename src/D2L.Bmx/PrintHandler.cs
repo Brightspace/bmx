@@ -19,7 +19,7 @@ internal class PrintHandler {
 		string? user,
 		string? account,
 		string? role,
-		int duration,
+		int? duration,
 		bool nomask,
 		string? output
 	) {
@@ -70,13 +70,15 @@ internal class PrintHandler {
 			}
 		}
 
-		if( config.DefaultDuration is not null ) {
-			duration = (int)config.DefaultDuration;
-		} else {
-			duration = 60;
+		if( duration is null ) {
+			if( config.DefaultDuration is not null ) {
+				duration = config.DefaultDuration;
+			} else {
+				duration = 60;
+			}
 		}
 
-		var tokens = await _awsClient.GetTokensAsync( roleState, role, duration );
+		var tokens = await _awsClient.GetTokensAsync( roleState, role, (int)duration );
 
 		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( tokens );
