@@ -19,7 +19,7 @@ var accountOption = new Option<string>(
 var roleOption = new Option<string>(
 	name: "--role",
 	description: "the desired role to assume" );
-var durationOption = new Option<int?>(
+var durationOption = new Option<int>(
 	name: "--duration",
 	description: "duration of session in minutes" );
 durationOption.AddValidator( result => {
@@ -33,7 +33,8 @@ var nomaskOption = new Option<bool>(
 	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string>(
 	name: "--output",
-	description: "the output format [bash|powershell]" );
+	description: "the output format [bash|powershell]"
+	);
 var writeOutputOption = new Option<string>(
 	name: "--output",
 	description: "write to the specified file instead of ~/.aws/credentials" );

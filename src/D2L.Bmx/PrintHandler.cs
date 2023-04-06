@@ -19,7 +19,7 @@ internal class PrintHandler {
 		string? user,
 		string? account,
 		string? role,
-		int? duration,
+		int duration,
 		bool nomask,
 		string? output
 	) {
@@ -47,8 +47,6 @@ internal class PrintHandler {
 		// Asks for user password input, or logs them in through caches
 		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
 
-		// TODO: replace placeholder values with actual values. Get accounts and roles list from AWS and pass it into the prompter
-		// var accounts = new[] { "Dev-Slims", "Dev-Toolmon", "Int-Dev-NDE" };
 		var accountState = await _oktaApi.GetAccountsOktaAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
 
@@ -61,45 +59,45 @@ internal class PrintHandler {
 		}
 
 		var accountCredentials = await _oktaApi.GetAccountOktaAsync( accountState, account );
-
 		var roleState = _awsClient.GetRoles( accountCredentials );
 		var roles = roleState.Roles;
 
 		if( string.IsNullOrEmpty( role ) ) {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
-				role = config.Role.ToLower();
+				role = config.Role;
 			} else {
 				role = ConsolePrompter.PromptRole( roles );
 			}
 		}
 
-		if( duration is null ) {
-			if( config.DefaultDuration is not null ) {
-				duration = config.DefaultDuration;
+		if( config.DefaultDuration is not null ) {
+			duration = (int)config.DefaultDuration;
+		} else {
+			duration = 60;
+		}
+
+		var tokens = await _awsClient.GetTokensAsync( roleState, role, duration );
+
+		if( string.IsNullOrEmpty( output ) ) {
+			if( !string.IsNullOrEmpty( config.Role ) ) {
+				role = config.Role;
 			} else {
-				duration = 60;
+				// print default
 			}
 		}
 
-		var tokens = await _awsClient.GetTokensAsync( roleState, role );
-
-		Console.WriteLine( tokens );
-
-		if( string.IsNullOrEmpty( output ) ) {
-			Console.WriteLine( string.Join( ' ',
-				$"$env:AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
-				$"$env:AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
-				$"$env:AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
-		} else if( output == "bash" ) {
+		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
 			Console.WriteLine( string.Join( '\n',
 				$"export AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
 				$"export AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
 				$"export AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
-		} else if( output == "powershell" ) {
+		} else if( string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
 			Console.WriteLine( string.Join( ' ',
-				$"$env:AWS_SESSION_TOKEN='{tokens.AwsSessionToken}'",
-				$"$env:AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}'",
-				$"$env:AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}'" ) );
+				$"$env:AWS_SESSION_TOKEN='{tokens.AwsSessionToken}';",
+				$"$env:AWS_ACCESS_KEY_ID='{tokens.AwsAccessKeyId}';",
+				$"$env:AWS_SECRET_KEY_ID='{tokens.AwsSecretAccessKey}';" ) );
+		} else {
+			throw new BmxException( "Output format is unsupported" );
 		}
 
 		// TODO: Replace with call to function to get AWS credentials and print them on screen
@@ -113,4 +111,18 @@ internal class PrintHandler {
 
 		return true;
 	}
+
+	private void PrintBash( AwsCredentials credentials ) {
+		Console.WriteLine( string.Join( '\n',
+			$"export AWS_SESSION_TOKEN='{credentials.AwsSessionToken}'",
+			$"export AWS_ACCESS_KEY_ID='{credentials.AwsAccessKeyId}'",
+			$"export AWS_SECRET_KEY_ID='{credentials.AwsSecretAccessKey}'" ) );
+	}
+	private void PrintPowershell( AwsCredentials credentials ) {
+		Console.WriteLine( string.Join( ' ',
+			$"$env:AWS_SESSION_TOKEN='{credentials.AwsSessionToken}';",
+			$"$env:AWS_ACCESS_KEY_ID='{credentials.AwsAccessKeyId}';",
+			$"$env:AWS_SECRET_KEY_ID='{credentials.AwsSecretAccessKey}';" ) );
+	}
 }
+

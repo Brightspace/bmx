@@ -28,22 +28,13 @@ internal class Authenticator {
 			}
 		}
 
-
-		// TODO: Add authenticaion into Okta Client. If error, print and terminate.
 		oktaApi.SetOrganization( org );
-
-		Console.WriteLine( "Stopping here line 35" );
-
-		Console.WriteLine( $"User: {user}" );
 
 		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false ); ;
 
-		Console.WriteLine( "Stopping here line 39" );
-
 		OktaAuthenticatedState? authenticatedState = default;
 
-		// write mfa later
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;

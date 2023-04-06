@@ -8,7 +8,7 @@ namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
 	AwsRoleState GetRoles( string encodedSaml );
-	Task<AwsCredentials> GetTokensAsync( AwsRoleState state, string selectedRole );
+	Task<AwsCredentials> GetTokensAsync( AwsRoleState state, string selectedRole, int durationInMinutes );
 }
 
 internal class AwsClient : IAwsClient {
@@ -42,16 +42,21 @@ internal class AwsClient : IAwsClient {
 		return new AwsRoleState( roles, encodedSaml );
 	}
 
-	async Task<AwsCredentials> IAwsClient.GetTokensAsync( AwsRoleState state, string selectedRole ) {
-		var role = state.AwsRoles.Find( role => role.RoleName == selectedRole );
+	async Task<AwsCredentials> IAwsClient.GetTokensAsync(
+		AwsRoleState state,
+		string selectedRole,
+		int durationInMinutes ) {
+		var role = state.AwsRoles
+			.Find( role => string.Equals( role.RoleName, selectedRole, StringComparison.OrdinalIgnoreCase ) );
 
 		if( role is not null ) {
 			// Generate access keys valid for 1 hour (default)
 
+
 			var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest() {
 				PrincipalArn = role.PrincipalArn,
 				RoleArn = role.RoleArn,
-				SAMLAssertion = state.SamlString
+				SAMLAssertion = state.SamlString,
 			} );
 
 			return new AwsCredentials(
