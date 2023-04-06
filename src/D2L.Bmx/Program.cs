@@ -97,13 +97,13 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 		userOption,
 	};
 
-writeCommand.SetHandler( ( InvocationContext context ) => {
+writeCommand.SetHandler( async ( InvocationContext context ) => {
 	var handler = new WriteHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
 		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
-		handler.Handle(
+		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
 			account: context.ParseResult.GetValueForOption( accountOption ),
