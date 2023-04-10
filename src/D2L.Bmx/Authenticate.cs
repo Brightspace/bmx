@@ -31,7 +31,7 @@ internal class Authenticator {
 		oktaApi.SetOrganization( org );
 
 		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
-			.ConfigureAwait( false ); ;
+			.ConfigureAwait( false );
 
 		OktaAuthenticatedState? authenticatedState = default;
 
