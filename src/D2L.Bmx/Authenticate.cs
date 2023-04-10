@@ -38,7 +38,6 @@ internal class Authenticator {
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-			var sessionOptions = new SessionOptions( authState.OktaStateToken );
 
 			var selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
