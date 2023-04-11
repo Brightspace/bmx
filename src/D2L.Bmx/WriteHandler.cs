@@ -1,10 +1,16 @@
+using D2L.Bmx.Aws;
+using D2L.Bmx.Okta;
+
 namespace D2L.Bmx;
 
 internal class WriteHandler {
 	private readonly IBmxConfigProvider _configProvider;
-
-	public WriteHandler( IBmxConfigProvider configProvider ) {
+	private readonly IOktaApi _oktaApi;
+	private readonly IAwsClient _awsClient;
+	public WriteHandler( IBmxConfigProvider configProvider, IOktaApi oktaApi, IAwsClient awsClient ) {
 		_configProvider = configProvider;
+		_oktaApi = oktaApi;
+		_awsClient = awsClient;
 	}
 
 	public void Handle(
@@ -38,7 +44,7 @@ internal class WriteHandler {
 		};
 
 		// Asks for user password input, or logs them in through caches
-		Authenticator.Authenticate( org, user, nomask );
+		var authState = Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
 
 		// TODO: replace placeholder values with actual values
 		var accounts = new[] { "Dev-Slims", "Dev-Toolmon", "Int-Dev-NDE" };
@@ -86,5 +92,6 @@ internal class WriteHandler {
 			$"Role: {role}",
 			$"Duration: {duration}",
 			$"nomask: {nomask}" ) );
+
 	}
 }

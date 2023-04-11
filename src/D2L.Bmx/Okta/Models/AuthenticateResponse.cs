@@ -6,6 +6,7 @@ internal record AuthenticateResponseInital(
 	[property: JsonConverter( typeof( JsonStringEnumConverter ) )]
 	AuthenticationStatus Status,
 	string? StateToken,
+	string? SessionToken,
 	[property: JsonPropertyName( "_embedded" )]
 	AuthenticateResponseEmbeddedInitial Embedded
 );

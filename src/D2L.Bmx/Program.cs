@@ -1,7 +1,11 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using Amazon.Runtime;
+using Amazon.SecurityToken;
 using D2L.Bmx;
+using D2L.Bmx.Aws;
+using D2L.Bmx.Okta;
 
 var orgOption = new Option<string>(
 	name: "--org",
@@ -29,7 +33,15 @@ var nomaskOption = new Option<bool>(
 	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string>(
 	name: "--output",
-	description: "the output format [bash|powershell]" );
+	description: "the output format [bash|powershell]"
+	);
+printOutputOption.AddValidator( result => {
+	var output = result.GetValueForOption( printOutputOption );
+	if( !string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase )
+		&& !string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
+		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
+	}
+} );
 var writeOutputOption = new Option<string>(
 	name: "--output",
 	description: "write to the specified file instead of ~/.aws/credentials" );
@@ -50,10 +62,13 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 		userOption,
 	};
 
-printCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new PrintHandler( new BmxConfigProvider() );
+printCommand.SetHandler( async ( InvocationContext context ) => {
+	var handler = new PrintHandler(
+		new BmxConfigProvider(),
+		new OktaApi(),
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
-		handler.Handle(
+		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
 			account: context.ParseResult.GetValueForOption( accountOption ),
@@ -83,7 +98,10 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 	};
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new WriteHandler( new BmxConfigProvider() );
+	var handler = new WriteHandler(
+		new BmxConfigProvider(),
+		new OktaApi(),
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
