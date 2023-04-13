@@ -44,7 +44,7 @@ printOutputOption.AddValidator( result => {
 } );
 var writeOutputOption = new Option<string>(
 	name: "--output",
-	description: "write to the specified file instead of ~/.aws/credentials" );
+	description: "write to the specified file path instead of ~/.aws/credentials" );
 var profileOption = new Option<string>(
 	name: "--profile",
 	description: "aws profile name" );

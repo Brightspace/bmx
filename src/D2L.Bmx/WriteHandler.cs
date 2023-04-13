@@ -1,5 +1,6 @@
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
+using Amazon.Runtime.CredentialManagement;
 
 namespace D2L.Bmx;
 
@@ -88,15 +89,18 @@ internal class WriteHandler {
 			}
 		}
 
-		// TODO: Replace with call to function to get AWS credentials and write them to credentials file
-		Console.WriteLine( string.Join( '\n',
-			$"Org: {org}",
-			$"Profile: {profile}",
-			$"User: {user}",
-			$"Account: {account}",
-			$"Role: {role}",
-			$"Duration: {duration}",
-			$"nomask: {nomask}" ) );
+		var credentialsFile = new SharedCredentialsFile();
+		if( !string.IsNullOrEmpty( output ) ) {
+			credentialsFile = new SharedCredentialsFile( output );
+		}
+
+		var profileOptions = new CredentialProfileOptions {
+			Token = tokens.AwsSessionToken,
+			AccessKey = tokens.AwsAccessKeyId,
+			SecretKey = tokens.AwsSecretAccessKey
+		};
+
+		credentialsFile.RegisterProfile( new CredentialProfile( profile, profileOptions ) );
 
 	}
 }
