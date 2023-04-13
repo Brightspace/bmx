@@ -1,5 +1,4 @@
 using Amazon.Runtime.CredentialManagement;
-using System.IO;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 
