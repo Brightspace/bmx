@@ -1,4 +1,5 @@
 using Amazon.Runtime.CredentialManagement;
+using System.IO;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 
@@ -91,6 +92,9 @@ internal class WriteHandler {
 
 		var credentialsFile = new SharedCredentialsFile();
 		if( !string.IsNullOrEmpty( output ) ) {
+			if( !Path.IsPathRooted( output ) ) {
+				output = "./" + output;
+			}
 			credentialsFile = new SharedCredentialsFile( output );
 		}
 
@@ -99,8 +103,6 @@ internal class WriteHandler {
 			AccessKey = tokens.AwsAccessKeyId,
 			SecretKey = tokens.AwsSecretAccessKey
 		};
-
 		credentialsFile.RegisterProfile( new CredentialProfile( profile, profileOptions ) );
-
 	}
 }
