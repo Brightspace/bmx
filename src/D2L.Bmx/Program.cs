@@ -97,7 +97,7 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 		userOption,
 	};
 
-writeCommand.SetHandler( async ( InvocationContext context ) => {
+writeCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new WriteHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),

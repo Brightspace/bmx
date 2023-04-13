@@ -31,14 +31,13 @@ internal class Authenticator {
 		oktaApi.SetOrganization( org );
 
 		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
-			.ConfigureAwait( false ); ;
+			.ConfigureAwait( false );
 
 		OktaAuthenticatedState? authenticatedState = default;
 
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-			var sessionOptions = new SessionOptions( authState.OktaStateToken );
 
 			var selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
