@@ -1,6 +1,6 @@
+using Amazon.Runtime.CredentialManagement;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
-using Amazon.Runtime.CredentialManagement;
 
 namespace D2L.Bmx;
 
