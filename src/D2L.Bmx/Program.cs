@@ -44,7 +44,7 @@ printOutputOption.AddValidator( result => {
 } );
 var writeOutputOption = new Option<string>(
 	name: "--output",
-	description: "write to the specified file instead of ~/.aws/credentials" );
+	description: "write to the specified file path instead of ~/.aws/credentials" );
 var profileOption = new Option<string>(
 	name: "--profile",
 	description: "aws profile name" );
@@ -97,13 +97,13 @@ var writeCommand = new Command( "write", "Write to aws credential file" )
 		userOption,
 	};
 
-writeCommand.SetHandler( ( InvocationContext context ) => {
+writeCommand.SetHandler( async ( InvocationContext context ) => {
 	var handler = new WriteHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
 		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
 	try {
-		handler.Handle(
+		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
 			account: context.ParseResult.GetValueForOption( accountOption ),

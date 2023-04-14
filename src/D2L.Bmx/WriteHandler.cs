@@ -1,3 +1,4 @@
+using Amazon.Runtime.CredentialManagement;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 
@@ -13,7 +14,7 @@ internal class WriteHandler {
 		_awsClient = awsClient;
 	}
 
-	public void Handle(
+	public async Task HandleAsync(
 		string? org,
 		string? user,
 		string? account,
@@ -44,11 +45,10 @@ internal class WriteHandler {
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
 
-		// TODO: replace placeholder values with actual values
-		var accounts = new[] { "Dev-Slims", "Dev-Toolmon", "Int-Dev-NDE" };
-		var roles = new[] { "Dev-Slims-ReadOnly", "Dev-Slims-Admin" };
+		var accountState = await _oktaApi.GetAccountsOktaAsync( authState, "amazon_aws" );
+		var accounts = accountState.Accounts;
 
 		if( string.IsNullOrEmpty( account ) ) {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
@@ -57,6 +57,10 @@ internal class WriteHandler {
 				account = ConsolePrompter.PromptAccount( accounts );
 			}
 		}
+
+		var accountCredentials = await _oktaApi.GetAccountOktaAsync( accountState, account );
+		var roleState = _awsClient.GetRoles( accountCredentials );
+		var roles = roleState.Roles;
 
 		if( string.IsNullOrEmpty( role ) ) {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
@@ -74,6 +78,8 @@ internal class WriteHandler {
 			}
 		}
 
+		var tokens = await _awsClient.GetTokensAsync( roleState, role, duration.GetValueOrDefault() );
+
 		// check if profile flag has been set
 		if( string.IsNullOrEmpty( profile ) ) {
 			if( !string.IsNullOrEmpty( config.Profile ) ) {
@@ -83,15 +89,19 @@ internal class WriteHandler {
 			}
 		}
 
-		// TODO: Replace with call to function to get AWS credentials and write them to credentials file
-		Console.WriteLine( string.Join( '\n',
-			$"Org: {org}",
-			$"Profile: {profile}",
-			$"User: {user}",
-			$"Account: {account}",
-			$"Role: {role}",
-			$"Duration: {duration}",
-			$"nomask: {nomask}" ) );
+		var credentialsFile = new SharedCredentialsFile();
+		if( !string.IsNullOrEmpty( output ) ) {
+			if( !Path.IsPathRooted( output ) ) {
+				output = "./" + output;
+			}
+			credentialsFile = new SharedCredentialsFile( output );
+		}
 
+		var profileOptions = new CredentialProfileOptions {
+			Token = tokens.AwsSessionToken,
+			AccessKey = tokens.AwsAccessKeyId,
+			SecretKey = tokens.AwsSecretAccessKey
+		};
+		credentialsFile.RegisterProfile( new CredentialProfile( profile, profileOptions ) );
 	}
 }
