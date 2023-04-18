@@ -14,7 +14,7 @@ internal interface IOktaApi {
 	Task<OktaAuthenticateState> AuthenticateOktaAsync( AuthenticateOptions authOptions );
 	Task<OktaAuthenticatedState> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
-	Task IssueChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex );
+	Task IssueMfaChallengeOktaAsync( OktaAuthenticateState state, int selectedMfaIndex );
 	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
 	Task<OktaAccountState> GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetAccountOktaAsync( OktaAccountState state, string selectedAccount );
@@ -63,7 +63,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta" );
 	}
 
-	async Task IOktaApi.IssueChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex ) {
+	async Task IOktaApi.IssueMfaChallengeOktaAsync( OktaAuthenticateState state, int selectedMfaIndex ) {
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 		var authOptions = new AuthenticateChallengeMfaOptions( FactorId: mfaFactor.Id, StateToken: state.OktaStateToken! );
 
