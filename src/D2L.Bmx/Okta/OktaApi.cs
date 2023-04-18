@@ -14,6 +14,7 @@ internal interface IOktaApi {
 	Task<OktaAuthenticateState> AuthenticateOktaAsync( AuthenticateOptions authOptions );
 	Task<OktaAuthenticatedState> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
+	Task IssueSmsChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex );
 	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
 	Task<OktaAccountState> GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetAccountOktaAsync( OktaAccountState state, string selectedAccount );
@@ -62,14 +63,27 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta" );
 	}
 
+	async Task IOktaApi.IssueSmsChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex ) {
+		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
+		var authOptions = new AuthenticateChallengeMfaOptions( FactorId: mfaFactor.Id, StateToken: state.OktaStateToken! );
+
+		await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
+			new StringContent(
+				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
+				Encoding.Default,
+				"application/json" ) );
+	}
+
 	async Task<OktaAuthenticatedState> IOktaApi.AuthenticateChallengeMfaOktaAsync(
 		OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 
-
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 
-		var authOptions = new AuthenticateChallengeMfaOptions( mfaFactor.Id, challengeResponse, state.OktaStateToken! );
+		var authOptions = new AuthenticateChallengeMfaOptions(
+			FactorId: mfaFactor.Id,
+			StateToken: state.OktaStateToken!,
+			PassCode: challengeResponse );
 
 		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
 			new StringContent(

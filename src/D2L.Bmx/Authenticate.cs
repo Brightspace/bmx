@@ -42,19 +42,22 @@ internal class Authenticator {
 			var selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
 
+			string mfaInput = "";
+
 			if( selectedMfa.Type == MfaType.Challenge ) {
-				// TODO: Handle retry for MFA challenge
-				string mfaInput = PromptMfaInput( selectedMfa.Name );
-				authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1,
-					mfaInput );
-			} else if( selectedMfa.Type == MfaType.Verify || selectedMfa.Type == MfaType.Unknown ) {
+				mfaInput = PromptMfaInput( "Code" );
+			} else if( selectedMfa.Type == MfaType.Sms ) {
+				await oktaApi.IssueSmsChallengeMfaOktaAsync( authState, selectedMfaIndex - 1 );
+				mfaInput = PromptMfaInput( "Code" );
+			} else if( selectedMfa.Type == MfaType.Question ) {
+				mfaInput = PromptMfaInput( "Answer" );
+			} else if( selectedMfa.Type == MfaType.Unknown ) {
 				// Identical to Code based workflow for now (capture same behaviour as BMX current)
 
-				// TODO: Remove need for input here, Push style flows have no user input on app here
-				// ex: https://developer.okta.com/docs/reference/api/authn/#response-example-waiting
 				PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
+			authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1, mfaInput );
 		} else if( authState.OktaSessionToken is not null ) {
 			authenticatedState = new OktaAuthenticatedState( true, authState.OktaSessionToken );
 		}
@@ -67,14 +70,13 @@ internal class Authenticator {
 	}
 
 	private static int PromptMfa( MfaOption[] mfaOptions ) {
-		var options = mfaOptions.Select( option => option.Name ).ToArray();
 
 		Console.WriteLine( "MFA Required" );
-		for( int i = 0; i < options.Length; i++ ) {
-			Console.WriteLine( $"[{i + 1}] {options[i]}" );
+		for( int i = 0; i < mfaOptions.Length; i++ ) {
+			Console.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].Name}" );
 		}
 		Console.Write( "Select an available MFA option: " );
-		if( !int.TryParse( Console.ReadLine(), out int index ) || index > options.Length || index < 1 ) {
+		if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
 			throw new BmxException( "Invalid account selection" );
 		}
 
