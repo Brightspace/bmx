@@ -46,7 +46,7 @@ internal class Authenticator {
 			if( selectedMfa.Type == MfaType.Challenge ) {
 				mfaInput = PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Sms ) {
-				await oktaApi.IssueSmsChallengeMfaOktaAsync( authState, selectedMfaIndex - 1 );
+				await oktaApi.IssueChallengeMfaOktaAsync( authState, selectedMfaIndex - 1 );
 				mfaInput = PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Question ) {
 				mfaInput = PromptMfaInput( "Answer" );
