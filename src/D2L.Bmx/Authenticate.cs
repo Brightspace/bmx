@@ -38,12 +38,11 @@ internal class Authenticator {
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-
 			var selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
-
 			string mfaInput = "";
 
+			// TODO: Handle retry
 			if( selectedMfa.Type == MfaType.Challenge ) {
 				mfaInput = PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Sms ) {
@@ -53,7 +52,6 @@ internal class Authenticator {
 				mfaInput = PromptMfaInput( "Answer" );
 			} else if( selectedMfa.Type == MfaType.Unknown ) {
 				// Identical to Code based workflow for now (capture same behaviour as BMX current)
-
 				PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
