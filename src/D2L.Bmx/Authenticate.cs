@@ -30,7 +30,7 @@ internal class Authenticator {
 
 		oktaApi.SetOrganization( org );
 
-		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
+		var authState = await oktaApi.AuthenticateAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false );
 
 		OktaAuthenticatedState? authenticatedState = default;
@@ -46,7 +46,7 @@ internal class Authenticator {
 			if( selectedMfa.Type == MfaType.Challenge ) {
 				mfaInput = PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Sms ) {
-				await oktaApi.IssueMfaChallengeOktaAsync( authState, selectedMfaIndex - 1 );
+				await oktaApi.IssueMfaChallengeAsync( authState, selectedMfaIndex - 1 );
 				mfaInput = PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Question ) {
 				mfaInput = PromptMfaInput( "Answer" );
@@ -55,7 +55,7 @@ internal class Authenticator {
 				PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
-			authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1, mfaInput );
+			authenticatedState = await oktaApi.AuthenticateChallengeMfaAsync( authState, selectedMfaIndex - 1, mfaInput );
 		} else if( authState.OktaSessionToken is not null ) {
 			authenticatedState = new OktaAuthenticatedState( true, authState.OktaSessionToken );
 		}
