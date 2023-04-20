@@ -11,13 +11,13 @@ namespace D2L.Bmx.Okta;
 internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
-	Task<OktaAuthenticateState> AuthenticateOktaAsync( AuthenticateOptions authOptions );
-	Task<OktaAuthenticatedState> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
+	Task<OktaAuthenticateState> AuthenticateAsync( AuthenticateOptions authOptions );
+	Task<OktaAuthenticatedState> AuthenticateChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
-	Task IssueMfaChallengeOktaAsync( OktaAuthenticateState state, int selectedMfaIndex );
-	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
-	Task<OktaAccountState> GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType );
-	Task<string> GetAccountOktaAsync( OktaAccountState state, string selectedAccount );
+	Task IssueMfaChallengeAsync( OktaAuthenticateState state, int selectedMfaIndex );
+	Task<OktaSession> CreateSessionAsync( SessionOptions sessionOptions );
+	Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType );
+	Task<string> GetAccountAsync( OktaAccountState state, string selectedAccount );
 }
 
 internal class OktaApi : IOktaApi {
@@ -44,7 +44,7 @@ internal class OktaApi : IOktaApi {
 		}
 	}
 
-	async Task<OktaAuthenticateState> IOktaApi.AuthenticateOktaAsync( AuthenticateOptions authOptions ) {
+	async Task<OktaAuthenticateState> IOktaApi.AuthenticateAsync( AuthenticateOptions authOptions ) {
 
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent(
@@ -63,7 +63,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta" );
 	}
 
-	async Task IOktaApi.IssueMfaChallengeOktaAsync( OktaAuthenticateState state, int selectedMfaIndex ) {
+	async Task IOktaApi.IssueMfaChallengeAsync( OktaAuthenticateState state, int selectedMfaIndex ) {
 		var mfaFactor = state.OktaMfaFactors[selectedMfaIndex];
 		var authOptions = new AuthenticateChallengeMfaOptions( FactorId: mfaFactor.Id, StateToken: state.OktaStateToken! );
 
@@ -74,7 +74,7 @@ internal class OktaApi : IOktaApi {
 				"application/json" ) );
 	}
 
-	async Task<OktaAuthenticatedState> IOktaApi.AuthenticateChallengeMfaOktaAsync(
+	async Task<OktaAuthenticatedState> IOktaApi.AuthenticateChallengeMfaAsync(
 		OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 
@@ -98,7 +98,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error authenticating Okta challenge MFA" );
 	}
 
-	async Task<OktaSession> IOktaApi.CreateSessionOktaAsync( SessionOptions sessionOptions ) {
+	async Task<OktaSession> IOktaApi.CreateSessionAsync( SessionOptions sessionOptions ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent(
 				JsonSerializer.Serialize( sessionOptions, SourceGenerationContext.Default.SessionOptions ),
@@ -112,9 +112,9 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error creating Okta session" );
 	}
 
-	async Task<OktaAccountState> IOktaApi.GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType ) {
+	async Task<OktaAccountState> IOktaApi.GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
 		// TODO: Use existing session if it exists in ~/.bmx and isn't expired
-		var sessionResp = await ( this as IOktaApi ).CreateSessionOktaAsync( new SessionOptions( state.OktaSessionToken ) );
+		var sessionResp = await ( this as IOktaApi ).CreateSessionAsync( new SessionOptions( state.OktaSessionToken ) );
 		// TODO: Consider making OktaAPI stateless as well (?)
 		( this as IOktaApi ).AddSession( sessionResp.Id );
 
@@ -127,7 +127,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error retrieving Okta accounts" );
 	}
 
-	async Task<string> IOktaApi.GetAccountOktaAsync( OktaAccountState state, string selectedAccount ) {
+	async Task<string> IOktaApi.GetAccountAsync( OktaAccountState state, string selectedAccount ) {
 
 		var account = Array.Find(
 			state.OktaApps,
