@@ -49,16 +49,6 @@ internal class OktaSessionStorage {
 
 	internal static string UserHomeDir() {
 
-		string osPlatform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
-		string pattern = @"(?i)\bwindows\b";
-
-		if( Regex.IsMatch( osPlatform, pattern ) ) {
-			string? home = Environment.GetEnvironmentVariable( "HOMEDRIVE" ) + Environment.GetEnvironmentVariable( "HOMEPATH" );
-			if( home is null || home.Equals( "" ) ) {
-				home = Environment.GetEnvironmentVariable( "USERPROFILE" );
-			}
-			return home!;
-		}
-		return Environment.GetEnvironmentVariable( "HOME" )!;
+		return Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	}
 }
