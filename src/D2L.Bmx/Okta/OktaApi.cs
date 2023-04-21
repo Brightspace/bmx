@@ -40,10 +40,6 @@ internal class OktaApi : IOktaApi {
 		_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
 	}
 
-	Uri IOktaApi.GetOrganizationUri() {
-		return _httpClient.BaseAddress!;
-	}
-
 	void IOktaApi.AddSession( string sessionId ) {
 		if( _httpClient.BaseAddress is not null ) {
 			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
