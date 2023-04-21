@@ -146,8 +146,7 @@ internal class OktaApi : IOktaApi {
 	async Task<string> IOktaApi.GetMeResponseAsync( string sessionId ) {
 
 		try {
-			using var meRequest = new HttpRequestMessage( HttpMethod.Get, "users/me" );
-			using var meResponse = await _httpClient.SendAsync( meRequest );
+			using var meResponse = await _httpClient.GetAsync( "users/me" );
 
 			if( !meResponse.IsSuccessStatusCode ) {
 				return "";
