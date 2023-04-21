@@ -13,7 +13,6 @@ namespace D2L.Bmx.Okta;
 internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
-	Uri GetOrganizationUri();
 	Task<OktaAuthenticateState> AuthenticateOktaAsync( AuthenticateOptions authOptions );
 	Task<string> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
