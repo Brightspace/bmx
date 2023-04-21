@@ -1,3 +1,4 @@
+using System.Text.Json;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
@@ -10,7 +11,13 @@ internal class Authenticator {
 		string user,
 		bool nomask,
 		IOktaApi oktaApi ) {
-		// TODO: Add authenticating from cache
+
+		oktaApi.SetOrganization( org );
+
+		var cachedSession = await AuthenticateFromCacheAsync( org, user, oktaApi );
+		if( cachedSession.SuccessfulAuthentication ) {
+			return cachedSession;
+		}
 
 		Console.Write( "Okta Password: " );
 		var password = "";
@@ -28,12 +35,10 @@ internal class Authenticator {
 			}
 		}
 
-		oktaApi.SetOrganization( org );
-
 		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false );
 
-		OktaAuthenticatedState? authenticatedState = default;
+		string sessionToken = "";
 
 		if( authState.OktaStateToken is not null ) {
 
@@ -55,17 +60,60 @@ internal class Authenticator {
 				PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
-			authenticatedState = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1, mfaInput );
+			sessionToken = await oktaApi.AuthenticateChallengeMfaOktaAsync( authState, selectedMfaIndex - 1, mfaInput );
 		} else if( authState.OktaSessionToken is not null ) {
-			authenticatedState = new OktaAuthenticatedState( true, authState.OktaSessionToken );
+			sessionToken = authState.OktaSessionToken;
 		}
 
-		if( authenticatedState is not null ) {
-			return authenticatedState;
+		if( !sessionToken.Equals( "" ) ) {
+			var sessionResp = await oktaApi.CreateSessionOktaAsync( new SessionOptions( sessionToken ) );
+			oktaApi.AddSession( sessionResp.Id );
+			CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
+			return new( true, sessionResp.Id );
 		}
 
 		throw new BmxException( "Authentication Failed" );
 	}
+
+	public static async Task<OktaAuthenticatedState> AuthenticateFromCacheAsync(
+		string org,
+		string user,
+		IOktaApi oktaApi
+	) {
+		var sessionId = GetCachedOktaSession( user, org );
+		if( sessionId.Equals( "" ) ) {
+			return new( false, "" );
+		}
+
+		oktaApi.AddSession( sessionId );
+		var userId = await oktaApi.GetMeResponseAsync( sessionId );
+		return new( !userId.Equals( "" ), sessionId );
+	}
+
+	private static void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
+		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
+		var existingSessions = ReadOktaSessionCacheFile();
+		existingSessions.Add( session );
+
+		OktaSessionStorage.SaveSessions( existingSessions );
+	}
+
+	private static string GetCachedOktaSession( string userId, string org ) {
+		var oktaSessions = ReadOktaSessionCacheFile();
+		var session = oktaSessions.Find( session => session.UserId == userId && session.Org == org );
+		return session?.SessionId ?? "";
+	}
+
+	private static List<OktaSessionCache> ReadOktaSessionCacheFile() {
+		var sessions = OktaSessionStorage.Sessions();
+		return RemoveExpiredOktaSessions( sessions );
+	}
+
+	private static List<OktaSessionCache> RemoveExpiredOktaSessions( List<OktaSessionCache> sourceCache ) {
+		var currTime = DateTimeOffset.Now;
+		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
+	}
+
 
 	private static int PromptMfa( MfaOption[] mfaOptions ) {
 

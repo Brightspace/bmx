@@ -1,9 +1,11 @@
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
+using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
 namespace D2L.Bmx.Okta;
@@ -11,13 +13,15 @@ namespace D2L.Bmx.Okta;
 internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
+	Uri GetOrganizationUri();
 	Task<OktaAuthenticateState> AuthenticateOktaAsync( AuthenticateOptions authOptions );
-	Task<OktaAuthenticatedState> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
+	Task<string> AuthenticateChallengeMfaOktaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
 	Task IssueMfaChallengeOktaAsync( OktaAuthenticateState state, int selectedMfaIndex );
 	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
 	Task<OktaAccountState> GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetAccountOktaAsync( OktaAccountState state, string selectedAccount );
+	Task<string> GetMeResponseAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
@@ -34,6 +38,10 @@ internal class OktaApi : IOktaApi {
 
 	void IOktaApi.SetOrganization( string organization ) {
 		_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
+	}
+
+	Uri IOktaApi.GetOrganizationUri() {
+		return _httpClient.BaseAddress!;
 	}
 
 	void IOktaApi.AddSession( string sessionId ) {
@@ -74,7 +82,7 @@ internal class OktaApi : IOktaApi {
 				"application/json" ) );
 	}
 
-	async Task<OktaAuthenticatedState> IOktaApi.AuthenticateChallengeMfaOktaAsync(
+	async Task<string> IOktaApi.AuthenticateChallengeMfaOktaAsync(
 		OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 
@@ -93,7 +101,7 @@ internal class OktaApi : IOktaApi {
 		var authSuccess = await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
 			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
 		if( authSuccess?.SessionToken is not null ) {
-			return new OktaAuthenticatedState( true, authSuccess.SessionToken );
+			return authSuccess.SessionToken;
 		}
 		throw new BmxException( "Error authenticating Okta challenge MFA" );
 	}
@@ -113,12 +121,10 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<OktaAccountState> IOktaApi.GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType ) {
-		// TODO: Use existing session if it exists in ~/.bmx and isn't expired
-		var sessionResp = await ( this as IOktaApi ).CreateSessionOktaAsync( new SessionOptions( state.OktaSessionToken ) );
 		// TODO: Consider making OktaAPI stateless as well (?)
-		( this as IOktaApi ).AddSession( sessionResp.Id );
+		var resp = await _httpClient.GetAsync(
+			"users/me/appLinks" );
 
-		var resp = await _httpClient.GetAsync( $"users/{sessionResp.UserId}/appLinks" );
 		var accounts = await JsonSerializer.DeserializeAsync<OktaApp[]>( await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaAppArray );
 		if( accounts is not null ) {
@@ -140,6 +146,26 @@ internal class OktaApi : IOktaApi {
 		}
 
 		throw new BmxException( "Account could not be found" );
+	}
+
+	async Task<string> IOktaApi.GetMeResponseAsync( string sessionId ) {
+
+		try {
+			using var meRequest = new HttpRequestMessage( HttpMethod.Get, "users/me" );
+			using var meResponse = await _httpClient.SendAsync( meRequest );
+
+			if( !meResponse.IsSuccessStatusCode ) {
+				return "";
+			}
+
+			var meJson = await meResponse.Content.ReadAsStringAsync();
+			var me = JsonSerializer.Deserialize( meJson, SourceGenerationContext.Default.OktaMeResponse )!;
+			return me.Id;
+		} catch( HttpRequestException ) {
+			return "";
+		} catch( JsonException ) {
+			return "";
+		}
 	}
 
 	private string ExtractAwsSaml( string htmlResponse ) {
