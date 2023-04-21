@@ -40,7 +40,7 @@ internal class OktaSessionStorage {
 	}
 
 	internal static string SessionsFileName() {
-		return Path.Join( UserHomeDir(), ".bmx3", "sessions" );
+		return Path.Join( UserHomeDir(), ".bmx", "sessions" );
 	}
 
 	internal static string BmxDir() {
