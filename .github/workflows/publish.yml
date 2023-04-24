@@ -26,6 +26,7 @@ jobs:
         uses: ./.github/actions/create-release
 
   build:
+    if: ${{ always() }}
     needs: create_release
     strategy:
       matrix:
@@ -44,7 +45,9 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
-        run: dotnet publish -r $env:PLATFORM-x64 -c Release -o build/$env:PLATFORM
+        run: |
+          dotnet publish -r $env:PLATFORM-x64 -c Release -o build/$env:PLATFORM
+          ls
       - name: upload build
         if: ${{ github.event_name == 'repository_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
@@ -54,6 +57,8 @@ jobs:
           asset_content_type: ${{ matrix.content_type }}
 
   build_docker:
+    if: ${{ always() }}
+    needs: create_release
     strategy:
       matrix:
         include:
@@ -72,6 +77,7 @@ jobs:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           docker buildx build -f $env:DOCKERFILE -o out .
+          ls
       - name: upload build
         if: ${{ github.event_name == 'repository_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
