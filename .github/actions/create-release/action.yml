@@ -1,0 +1,31 @@
+name: "create release"
+description: "Creates a new GitHub release with incremented version"
+outputs:
+  release_tag:
+    description: "The tag of the created release"
+    value: ${{ steps.create_release.outputs.release_tag }}
+runs:
+  using: "composite"
+  steps:
+    - run: sudo apt-get update && sudo apt-get install -y jq bc
+      shell: bash
+
+    - id: create_release
+      run: |
+        LATEST_RELEASE_VERSION=$(gh release list --limit 1 --json version | jq -r '.[0].version // "1.0"')
+
+        if [ "${LATEST_RELEASE_VERSION}" == "1.0" ]; then
+          NEXT_RELEASE_VERSION="1.0"
+        else
+          NEXT_RELEASE_VERSION=$(echo "${LATEST_RELEASE_VERSION} + 0.0.1" | bc)
+        fi
+
+        RELEASE_TAG="v${NEXT_RELEASE_VERSION}"
+        echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+
+        gh release create "${RELEASE_TAG}" \
+          --title "Release ${RELEASE_TAG}" \
+          --notes "Release notes for version ${RELEASE_TAG}"
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

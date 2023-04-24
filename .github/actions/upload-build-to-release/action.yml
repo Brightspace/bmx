@@ -1,0 +1,35 @@
+name: "upload build to release"
+description: "uploads a compiled build to the new github release"
+inputs:
+  release_tag:
+    description: "The release tag"
+    required: true
+  build_path:
+    description: "The path to the build"
+    required: true
+  build_name:
+    description: "The name of the build"
+    required: true
+  content_type:
+    description: "The content type of the build"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - env:
+        RELEASE_TAG: ${{ inputs.release_tag }}
+        BUILD_PATTERN: ${{ inputs.build_name }}
+        CONTENT_TYPE: ${{ inputs.content_type }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        matching_file=$(find . -type f -name "$BUILD_PATTERN" | head -n 1)
+        if [ -n "${matching_file}" ]; then
+          echo "Uploading ${matching_file}..."
+          gh release upload "$RELEASE_TAG" "${matching_file}" \
+            --name "$(basename ${matching_file})" \
+            --content-type "$CONTENT_TYPE" \
+            --repo ${{ github.repository }}
+        else
+          echo "No file found matching pattern '$BUILD_PATTERN'"
+        fi
+      shell: bash
