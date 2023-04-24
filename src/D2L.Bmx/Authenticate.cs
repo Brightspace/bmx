@@ -65,7 +65,7 @@ internal class Authenticator {
 			sessionToken = authState.OktaSessionToken;
 		}
 
-		if( !sessionToken.Equals( "" ) ) {
+		if( !string.IsNullOrEmpty( sessionToken ) ) {
 			var sessionResp = await oktaApi.CreateSessionOktaAsync( new SessionOptions( sessionToken ) );
 			oktaApi.AddSession( sessionResp.Id );
 			CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
@@ -81,13 +81,13 @@ internal class Authenticator {
 		IOktaApi oktaApi
 	) {
 		var sessionId = GetCachedOktaSession( user, org );
-		if( sessionId.Equals( "" ) ) {
+		if( string.IsNullOrEmpty( sessionId ) ) {
 			return new( false, "" );
 		}
 
 		oktaApi.AddSession( sessionId );
 		var userId = await oktaApi.GetMeResponseAsync( sessionId );
-		return new( !userId.Equals( "" ), sessionId );
+		return new( !string.IsNullOrEmpty( userId ), sessionId );
 	}
 
 	private static void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
