@@ -13,6 +13,9 @@ on:
       - ".github/workflows/publish.yml"
   repository_dispatch:
     types: [create-release]
+    client_payload:
+      version:
+        required: true
   workflow_dispatch:
 
 
@@ -37,11 +40,9 @@ jobs:
         include:
           - machine: windows-latest
             platform: win
-            content_type: application/vnd.microsoft.portable-executable
             file_name: D2L.Bmx.exe
           - machine: macos-latest
             platform: osx
-            content_type: application/octet-stream
             file_name: D2L.Bmx
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
@@ -66,8 +67,8 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           echo "Uploading build to release $RELEASE_TAG"
-          mv "$FILE_NAME" "$PLATFORM-$FILE_NAME"
-          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME"
+          mv "build/$FILE_NAME" "build/$PLATFORM-$FILE_NAME"
+          gh release upload v3.0.0 "build/$PLATFORM-$FILE_NAME"
 
   build_docker:
     if: ${{ always() }}
