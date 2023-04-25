@@ -31,7 +31,11 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         echo "Uploading build to release $RELEASE_TAG"
-        gh release upload "$RELEASE_TAG" "$BUILD_PATH/$BUILD_NAME" \
+
+        PREFIXED_NAME="$BUILD_PATH/$BUILD_PREFIX-$BUILD_NAME"
+        mv "$BUILD_PATH/$BUILD_NAME" "$NEW_FILE_NAME"
+
+        gh release upload "$RELEASE_TAG" "$NEW_FILE_NAME" \
           --name "$BUILD_NAME_PRESET$BUILD_NAME" \
           --content-type $CONTENT_TYPE
       shell: bash
