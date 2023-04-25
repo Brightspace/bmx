@@ -29,6 +29,7 @@ runs:
         BUILD_NAME_PREFIX: ${{ inputs.build_name_prefix }}
         CONTENT_TYPE: ${{ inputs.build_content_type }}
         GITHUB_TOKEN: ${{ github.token }}
+      working-directory: src/D2L.Bmx
       run: |
         echo "Uploading build to release $RELEASE_TAG"
 
