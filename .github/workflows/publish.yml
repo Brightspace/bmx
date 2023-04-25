@@ -55,6 +55,7 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
+          ls build
       - name: upload build
         #if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github/actions/upload-build-to-release
@@ -63,7 +64,7 @@ jobs:
           build_path: build
           build_name: ${{ matrix.file_name }}
           build_content_type: ${{ matrix.content_type }}
-          build_name_prefix: ${{ inputs.platform }}
+          build_name_prefix: ${{ matrix.platform }}
 
   build_docker:
     if: ${{ always() }}
