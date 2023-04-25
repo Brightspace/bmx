@@ -48,7 +48,8 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
         run: |
-          dotnet publish -r $env:PLATFORM-x64 -c Release -o build/$env:PLATFORM
+          dotnet publish -r $env:PLATFORM-x64 -c Release -o build
+          cd build
           ls
       - name: upload build
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -78,7 +79,8 @@ jobs:
         env:
           DOCKERFILE: ${{ matrix.file }}
         run: |
-          docker buildx build -f $env:DOCKERFILE -o out .
+          docker buildx build -f $env:DOCKERFILE -o build .
+          cd build
           ls
       - name: upload build
         if: ${{ github.event_name == 'workflow_dispatch' }}
