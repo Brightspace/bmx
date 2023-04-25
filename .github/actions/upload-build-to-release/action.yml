@@ -25,7 +25,7 @@ runs:
         BUILD_PATH: ${{ inputs.build_path }}
         BUILD_NAME_PREFIX: ${{ inputs.build_name_prefix }}
         CONTENT_TYPE: ${{ inputs.build_content_type }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         echo "Uploading build to release $RELEASE_TAG"
         gh release upload "$RELEASE_TAG" "$BUILD_PATH/$BUILD_NAME" \
