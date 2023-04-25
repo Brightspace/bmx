@@ -23,7 +23,7 @@ runs:
         $version = "${{ inputs.version }}"
 
         $RELEASE_TAG = "v$version"
-        echo "release_tag=$RELEASE_TAG" >> GITHUB_OUTPUT
+        echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
         gh release create "$RELEASE_TAG" `
           --title "Release $RELEASE_TAG" `
