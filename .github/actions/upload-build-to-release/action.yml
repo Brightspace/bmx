@@ -19,7 +19,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - env:
+    - name: checkout
+      uses: Brightspace/third-party-actions@actions/checkout
+    - name: upload
+      env:
         RELEASE_TAG: ${{ inputs.release_tag }}
         BUILD_NAME: ${{ inputs.build_name }}
         BUILD_PATH: ${{ inputs.build_path }}
