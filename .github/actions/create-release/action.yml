@@ -25,7 +25,7 @@ runs:
         $RELEASE_TAG = "v$version"
         echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
-        gh release create "$RELEASE_TAG" `
+        gh release create "$RELEASE_TAG" --draft `
           --title "Release $RELEASE_TAG" `
           --notes "Release notes for version $RELEASE_TAG"
       shell: pwsh
