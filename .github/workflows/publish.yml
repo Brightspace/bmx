@@ -55,8 +55,6 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
-          cd build
-          ls
       - name: upload build
         #if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github/actions/upload-build-to-release
@@ -90,8 +88,6 @@ jobs:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
-          cd build
-          ls
       - name: upload build
         #if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github/actions/upload-build-to-release
