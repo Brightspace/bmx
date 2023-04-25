@@ -12,7 +12,7 @@ runs:
 
     - id: create_release
       run: |
-        LATEST_RELEASE_VERSION=$(gh release view --json version | jq -r '.version // "1.0"')
+        LATEST_RELEASE_VERSION=$(gh release view --json tagName | jq -r '.tagName // "1.0"')
 
         if [ "${LATEST_RELEASE_VERSION}" == "1.0" ]; then
           NEXT_RELEASE_VERSION="1.0"
