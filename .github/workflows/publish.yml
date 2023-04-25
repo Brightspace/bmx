@@ -59,7 +59,7 @@ jobs:
           ls
       - name: upload build
         #if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: ./.github.actions/upload-build-to-release
+        uses: ./.github/actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
           build_path: build
@@ -94,7 +94,7 @@ jobs:
           ls
       - name: upload build
         #if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: ./.github.actions/upload-build-to-release
+        uses: ./.github/actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
           build_path: build
