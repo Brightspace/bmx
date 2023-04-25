@@ -103,6 +103,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         working-directory: src/D2L.Bmx
         run: |
+          ls
           cd build
           mv "D2L.Bmx" "$PLATFORM-D2L.Bmx"
           gh release upload v3.0.0 "$PLATFORM-D2L.Bmx"
