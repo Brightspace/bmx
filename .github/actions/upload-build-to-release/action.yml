@@ -10,26 +10,25 @@ inputs:
   build_name:
     description: "The name of the build"
     required: true
-  content_type:
+  build_content_type:
     description: "The content type of the build"
+    required: true
+  build_name_prefix:
+    description: 'The prefix to be added to the display name of the uploaded build. ie mac-, alpine-'
     required: true
 runs:
   using: "composite"
   steps:
     - env:
         RELEASE_TAG: ${{ inputs.release_tag }}
-        BUILD_PATTERN: ${{ inputs.build_name }}
-        CONTENT_TYPE: ${{ inputs.content_type }}
+        BUILD_NAME: ${{ inputs.build_name }}
+        BUILD_PATH: ${{ inputs.build_path }}
+        BUILD_NAME_PREFIX: ${{ inputs.build_name_prefix }}
+        CONTENT_TYPE: ${{ inputs.build_content_type }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        matching_file=$(find . -type f -name "$BUILD_PATTERN" | head -n 1)
-        if [ -n "${matching_file}" ]; then
-          echo "Uploading ${matching_file}..."
-          gh release upload "$RELEASE_TAG" "${matching_file}" \
-            --name "$(basename ${matching_file})" \
-            --content-type "$CONTENT_TYPE" \
-            --repo ${{ github.repository }}
-        else
-          echo "No file found matching pattern '$BUILD_PATTERN'"
-        fi
+        echo "Uploading build to release $RELEASE_TAG"
+        gh release upload "$RELEASE_TAG" "$BUILD_PATH/$BUILD_NAME" \
+          --name "$BUILD_NAME_PRESET$BUILD_NAME" \
+          --content-type $CONTENT_TYPE
       shell: bash

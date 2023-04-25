@@ -36,6 +36,7 @@ jobs:
           - machine: windows-latest
             platform: win
             content_type: application/vnd.microsoft.portable-executable
+            file_extension: .exe
           - machine: macos-latest
             platform: osx
             content_type: application/octet-stream
@@ -59,8 +60,10 @@ jobs:
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
-          asset_pattern: '$env:PLATFORM.*'
-          asset_content_type: $env:ASSET_CONTENT_TYPE
+          build_path: build
+          build_name: D2L.Bmx${{ matrix.file_extension }}
+          build_content_type: ${{ matrix.content_type }}
+          build_name_prefix: ${{ inputs.platform }}
 
   build_docker:
     if: ${{ always() }}
@@ -69,7 +72,9 @@ jobs:
       matrix:
         include:
           - file: Dockerfile.ubuntu
+            platform: ubuntu
           - file: Dockerfile.alpine
+            platform: alpine
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -90,5 +95,7 @@ jobs:
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
-          asset_pattern: '$env:PLATFORM.*'
-          asset_content_type: application/x-executable
+          build_path: build
+          build_name: D2L.Bmx
+          build_content_type: application/x-executable
+          build_name_prefix: ${{ matrix.platform }}
