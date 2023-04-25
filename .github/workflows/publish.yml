@@ -16,12 +16,10 @@ on:
     client_payload:
       version:
         required: true
-  workflow_dispatch:
-
 
 jobs:
   create_release:
-    #if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'repository_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.create_release.outputs.release_tag }}
@@ -29,8 +27,15 @@ jobs:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
-        id: create_release
-        uses: ./.github/actions/create-release
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          $RELEASE_TAG = "v$VERSION"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+          gh release create "$RELEASE_TAG" --draft `
+            --title "Release $RELEASE_TAG" `
+            --notes "Release notes for version $RELEASE_TAG"
 
   build:
     if: ${{ always() }}
@@ -57,7 +62,7 @@ jobs:
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        #if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
           RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
@@ -68,7 +73,7 @@ jobs:
         run: |
           cd build
           mv "$FILE_NAME" "$PLATFORM-$FILE_NAME"
-          gh release upload v3.0.0 "$PLATFORM-$FILE_NAME"
+          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME"
 
   build_docker:
     if: ${{ always() }}
@@ -94,7 +99,7 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        #if: ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
           RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
@@ -103,4 +108,4 @@ jobs:
         run: |
           cd build
           mv "D2L.Bmx" "$PLATFORM-D2L.Bmx"
-          gh release upload v3.0.0 "$PLATFORM-D2L.Bmx"
+          gh release upload "$RELEASE_TAG" "$PLATFORM-D2L.Bmx"
