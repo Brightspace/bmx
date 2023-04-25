@@ -32,9 +32,9 @@ runs:
       working-directory: src/D2L.Bmx
       run: |
         echo "Uploading build to release $RELEASE_TAG"
-
-        PREFIXED_NAME="$BUILD_PATH/$BUILD_PREFIX-$BUILD_NAME"
-        mv "$BUILD_PATH/$BUILD_NAME" "$NEW_FILE_NAME"
+        cd $BUILD_PATH
+        $NEW_FILE_NAME="$BUILD_PREFIX-$BUILD_NAME"
+        mv "$BUILD_NAME" "$NEW_FILE_NAME"
 
         gh release upload "$RELEASE_TAG" "$NEW_FILE_NAME" \
           --name "$BUILD_NAME_PRESET$BUILD_NAME" \
