@@ -35,17 +35,20 @@ jobs:
         include:
           - machine: windows-latest
             platform: win
+            content_type: application/vnd.microsoft.portable-executable
           - machine: macos-latest
             platform: osx
+            content_type: application/octet-stream
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
+    env:
+      PLATFORM: ${{ matrix.platform }}
+      ASSET_CONTENT_TYPE: ${{ matrix.content_type }}
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: publish
         shell: pwsh
-        env:
-          PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
@@ -57,7 +60,7 @@ jobs:
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
           asset_pattern: '$env:PLATFORM.*'
-          asset_content_type: ${{ matrix.content_type }}
+          asset_content_type: $env:ASSET_CONTENT_TYPE
 
   build_docker:
     if: ${{ always() }}
@@ -88,4 +91,4 @@ jobs:
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
           asset_pattern: '$env:PLATFORM.*'
-          asset_content_type: ${{ matrix.content_type }}
+          asset_content_type: application/x-executable
