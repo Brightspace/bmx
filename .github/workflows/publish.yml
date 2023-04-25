@@ -14,32 +14,25 @@ on:
   repository_dispatch:
     types: [create-release]
     client_payload:
-      version:
+      release_tag:
         required: true
 
 jobs:
   create_release:
     if: ${{ github.event_name == 'repository_dispatch' }}
     runs-on: ubuntu-latest
-    outputs:
-      release_tag: ${{ steps.create_release.outputs.release_tag }}
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         env:
-          VERSION: ${{ github.event.client_payload.version }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
         run: |
-          $RELEASE_TAG = "v$VERSION"
-          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
-
           gh release create "$RELEASE_TAG" --draft `
             --title "Release $RELEASE_TAG" `
             --notes "Release notes for version $RELEASE_TAG"
 
   build:
-    if: ${{ always() }}
-    needs: create_release
     strategy:
       matrix:
         include:
@@ -65,7 +58,7 @@ jobs:
         if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -102,7 +95,7 @@ jobs:
         if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         run: |
