@@ -18,7 +18,7 @@ on:
 
 jobs:
   create_release:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    #if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.create_release.outputs.release_tag }}
@@ -45,7 +45,6 @@ jobs:
     timeout-minutes: 10
     env:
       PLATFORM: ${{ matrix.platform }}
-      ASSET_CONTENT_TYPE: ${{ matrix.content_type }}
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
@@ -57,7 +56,7 @@ jobs:
           cd build
           ls
       - name: upload build
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        #if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
@@ -92,7 +91,7 @@ jobs:
           cd build
           ls
       - name: upload build
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        #if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
