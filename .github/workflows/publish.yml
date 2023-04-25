@@ -13,10 +13,12 @@ on:
       - ".github/workflows/publish.yml"
   repository_dispatch:
     types: [create-release]
+  workflow_dispatch:
+
 
 jobs:
   create_release:
-    if: ${{ github.event_name == 'repository_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
       release_tag: ${{ steps.create_release.outputs.release_tag }}
@@ -49,7 +51,7 @@ jobs:
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build/$env:PLATFORM
           ls
       - name: upload build
-        if: ${{ github.event_name == 'repository_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
@@ -79,7 +81,7 @@ jobs:
           docker buildx build -f $env:DOCKERFILE -o out .
           ls
       - name: upload build
-        if: ${{ github.event_name == 'repository_dispatch' }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: ./.github.actions/upload-build-to-release
         with:
           release_tag: ${{ needs.create_release.outputs.release_tag }}
