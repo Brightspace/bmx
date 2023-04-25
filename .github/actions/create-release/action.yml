@@ -19,6 +19,7 @@ runs:
     - name: create release
       id: release_tag
       run: |
+        echo "$RELEASE_TAG <- tag"
         $version = "${{ inputs.version }}"
 
         $RELEASE_TAG = "v$version"
