@@ -66,12 +66,8 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           echo "Uploading build to release $RELEASE_TAG"
-          $NEW_FILE_NAME="$PLATFORM-$FILE_NAME"
-          mv "$BUILD_NAME" "$NEW_FILE_NAME"
-
-          gh release upload "$RELEASE_TAG" "$NEW_FILE_NAME" \
-            --name "$BUILD_NAME_PRESET$BUILD_NAME" \
-            --content-type $CONTENT_TYPE
+          mv "$BUILD_NAME" "$PLATFORM-$FILE_NAME"
+          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME"
 
   build_docker:
     if: ${{ always() }}
