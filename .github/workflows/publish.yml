@@ -23,6 +23,8 @@ jobs:
     outputs:
       release_tag: ${{ steps.create_release.outputs.release_tag }}
     steps:
+      - name: checkout
+        uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         id: create_release
         uses: ./.github/actions/create-release
