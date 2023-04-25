@@ -105,15 +105,10 @@ internal class Authenticator {
 	}
 
 	private static List<OktaSessionCache> ReadOktaSessionCacheFile() {
-		var sessions = OktaSessionStorage.Sessions();
-		return RemoveExpiredOktaSessions( sessions );
-	}
-
-	private static List<OktaSessionCache> RemoveExpiredOktaSessions( List<OktaSessionCache> sourceCache ) {
+		var sourceCache = OktaSessionStorage.Sessions();
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}
-
 
 	private static int PromptMfa( MfaOption[] mfaOptions ) {
 
