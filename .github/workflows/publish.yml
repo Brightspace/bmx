@@ -15,7 +15,9 @@ on:
     types: [create-release]
     client_payload:
       release_tag:
-        required: true
+        required: false
+        default: 3.0.0
+  workflow_dispatch:
 
 jobs:
   create_release:
@@ -29,19 +31,22 @@ jobs:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
         run: |
           gh release create "$RELEASE_TAG" --draft `
+            --generate-notes `
             --title "Release $RELEASE_TAG" `
             --notes "Release notes for version $RELEASE_TAG"
 
   build:
+    needs: create_release
+    if: ${{ !failure() }}
     strategy:
       matrix:
         include:
           - machine: windows-latest
             platform: win
-            file_name: D2L.Bmx.exe
+            file_name: bmx.exe
           - machine: macos-latest
             platform: osx
-            file_name: D2L.Bmx
+            file_name: bmx
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
     env:
@@ -65,12 +70,12 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           cd build
-          mv "$FILE_NAME" "$PLATFORM-$FILE_NAME"
-          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME"
+          zip "${PLATFORM}-${FILE_NAME}.zip" "$FILE_NAME"
+          gh release upload "$RELEASE_TAG" "{$PLATFORM}-{$FILE_NAME}.zip"
 
   build_docker:
-    if: ${{ always() }}
     needs: create_release
+    if: ${{ !failure() }}
     strategy:
       matrix:
         include:
@@ -100,5 +105,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd build
-          mv "D2L.Bmx" "$PLATFORM-D2L.Bmx"
-          gh release upload "$RELEASE_TAG" "$PLATFORM-D2L.Bmx"
+          zip "${PLATFORM}-bmx.zip" "bmx"
+          gh release upload "$RELEASE_TAG" "{$PLATFORM}-bmx.zip"
