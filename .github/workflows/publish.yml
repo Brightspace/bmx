@@ -29,8 +29,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
         run: |
-          gh release create "$RELEASE_TAG" --draft --generate-notes `
-            --title "Release $RELEASE_TAG" `
+          gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
 
   build:
     needs: create_release
