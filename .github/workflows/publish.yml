@@ -66,8 +66,8 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           cd build
-          zip "${PLATFORM}-${FILE_NAME}.zip" "$FILE_NAME"
-          gh release upload "$RELEASE_TAG" "{$PLATFORM}-{$FILE_NAME}.zip"
+          zip "$PLATFORM-$FILE_NAME.zip" "$FILE_NAME"
+          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME.zip"
 
   build_docker:
     needs: create_release
@@ -101,5 +101,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd build
-          zip "${PLATFORM}-bmx.zip" "bmx"
-          gh release upload "$RELEASE_TAG" "{$PLATFORM}-bmx.zip"
+          zip "$PLATFORM-bmx.zip" "bmx"
+          gh release upload "$RELEASE_TAG" "$PLATFORM-bmx.zip"
