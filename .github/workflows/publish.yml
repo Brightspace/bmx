@@ -50,6 +50,10 @@ jobs:
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
+      - name: install 7zip
+        if: ${{ matrix.platform }} == "win"
+        run: choco install p7zip -y
+        shell: bash
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
@@ -66,7 +70,7 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           cd build
-          zip "$PLATFORM-$FILE_NAME.zip" "$FILE_NAME"
+          7z a "$PLATFORM-$FILE_NAME.zip" "$FILE_NAME"
           gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME.zip"
 
   build_docker:
