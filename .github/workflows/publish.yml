@@ -51,7 +51,7 @@ jobs:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: install 7zip
-        if: ${{ matrix.platform }} == "win"
+        if: matrix.platform == "win"
         run: choco install p7zip -y
         shell: bash
       - name: publish
