@@ -15,8 +15,7 @@ on:
     types: [create-release]
     client_payload:
       release_tag:
-        required: false
-        default: 3.0.0
+        required: true
 
 jobs:
   create_release:
@@ -27,7 +26,7 @@ jobs:
         uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: 3.0.0 #${{ github.event.client_payload.release_tag }}
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
@@ -60,7 +59,7 @@ jobs:
         #if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: 3.0.0 # ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -97,7 +96,7 @@ jobs:
         #if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: 3.0.0 # ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         run: |
