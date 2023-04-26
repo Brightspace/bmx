@@ -19,14 +19,14 @@ on:
 
 jobs:
   create_release:
-    #if: ${{ github.event_name == 'repository_dispatch' }}
+    if: ${{ github.event_name == 'repository_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         env:
-          RELEASE_TAG: 3.0.0 #${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
@@ -60,10 +60,10 @@ jobs:
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        #if: ${{ github.event_name == 'repository_dispatch' }}
+        if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: 3.0.0 # ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -97,10 +97,10 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        #if: ${{ github.event_name == 'repository_dispatch' }}
+        if: ${{ github.event_name == 'repository_dispatch' }}
         shell: bash
         env:
-          RELEASE_TAG: 3.0.0 # ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         run: |
