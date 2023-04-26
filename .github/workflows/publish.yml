@@ -52,7 +52,7 @@ jobs:
         uses: Brightspace/third-party-actions@actions/checkout
       - name: install 7zip
         if: matrix.platform == 'win'
-        run: choco install p7zip -y
+        run: choco install 7zip -y
         shell: bash
       - name: publish
         shell: pwsh
