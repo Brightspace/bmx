@@ -91,7 +91,7 @@ jobs:
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
         if: github.event_name == 'repository_dispatch'
-        shell: bash
+        shell: pwsh
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
