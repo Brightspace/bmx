@@ -19,11 +19,9 @@ on:
 
 jobs:
   create_release:
-    if: ${{ github.event_name == 'repository_dispatch' }}
+    if: github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
@@ -50,28 +48,23 @@ jobs:
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
-      - name: install 7zip
-        if: matrix.platform == 'win'
-        run: choco install 7zip -y
-        shell: bash
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        if: ${{ github.event_name == 'repository_dispatch' }}
-        shell: bash
+        if: github.event_name == 'repository_dispatch'
+        shell: pwsh
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
-        working-directory: src/D2L.Bmx
+        working-directory: src/D2L.Bmx/build
         run: |
-          cd build
-          7z a "$PLATFORM-$FILE_NAME.zip" "$FILE_NAME"
-          gh release upload "$RELEASE_TAG" "$PLATFORM-$FILE_NAME.zip"
+          Compress-Archive -Path "$env:FILE_NAME" -DestinationPath "bmx-$env.PLATFORM.zip"
+          gh release upload "$RELEASE_TAG" "bmx-$env.PLATFORM.zip"
 
   build_docker:
     needs: create_release
@@ -97,13 +90,13 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        if: ${{ github.event_name == 'repository_dispatch' }}
+        if: github.event_name == 'repository_dispatch'
         shell: bash
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
+        working-directory: build
         run: |
-          cd build
-          zip "$PLATFORM-bmx.zip" "bmx"
-          gh release upload "$RELEASE_TAG" "$PLATFORM-bmx.zip"
+          Compress-Archive -Path "bmx" -DestinationPath "bmx-$env.PLATFORM.zip"
+          gh release upload "$RELEASE_TAG" "bmx-$env.PLATFORM.zip"
