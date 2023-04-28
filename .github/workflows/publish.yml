@@ -98,5 +98,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         working-directory: build
         run: |
-          Compress-Archive -Path "bmx" -DestinationPath "bmx-$env.PLATFORM.zip"
-          gh release upload "$RELEASE_TAG" "bmx-$env.PLATFORM.zip"
+          Compress-Archive -Path "bmx" -DestinationPath "bmx-$env:PLATFORM.zip"
+          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
