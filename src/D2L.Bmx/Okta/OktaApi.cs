@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -20,7 +21,7 @@ internal interface IOktaApi {
 	Task<OktaSession> CreateSessionOktaAsync( SessionOptions sessionOptions );
 	Task<OktaAccountState> GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetAccountOktaAsync( OktaAccountState state, string selectedAccount );
-	Task<string> GetMeResponseAsync( string sessionId );
+	Task<string?> GetMeResponseAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
@@ -116,7 +117,6 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<OktaAccountState> IOktaApi.GetAccountsOktaAsync( OktaAuthenticatedState state, string accountType ) {
-		// TODO: Consider making OktaAPI stateless as well (?)
 		var resp = await _httpClient.GetAsync(
 			"users/me/appLinks" );
 
@@ -143,22 +143,21 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Account could not be found" );
 	}
 
-	async Task<string> IOktaApi.GetMeResponseAsync( string sessionId ) {
+	async Task<string?> IOktaApi.GetMeResponseAsync( string sessionId ) {
 
 		try {
 			using var meResponse = await _httpClient.GetAsync( "users/me" );
-
 			if( !meResponse.IsSuccessStatusCode ) {
-				return "";
+				return null;
 			}
 
 			var meJson = await meResponse.Content.ReadAsStringAsync();
-			var me = JsonSerializer.Deserialize( meJson, SourceGenerationContext.Default.OktaMeResponse )!;
-			return me.Id;
+			var me = await meResponse.Content.ReadFromJsonAsync( SourceGenerationContext.Default.OktaMeResponse );
+			return me?.Id ?? null;
 		} catch( HttpRequestException ) {
-			return "";
+			return null;
 		} catch( JsonException ) {
-			return "";
+			return null;
 		}
 	}
 

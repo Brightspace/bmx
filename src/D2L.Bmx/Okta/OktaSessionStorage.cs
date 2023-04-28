@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx.Okta;
@@ -9,8 +8,8 @@ internal class OktaSessionStorage {
 	internal static void SaveSessions( List<OktaSessionCache> sessions ) {
 
 		string jsonString = JsonSerializer.Serialize(
-			sessions.ToArray(),
-			SourceGenerationContext.Default.OktaSessionCacheArray );
+			sessions,
+			SourceGenerationContext.Default.ListOktaSessionCache );
 		File.WriteAllText( SessionsFileName(), jsonString );
 	}
 
@@ -29,9 +28,9 @@ internal class OktaSessionStorage {
 
 		try {
 			var sessionsJson = File.ReadAllText( SessionsFileName() );
-			var sessions = JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.OktaSessionCacheArray );
+			var sessions = JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListOktaSessionCache );
 			if( sessions is not null ) {
-				return sessions.ToList();
+				return sessions;
 			}
 		} catch( JsonException ) {
 			return new();

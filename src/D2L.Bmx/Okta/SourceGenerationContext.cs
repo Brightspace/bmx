@@ -11,6 +11,6 @@ namespace D2L.Bmx.Okta;
 [JsonSerializable( typeof( OktaSession ) )]
 [JsonSerializable( typeof( OktaApp[] ) )]
 [JsonSerializable( typeof( OktaMeResponse ) )]
-[JsonSerializable( typeof( OktaSessionCache[] ) )]
+[JsonSerializable( typeof( List<OktaSessionCache> ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
@@ -38,7 +37,7 @@ internal class Authenticator {
 		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false );
 
-		string sessionToken = "";
+		string? sessionToken = null;
 
 		if( authState.OktaStateToken is not null ) {
 
@@ -67,9 +66,10 @@ internal class Authenticator {
 
 		if( !string.IsNullOrEmpty( sessionToken ) ) {
 			var sessionResp = await oktaApi.CreateSessionOktaAsync( new SessionOptions( sessionToken ) );
+			// TODO: Consider making OktaAPI stateless as well (?)
 			oktaApi.AddSession( sessionResp.Id );
 			CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
-			return new( true, sessionResp.Id );
+			return new( SuccessfulAuthentication: true, OktaSessionId: sessionResp.Id );
 		}
 
 		throw new BmxException( "Authentication Failed" );
@@ -82,12 +82,15 @@ internal class Authenticator {
 	) {
 		var sessionId = GetCachedOktaSession( user, org );
 		if( string.IsNullOrEmpty( sessionId ) ) {
-			return new( false, "" );
+			return new( SuccessfulAuthentication: false, OktaSessionId: "" );
 		}
 
 		oktaApi.AddSession( sessionId );
 		var userId = await oktaApi.GetMeResponseAsync( sessionId );
-		return new( !string.IsNullOrEmpty( userId ), sessionId );
+		if( !string.IsNullOrEmpty( userId ) ) {
+			return new( SuccessfulAuthentication: true, OktaSessionId: userId );
+		}
+		return new( SuccessfulAuthentication: false, OktaSessionId: "" );
 	}
 
 	private static void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
