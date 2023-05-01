@@ -34,7 +34,7 @@ internal class Authenticator {
 			}
 		}
 
-		var authState = await oktaApi.AuthenticateOktaAsync( new AuthenticateOptions( user, password ) )
+		var authState = await oktaApi.AuthenticateAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false );
 
 		string? sessionToken = null;
@@ -65,7 +65,7 @@ internal class Authenticator {
 		}
 
 		if( !string.IsNullOrEmpty( sessionToken ) ) {
-			var sessionResp = await oktaApi.CreateSessionOktaAsync( new SessionOptions( sessionToken ) );
+			var sessionResp = await oktaApi.CreateSessionAsync( new SessionOptions( sessionToken ) );
 			// TODO: Consider making OktaAPI stateless as well (?)
 			oktaApi.AddSession( sessionResp.Id );
 			CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
@@ -80,7 +80,7 @@ internal class Authenticator {
 		string user,
 		IOktaApi oktaApi
 	) {
-		var sessionId = GetCachedOktaSession( user, org );
+		var sessionId = GetCachedOktaSessionId( user, org );
 		if( string.IsNullOrEmpty( sessionId ) ) {
 			return new( SuccessfulAuthentication: false, OktaSessionId: "" );
 		}
@@ -104,7 +104,7 @@ internal class Authenticator {
 	private static string? GetCachedOktaSessionId( string userId, string org ) {
 		var oktaSessions = ReadOktaSessionCacheFile();
 		var session = oktaSessions.Find( session => session.UserId == userId && session.Org == org );
-		return session?.SessionId ?? "";
+		return session?.SessionId ?? null;
 	}
 
 	private static List<OktaSessionCache> ReadOktaSessionCacheFile() {

@@ -1,12 +1,10 @@
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
 namespace D2L.Bmx.Okta;
@@ -15,12 +13,13 @@ internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
 	Task<OktaAuthenticateState> AuthenticateAsync( AuthenticateOptions authOptions );
-	Task<OktaAuthenticatedState> AuthenticateChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
+	Task<string> AuthenticateChallengeMfaAsync( OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse );
 	Task IssueMfaChallengeAsync( OktaAuthenticateState state, int selectedMfaIndex );
 	Task<OktaSession> CreateSessionAsync( SessionOptions sessionOptions );
 	Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType );
 	Task<string> GetAccountAsync( OktaAccountState state, string selectedAccount );
+	Task<string?> GetMeResponseAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
@@ -77,7 +76,7 @@ internal class OktaApi : IOktaApi {
 				"application/json" ) );
 	}
 
-	async Task<OktaAuthenticatedState> IOktaApi.AuthenticateChallengeMfaAsync(
+	async Task<string> IOktaApi.AuthenticateChallengeMfaAsync(
 		OktaAuthenticateState state, int selectedMfaIndex,
 		string challengeResponse ) {
 
