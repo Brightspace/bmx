@@ -47,7 +47,7 @@ internal class PrintHandler {
 		// Asks for user password input, or logs them in through caches
 		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
 
-		var accountState = await _oktaApi.GetAccountsOktaAsync( authState, "amazon_aws" );
+		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
 
 		if( string.IsNullOrEmpty( account ) ) {
@@ -58,7 +58,7 @@ internal class PrintHandler {
 			}
 		}
 
-		var accountCredentials = await _oktaApi.GetAccountOktaAsync( accountState, account );
+		var accountCredentials = await _oktaApi.GetAccountAsync( accountState, account );
 		var roleState = _awsClient.GetRoles( accountCredentials );
 		var roles = roleState.Roles;
 
