@@ -101,7 +101,7 @@ internal class Authenticator {
 		OktaSessionStorage.SaveSessions( existingSessions );
 	}
 
-	private static string GetCachedOktaSession( string userId, string org ) {
+	private static string? GetCachedOktaSessionId( string userId, string org ) {
 		var oktaSessions = ReadOktaSessionCacheFile();
 		var session = oktaSessions.Find( session => session.UserId == userId && session.Org == org );
 		return session?.SessionId ?? "";
