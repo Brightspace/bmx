@@ -11,34 +11,71 @@ on:
     paths:
       - "src/**"
       - ".github/workflows/publish.yml"
+  repository_dispatch:
+    types: [create-release]
+    client_payload:
+      release_tag:
+        required: true
 
 jobs:
+  create_release:
+    if: github.event_name == 'repository_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        env:
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+
   build:
+    needs: create_release
+    if: ${{ !failure() }}
     strategy:
       matrix:
         include:
           - machine: windows-latest
             platform: win
+            file_name: bmx.exe
           - machine: macos-latest
             platform: osx
+            file_name: bmx
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
+    env:
+      PLATFORM: ${{ matrix.platform }}
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
       - name: publish
         shell: pwsh
-        env:
-          PLATFORM: ${{ matrix.platform }}
         working-directory: src/D2L.Bmx
-        run: dotnet publish -r $env:PLATFORM-x64 -c Release -o out
+        run: |
+          dotnet publish -r $env:PLATFORM-x64 -c Release -o build
+      - name: upload build
+        if: github.event_name == 'repository_dispatch'
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          PLATFORM: ${{ matrix.platform }}
+          FILE_NAME: ${{ matrix.file_name }}
+          GH_TOKEN: ${{ github.token }}
+        working-directory: src/D2L.Bmx/build
+        run: |
+          Compress-Archive -Path "$env:FILE_NAME" -DestinationPath "bmx-$env:PLATFORM.zip"
+          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
 
   build_docker:
+    needs: create_release
+    if: ${{ !failure() }}
     strategy:
       matrix:
         include:
           - file: Dockerfile.ubuntu
+            platform: ubuntu
           - file: Dockerfile.alpine
+            platform: alpine
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -51,4 +88,15 @@ jobs:
         env:
           DOCKERFILE: ${{ matrix.file }}
         run: |
-          docker buildx build -f $env:DOCKERFILE -o out .
+          docker buildx build -f $env:DOCKERFILE -o build .
+      - name: upload build
+        if: github.event_name == 'repository_dispatch'
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          PLATFORM: ${{ matrix.platform }}
+          GH_TOKEN: ${{ github.token }}
+        working-directory: build
+        run: |
+          Compress-Archive -Path "bmx" -DestinationPath "bmx-$env:PLATFORM.zip"
+          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
