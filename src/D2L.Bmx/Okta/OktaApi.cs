@@ -1,12 +1,10 @@
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Amazon.Runtime.Internal.Endpoints.StandardLibrary;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
 namespace D2L.Bmx.Okta;
