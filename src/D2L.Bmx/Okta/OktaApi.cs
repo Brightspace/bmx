@@ -152,7 +152,7 @@ internal class OktaApi : IOktaApi {
 
 			var meJson = await meResponse.Content.ReadAsStringAsync();
 			var me = await meResponse.Content.ReadFromJsonAsync( SourceGenerationContext.Default.OktaMeResponse );
-			return me?.Id ?? null;
+			return me?.Id;
 		} catch( HttpRequestException ) {
 			return null;
 		} catch( JsonException ) {
