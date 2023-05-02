@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<TargetName>bmx</TargetName>
 		<PublishAot>true</PublishAot>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net7.0</TargetFramework>
