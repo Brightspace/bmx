@@ -21,6 +21,8 @@ jobs:
   create_release:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: Brightspace/third-party-actions@actions/checkout
       - name: Create release
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
