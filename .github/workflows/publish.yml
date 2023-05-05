@@ -26,7 +26,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v3.0.1" --draft --generate-notes --title "Release $RELEASE_TAG"
+          gh release create "v3.0.1" --draft --generate-notes --title "Release 3.0.1"
 
   build:
     needs: create_release
@@ -62,7 +62,7 @@ jobs:
         working-directory: src/D2L.Bmx/build
         run: |
           Compress-Archive -Path "$env:FILE_NAME" -DestinationPath "bmx-$env:PLATFORM.zip"
-          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
+          gh release upload "v3.0.1" "bmx-$env:PLATFORM.zip"
 
   build_docker:
     needs: create_release
@@ -96,4 +96,4 @@ jobs:
         working-directory: build
         run: |
           Compress-Archive -Path "bmx" -DestinationPath "bmx-$env:PLATFORM.zip"
-          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
+          gh release upload "v3.0.1" "bmx-$env:PLATFORM.zip"
