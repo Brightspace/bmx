@@ -67,6 +67,7 @@ jobs:
             Compress-Archive -Path "$env:FILE_NAME" -DestinationPath "bmx-$env:PLATFORM.zip"
             gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
           } else if ($env:PLATFORM -eq 'osx') {
+            chmod u+x "bmx"
             tar -cvf "bmx-$env:PLATFORM.tar" "$env:FILE_NAME"
             gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.tar"
           }
