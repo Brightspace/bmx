@@ -1,5 +1,8 @@
+using System.Text.Json;
 using D2L.Bmx.Aws;
+using D2L.Bmx.Aws.Models;
 using D2L.Bmx.Okta;
+
 namespace D2L.Bmx;
 
 internal class PrintHandler {
@@ -21,6 +24,7 @@ internal class PrintHandler {
 		string? role,
 		int? duration,
 		bool nomask,
+		bool headless,
 		string? output
 	) {
 
@@ -30,8 +34,10 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
-			} else {
+			} else if( !headless ) {
 				org = ConsolePrompter.PromptOrg();
+			} else {
+				throw new BmxException( "Org value was not provided" );
 			}
 		};
 
@@ -39,13 +45,15 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( user ) ) {
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
-			} else {
+			} else if( !headless ) {
 				user = ConsolePrompter.PromptUser();
+			} else {
+				throw new BmxException( "User value was not provided" );
 			}
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, headless, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
@@ -53,8 +61,10 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( account ) ) {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
 				account = config.Account;
-			} else {
+			} else if( !headless ) {
 				account = ConsolePrompter.PromptAccount( accounts );
+			} else {
+				throw new BmxException( "Account value was not provided" );
 			}
 		}
 
@@ -65,8 +75,10 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( role ) ) {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
 				role = config.Role;
-			} else {
+			} else if( !headless ) {
 				role = ConsolePrompter.PromptRole( roles );
+			} else {
+				throw new BmxException( "Role value was not provided" );
 			}
 		}
 
@@ -84,6 +96,8 @@ internal class PrintHandler {
 			PrintBash( tokens );
 		} else if( string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintPowershell( tokens );
+		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
+			PrintJson( tokens );
 		} else {
 			if( System.OperatingSystem.IsWindows() ) {
 				PrintPowershell( tokens );
@@ -95,14 +109,27 @@ internal class PrintHandler {
 
 	private void PrintBash( AwsCredentials credentials ) {
 		Console.WriteLine( string.Join( '\n',
-			$"export AWS_SESSION_TOKEN='{credentials.AwsSessionToken}'",
-			$"export AWS_ACCESS_KEY_ID='{credentials.AwsAccessKeyId}'",
-			$"export AWS_SECRET_KEY_ID='{credentials.AwsSecretAccessKey}'" ) );
+			$"export AWS_SESSION_TOKEN='{credentials.SessionToken}'",
+			$"export AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}'",
+			$"export AWS_SECRET_KEY_ID='{credentials.SecretAccessKey}'" ) );
 	}
 	private void PrintPowershell( AwsCredentials credentials ) {
 		Console.WriteLine( string.Join( ' ',
-			$"$env:AWS_SESSION_TOKEN='{credentials.AwsSessionToken}';",
-			$"$env:AWS_ACCESS_KEY_ID='{credentials.AwsAccessKeyId}';",
-			$"$env:AWS_SECRET_KEY_ID='{credentials.AwsSecretAccessKey}';" ) );
+			$"$env:AWS_SESSION_TOKEN='{credentials.SessionToken}';",
+			$"$env:AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}';",
+			$"$env:AWS_SECRET_KEY_ID='{credentials.SecretAccessKey}';" ) );
+	}
+	private void PrintJson( AwsCredentials credentials ) {
+		var jsonCredentials = new AwsCredentials(
+			SessionToken: credentials.SessionToken,
+			AccessKeyId: credentials.AccessKeyId,
+			SecretAccessKey: credentials.SecretAccessKey,
+			Expiration: credentials.Expiration
+		);
+
+		var jsonString = JsonSerializer.Serialize(
+			jsonCredentials,
+			SourceGenerationContext.Default.AwsCredentials );
+		Console.WriteLine( jsonString );
 	}
 }

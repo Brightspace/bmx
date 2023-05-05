@@ -27,18 +27,25 @@ durationOption.AddValidator( result => {
 		result.ErrorMessage = "Invalid duration";
 	}
 } );
+var headlessOption = new Option<bool>(
+	name: "--headless",
+	getDefaultValue: () => false,
+	description: "If the print handler should be run headless and assume all information is provided" );
 var nomaskOption = new Option<bool>(
 	name: "--nomask",
 	getDefaultValue: () => false,
 	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string>(
 	name: "--output",
-	description: "the output format [bash|powershell]"
+	description: "the output format [bash|powershell|json]"
 	);
 printOutputOption.AddValidator( result => {
 	var output = result.GetValueForOption( printOutputOption );
-	if( !string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase )
-		&& !string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
+	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
+		"bash", "powershell", "json"
+	};
+
+	if( !string.IsNullOrEmpty( output ) && !supportedOutputs.Contains( output ) ) {
 		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
 	}
 } );
@@ -60,6 +67,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 		printOutputOption,
 		roleOption,
 		userOption,
+		headlessOption
 	};
 
 printCommand.SetHandler( async ( InvocationContext context ) => {
@@ -75,6 +83,7 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
 			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
+			headless: context.ParseResult.GetValueForOption( headlessOption ),
 			output: context.ParseResult.GetValueForOption( printOutputOption )
 		);
 	} catch( BmxException e ) {

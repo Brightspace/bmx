@@ -3,6 +3,8 @@ using System.Text;
 using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
+using D2L.Bmx.Aws.Models;
+using D2L.Bmx.Aws.State;
 
 namespace D2L.Bmx.Aws;
 
@@ -59,9 +61,10 @@ internal class AwsClient : IAwsClient {
 			} );
 
 			return new AwsCredentials(
-				AwsSessionToken: authResp.Credentials.SessionToken,
-				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
-				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+				SessionToken: authResp.Credentials.SessionToken,
+				AccessKeyId: authResp.Credentials.AccessKeyId,
+				SecretAccessKey: authResp.Credentials.SecretAccessKey,
+				Expiration: authResp.Credentials.Expiration
 			);
 		}
 		throw new BmxException( "Invalid role selection" );
