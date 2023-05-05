@@ -19,7 +19,6 @@ on:
 
 jobs:
   create_release:
-    if: github.event_name == 'repository_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Create release
@@ -27,7 +26,7 @@ jobs:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+          gh release create "v3.0.1" --draft --generate-notes --title "Release $RELEASE_TAG"
 
   build:
     needs: create_release
@@ -54,7 +53,6 @@ jobs:
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
         shell: pwsh
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
@@ -90,7 +88,6 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
         shell: pwsh
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
