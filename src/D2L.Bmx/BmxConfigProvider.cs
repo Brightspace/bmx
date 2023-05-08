@@ -1,5 +1,3 @@
-using System.Reflection;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
@@ -57,15 +55,17 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 	}
 
 	public void SaveConfiguration( BmxConfig config ) {
-		StringBuilder configBuilder = new();
+		using StreamWriter writer = new StreamWriter( ConfigFileName(), false );
 
-		foreach( PropertyInfo property in config.GetType().GetProperties() ) {
-			var value = property.GetValue( config );
-			if( value is not null ) {
-				configBuilder.AppendLine( $"{property.Name}={value}" );
-			}
+		if( !string.IsNullOrEmpty( config.Org ) ) {
+			writer.WriteLine( $"org={config.Org}" );
 		}
-		File.WriteAllText( ConfigFileName(), configBuilder.ToString() );
+		if( !string.IsNullOrEmpty( config.User ) ) {
+			writer.WriteLine( $"user={config.User}" );
+		}
+		if( config.DefaultDuration.HasValue ) {
+			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
+		}
 	}
 
 	internal static string ConfigFileName() {
