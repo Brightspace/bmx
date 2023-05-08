@@ -75,7 +75,7 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 
 rootCommand.Add( configureCommand );
 
-var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables" )
+var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" )
 	{
 		accountOption,
 		durationOption,
