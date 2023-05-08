@@ -63,8 +63,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         working-directory: src/D2L.Bmx/build
         run: |
-          Compress-Archive -Path "$env:FILE_NAME" -DestinationPath "bmx-$env:PLATFORM.zip"
-          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
+          if ($env:PLATFORM -eq 'win') {
+            Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win.zip"
+            gh release upload "$env:RELEASE_TAG" "bmx-win.zip"
+          } else if ($env:PLATFORM -eq 'osx') {
+            chmod +x "bmx"
+            tar -czvf "bmx-osx.tar.gz" "bmx"
+            gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
+          }
 
   build_docker:
     needs: create_release
@@ -91,12 +97,13 @@ jobs:
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
         if: github.event_name == 'repository_dispatch'
-        shell: pwsh
+        shell: bash
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
         run: |
-          Compress-Archive -Path "bmx" -DestinationPath "bmx-$env:PLATFORM.zip"
-          gh release upload "$env:RELEASE_TAG" "bmx-$env:PLATFORM.zip"
+          chmod +x "bmx"
+          tar -czvf "bmx-$PLATFORM.tar.gz" "bmx"
+          gh release upload "$RELEASE_TAG" "bmx-$PLATFORM.tar.gz"
