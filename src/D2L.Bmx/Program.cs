@@ -51,7 +51,31 @@ var profileOption = new Option<string>(
 
 var rootCommand = new RootCommand();
 
-var printCommand = new Command( "print", "Print the long stuff to screen" )
+var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" )
+	{
+		orgOption,
+		userOption,
+		durationOption,
+	};
+
+configureCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new ConfigureHandler(
+		new BmxConfigProvider() );
+	try {
+		handler.Handle(
+			org: context.ParseResult.GetValueForOption( orgOption ),
+			user: context.ParseResult.GetValueForOption( userOption ),
+			duration: context.ParseResult.GetValueForOption( durationOption )
+		);
+	} catch( BmxException e ) {
+		Console.Error.WriteLine( e.Message );
+		context.ExitCode = 1;
+	}
+} );
+
+rootCommand.Add( configureCommand );
+
+var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables" )
 	{
 		accountOption,
 		durationOption,
@@ -85,7 +109,7 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 
 rootCommand.Add( printCommand );
 
-var writeCommand = new Command( "write", "Write to aws credential file" )
+var writeCommand = new Command( "write", "Write to AWS credentials file" )
 	{
 		accountOption,
 		durationOption,

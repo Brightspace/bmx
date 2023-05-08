@@ -32,6 +32,16 @@ internal static class ConsolePrompter {
 		return user;
 	}
 
+	public static int PromptDefaultDuration() {
+		Console.Write( "Default duration of session in minutes (recommended: 60): " );
+		string? input = Console.ReadLine();
+		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
+			throw new BmxException( "Invalid input for duration" );
+		}
+
+		return defaultDuration;
+	}
+
 	public static string PromptAccount( string[] accounts ) {
 		Console.WriteLine( "Available accounts:" );
 		for( int i = 0; i < accounts.Length; i++ ) {

@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
@@ -5,6 +7,7 @@ namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
 	BmxConfig GetConfiguration();
+	void SaveConfiguration( BmxConfig config );
 }
 
 internal class BmxConfigProvider : IBmxConfigProvider {
@@ -51,6 +54,26 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Profile: config["profile"],
 			DefaultDuration: defaultDuration
 		);
+	}
+
+	public void SaveConfiguration( BmxConfig config ) {
+		StringBuilder configBuilder = new();
+
+		foreach( PropertyInfo property in config.GetType().GetProperties() ) {
+			var value = property.GetValue( config );
+			if( value is not null ) {
+				configBuilder.AppendLine( $"{property.Name}={value}" );
+			}
+		}
+		File.WriteAllText( ConfigFileName(), configBuilder.ToString() );
+	}
+
+	internal static string ConfigFileName() {
+		return Path.Join( UserHomeDir(), ".bmx", "config" );
+	}
+
+	internal static string UserHomeDir() {
+		return Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file
