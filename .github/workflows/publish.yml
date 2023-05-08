@@ -69,7 +69,7 @@ jobs:
           } else if ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
             tar -czvf "bmx-osx.tar.gz" "bmx"
-            gh release upload "$RELEASE_TAG" "bmx-osx.tar.gz"
+            gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
           }
 
   build_docker:
@@ -97,7 +97,7 @@ jobs:
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
         if: github.event_name == 'repository_dispatch'
-        shell: pwsh
+        shell: shell
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PLATFORM: ${{ matrix.platform }}
