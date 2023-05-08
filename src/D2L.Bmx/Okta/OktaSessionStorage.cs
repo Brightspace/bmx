@@ -7,6 +7,12 @@ internal class OktaSessionStorage {
 
 	internal static void SaveSessions( List<OktaSessionCache> sessions ) {
 
+		if( !ConfigFileExists() ) {
+			Console.WriteLine( "No config file found. Your session will not be saved. " +
+				"Consider running `bmx configure` if you own this machine." );
+			return;
+		}
+
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
@@ -14,6 +20,10 @@ internal class OktaSessionStorage {
 	}
 
 	internal static List<OktaSessionCache> Sessions() {
+
+		if( !ConfigFileExists() ) {
+			return new();
+		}
 
 		var bmxDirectory = BmxDir();
 		var sessionsFileName = SessionsFileName();
@@ -46,8 +56,11 @@ internal class OktaSessionStorage {
 		return Path.Join( UserHomeDir(), ".bmx" );
 	}
 
-	internal static string UserHomeDir() {
+	internal static bool ConfigFileExists() {
+		return File.Exists( Path.Join( UserHomeDir(), ".bmx", "config" ) );
+	}
 
+	internal static string UserHomeDir() {
 		return Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	}
 }
