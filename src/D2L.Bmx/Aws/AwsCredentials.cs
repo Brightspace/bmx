@@ -4,6 +4,5 @@ internal record AwsCredentials(
 	string SessionToken,
 	string AccessKeyId,
 	string SecretAccessKey,
-	DateTime Expiration,
-	int Version = 1
+	DateTime Expiration
 );

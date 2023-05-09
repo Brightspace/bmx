@@ -4,7 +4,6 @@ using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using D2L.Bmx.Aws.Models;
-using D2L.Bmx.Aws.State;
 
 namespace D2L.Bmx.Aws;
 

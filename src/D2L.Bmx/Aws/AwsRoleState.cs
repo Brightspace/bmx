@@ -1,6 +1,4 @@
-using D2L.Bmx.Aws.Models;
-
-namespace D2L.Bmx.Aws.State;
+namespace D2L.Bmx.Aws;
 
 internal record AwsRoleState( List<AwsRole> AwsRoles, string SamlString ) {
 	public List<AwsRole> AwsRoles = AwsRoles;

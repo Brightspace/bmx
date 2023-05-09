@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Aws.Models;
@@ -120,16 +121,15 @@ internal class PrintHandler {
 			$"$env:AWS_SECRET_KEY_ID='{credentials.SecretAccessKey}';" ) );
 	}
 	private void PrintJson( AwsCredentials credentials ) {
-		var jsonCredentials = new AwsCredentials(
-			SessionToken: credentials.SessionToken,
-			AccessKeyId: credentials.AccessKeyId,
-			SecretAccessKey: credentials.SecretAccessKey,
-			Expiration: credentials.Expiration
-		);
 
-		var jsonString = JsonSerializer.Serialize(
-			jsonCredentials,
-			SourceGenerationContext.Default.AwsCredentials );
-		Console.WriteLine( jsonString );
+		string iso8601Expiration = credentials.Expiration.ToString( "yyyy-MM-ddTHH:mm:ss.fffffffK" );
+		Console.WriteLine( "{" );
+		Console.WriteLine( string.Join( '\n',
+			"\t\"Version\": 1,",
+			$"\t\"AccessKeyId\": \"{credentials.AccessKeyId}\",",
+			$"\t\"SecretAccessKey\": \"{credentials.SecretAccessKey}\",",
+			$"\t\"SessionToken\": \"{credentials.SessionToken}\",",
+			$"\t\"Expiration\": \"{iso8601Expiration}\"" ) );
+		Console.WriteLine( "}" );
 	}
 }

@@ -1,4 +1,4 @@
-namespace D2L.Bmx.Aws.Models;
+namespace D2L.Bmx.Aws;
 
 internal record AwsRole(
 	string RoleName,
