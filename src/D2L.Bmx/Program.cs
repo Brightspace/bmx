@@ -65,7 +65,7 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
-			duration: context.ParseResult.GetValueForOption( durationOption )
+			defaultDuration: context.ParseResult.GetValueForOption( durationOption )
 		);
 	} catch( BmxException e ) {
 		Console.Error.WriteLine( e.Message );

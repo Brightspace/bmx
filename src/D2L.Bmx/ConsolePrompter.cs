@@ -32,11 +32,11 @@ internal static class ConsolePrompter {
 		return user;
 	}
 
-	public static int PromptDefaultDuration() {
-		Console.Write( "Default duration of session in minutes (recommended: 60): " );
+	public static int? PromptDefaultDuration() {
+		Console.Write( "Default duration of session in minutes (optional, default: 60): " );
 		string? input = Console.ReadLine();
 		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
-			throw new BmxException( "Invalid input for duration" );
+			return null;
 		}
 
 		return defaultDuration;

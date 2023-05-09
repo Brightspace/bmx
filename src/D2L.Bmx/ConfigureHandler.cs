@@ -22,12 +22,18 @@ internal class ConfigureHandler {
 			user = ConsolePrompter.PromptUser();
 		};
 
-		if( duration is null ) {
-			duration = ConsolePrompter.PromptDefaultDuration();
+		if( defaultDuration is null ) {
+			defaultDuration = ConsolePrompter.PromptDefaultDuration();
 		}
 
-		BmxConfig config = new( Org: org, User: user, Account: null, Role: null, Profile: null, DefaultDuration: duration );
+		BmxConfig config = new(
+			Org: org,
+			User: user,
+			Account: null,
+			Role: null,
+			Profile: null,
+			DefaultDuration: defaultDuration );
 		_configProvider.SaveConfiguration( config );
-		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be saved." );
+		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
 	}
 }
