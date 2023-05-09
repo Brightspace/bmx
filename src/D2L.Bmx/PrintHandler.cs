@@ -1,5 +1,4 @@
 using D2L.Bmx.Aws;
-using D2L.Bmx.Aws.Models;
 using D2L.Bmx.Okta;
 
 namespace D2L.Bmx;

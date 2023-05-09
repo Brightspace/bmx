@@ -3,7 +3,6 @@ using System.Text;
 using System.Xml;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-using D2L.Bmx.Aws.Models;
 
 namespace D2L.Bmx.Aws;
 
