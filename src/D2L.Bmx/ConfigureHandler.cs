@@ -11,7 +11,7 @@ internal class ConfigureHandler {
 	public void Handle(
 		string? org,
 		string? user,
-		int? duration
+		int? defaultDuration
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
