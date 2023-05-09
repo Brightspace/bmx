@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using D2L.Bmx.Aws.Models;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
@@ -13,6 +12,5 @@ namespace D2L.Bmx.Okta;
 [JsonSerializable( typeof( OktaApp[] ) )]
 [JsonSerializable( typeof( OktaMeResponse ) )]
 [JsonSerializable( typeof( List<OktaSessionCache> ) )]
-[JsonSerializable( typeof( AwsCredentials ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }
