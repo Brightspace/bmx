@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using D2L.Bmx.Aws.Models;
 using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
