@@ -8,7 +8,7 @@ internal class OktaSessionStorage {
 	internal static void SaveSessions( List<OktaSessionCache> sessions ) {
 
 		if( !ConfigFileExists() ) {
-			Console.WriteLine( "No config file found. Your session will not be saved. " +
+			Console.WriteLine( "No config file found. Your Okta session will not be cached. " +
 				"Consider running `bmx configure` if you own this machine." );
 			return;
 		}
