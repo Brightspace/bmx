@@ -68,7 +68,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		}
 	}
 
-	internal static string ConfigFileName() {
+	private static string ConfigFileName() {
 		return Path.Join( UserHomeDir(), ".bmx", "config" );
 	}
 
