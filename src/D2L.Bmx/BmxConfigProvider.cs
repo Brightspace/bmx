@@ -12,7 +12,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
-		var configFileName = Utilities.CONFIG_FILE_NAME;
+		var configFileName = BmxPaths.CONFIG_FILE_NAME;
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
@@ -54,7 +54,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 	}
 
 	public void SaveConfiguration( BmxConfig config ) {
-		using var writer = new StreamWriter( Utilities.CONFIG_FILE_NAME, append: false );
+		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, append: false );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
 			writer.WriteLine( $"org={config.Org}" );
