@@ -10,13 +10,13 @@ internal class OktaSessionStorage {
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
-		File.WriteAllText( Utilities.SESSIONS_FILE_NAME, jsonString );
+		File.WriteAllText( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
 	internal static List<OktaSessionCache> Sessions() {
 
-		var bmxDirectory = Utilities.BMX_DIR;
-		var sessionsFileName = Utilities.SESSIONS_FILE_NAME;
+		var bmxDirectory = BmxPaths.BMX_DIR;
+		var sessionsFileName = BmxPaths.SESSIONS_FILE_NAME;
 
 		if( !Directory.Exists( bmxDirectory ) ) {
 			Directory.CreateDirectory( bmxDirectory );

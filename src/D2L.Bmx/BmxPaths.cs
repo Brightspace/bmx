@@ -1,6 +1,6 @@
 
 namespace D2L.Bmx;
-internal class Utilities {
+internal class BmxPaths {
 
 	public static readonly string USER_HOME_DIR = Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	public static readonly string BMX_DIR = Path.Join( USER_HOME_DIR, ".bmx" );
