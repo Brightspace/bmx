@@ -22,7 +22,7 @@ internal class PrintHandler {
 		string? role,
 		int? duration,
 		bool nomask,
-		bool headless,
+		bool nonInteractive,
 		string? output
 	) {
 
@@ -32,7 +32,7 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
-			} else if( !headless ) {
+			} else if( !nonInteractive ) {
 				org = ConsolePrompter.PromptOrg();
 			} else {
 				throw new BmxException( "Org value was not provided" );
@@ -43,7 +43,7 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( user ) ) {
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
-			} else if( !headless ) {
+			} else if( !nonInteractive ) {
 				user = ConsolePrompter.PromptUser();
 			} else {
 				throw new BmxException( "User value was not provided" );
@@ -51,7 +51,7 @@ internal class PrintHandler {
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, headless, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
@@ -59,7 +59,7 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( account ) ) {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
 				account = config.Account;
-			} else if( !headless ) {
+			} else if( !nonInteractive ) {
 				account = ConsolePrompter.PromptAccount( accounts );
 			} else {
 				throw new BmxException( "Account value was not provided" );
@@ -73,7 +73,7 @@ internal class PrintHandler {
 		if( string.IsNullOrEmpty( role ) ) {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
 				role = config.Role;
-			} else if( !headless ) {
+			} else if( !nonInteractive ) {
 				role = ConsolePrompter.PromptRole( roles );
 			} else {
 				throw new BmxException( "Role value was not provided" );

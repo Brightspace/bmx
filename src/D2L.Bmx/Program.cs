@@ -27,10 +27,10 @@ durationOption.AddValidator( result => {
 		result.ErrorMessage = "Invalid duration";
 	}
 } );
-var headlessOption = new Option<bool>(
-	name: "--headless",
+var nonInteractiveOption = new Option<bool>(
+	name: "--non-interactive",
 	getDefaultValue: () => false,
-	description: "If the print handler should be run headless and assume all information is provided" );
+	description: "If the print handler should be run without user input and assume all information is provided" );
 var nomaskOption = new Option<bool>(
 	name: "--nomask",
 	getDefaultValue: () => false,
@@ -67,7 +67,7 @@ var printCommand = new Command( "print", "Print the long stuff to screen" )
 		printOutputOption,
 		roleOption,
 		userOption,
-		headlessOption
+		nonInteractiveOption
 	};
 
 printCommand.SetHandler( async ( InvocationContext context ) => {
@@ -83,7 +83,7 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
 			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
-			headless: context.ParseResult.GetValueForOption( headlessOption ),
+			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 			output: context.ParseResult.GetValueForOption( printOutputOption )
 		);
 	} catch( BmxException e ) {
