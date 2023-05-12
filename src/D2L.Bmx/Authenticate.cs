@@ -9,6 +9,7 @@ internal class Authenticator {
 		string org,
 		string user,
 		bool nomask,
+		bool nonInteractive,
 		IOktaApi oktaApi ) {
 
 		oktaApi.SetOrganization( org );
@@ -16,6 +17,8 @@ internal class Authenticator {
 		var cachedSession = await AuthenticateFromCacheAsync( org, user, oktaApi );
 		if( cachedSession.SuccessfulAuthentication ) {
 			return cachedSession;
+		} else if( nonInteractive ) {
+			throw new BmxException( "Authentication failed. No cached session" );
 		}
 
 		Console.Write( "Okta Password: " );

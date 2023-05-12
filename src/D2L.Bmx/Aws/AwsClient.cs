@@ -59,9 +59,10 @@ internal class AwsClient : IAwsClient {
 			} );
 
 			return new AwsCredentials(
-				AwsSessionToken: authResp.Credentials.SessionToken,
-				AwsAccessKeyId: authResp.Credentials.AccessKeyId,
-				AwsSecretAccessKey: authResp.Credentials.SecretAccessKey
+				SessionToken: authResp.Credentials.SessionToken,
+				AccessKeyId: authResp.Credentials.AccessKeyId,
+				SecretAccessKey: authResp.Credentials.SecretAccessKey,
+				Expiration: authResp.Credentials.Expiration
 			);
 		}
 		throw new BmxException( "Invalid role selection" );

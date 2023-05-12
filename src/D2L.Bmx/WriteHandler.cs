@@ -45,7 +45,7 @@ internal class WriteHandler {
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive: false, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
@@ -98,9 +98,9 @@ internal class WriteHandler {
 		}
 
 		var profileOptions = new CredentialProfileOptions {
-			Token = tokens.AwsSessionToken,
-			AccessKey = tokens.AwsAccessKeyId,
-			SecretKey = tokens.AwsSecretAccessKey
+			Token = tokens.SessionToken,
+			AccessKey = tokens.AccessKeyId,
+			SecretKey = tokens.SecretAccessKey
 		};
 		credentialsFile.RegisterProfile( new CredentialProfile( profile, profileOptions ) );
 	}
