@@ -79,9 +79,9 @@ jobs:
       matrix:
         include:
           - file: Dockerfile.ubuntu
-            platform: ubuntu
+            platform: linux
           - file: Dockerfile.alpine
-            platform: alpine
+            platform: linux.alpine
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
