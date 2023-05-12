@@ -68,7 +68,12 @@ internal class Authenticator {
 			var sessionResp = await oktaApi.CreateSessionAsync( new SessionOptions( sessionToken ) );
 			// TODO: Consider making OktaAPI stateless as well (?)
 			oktaApi.AddSession( sessionResp.Id );
-			CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
+			if( File.Exists( Utilities.CONFIG_FILE_NAME ) ) {
+				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
+			} else {
+				Console.WriteLine( "No config file found. Your Okta session will not be cached. " +
+				"Consider running `bmx configure` if you own this machine." );
+			}
 			return new( SuccessfulAuthentication: true, OktaSessionId: sessionResp.Id );
 		}
 
@@ -102,6 +107,10 @@ internal class Authenticator {
 	}
 
 	private static string? GetCachedOktaSessionId( string userId, string org ) {
+		if( !File.Exists( Utilities.CONFIG_FILE_NAME ) ) {
+			return null;
+		}
+
 		var oktaSessions = ReadOktaSessionCacheFile();
 		var session = oktaSessions.Find( session => session.UserId == userId && session.Org == org );
 		return session?.SessionId;
