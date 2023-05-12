@@ -7,26 +7,16 @@ internal class OktaSessionStorage {
 
 	internal static void SaveSessions( List<OktaSessionCache> sessions ) {
 
-		if( !ConfigFileExists() ) {
-			Console.WriteLine( "No config file found. Your session will not be saved. " +
-				"Consider running `bmx configure` if you own this machine." );
-			return;
-		}
-
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
-		File.WriteAllText( SessionsFileName(), jsonString );
+		File.WriteAllText( Utilities.SESSIONS_FILE_NAME, jsonString );
 	}
 
 	internal static List<OktaSessionCache> Sessions() {
 
-		if( !ConfigFileExists() ) {
-			return new();
-		}
-
-		var bmxDirectory = BmxDir();
-		var sessionsFileName = SessionsFileName();
+		var bmxDirectory = Utilities.BMX_DIR;
+		var sessionsFileName = Utilities.SESSIONS_FILE_NAME;
 
 		if( !Directory.Exists( bmxDirectory ) ) {
 			Directory.CreateDirectory( bmxDirectory );
@@ -37,7 +27,7 @@ internal class OktaSessionStorage {
 		}
 
 		try {
-			var sessionsJson = File.ReadAllText( SessionsFileName() );
+			var sessionsJson = File.ReadAllText( sessionsFileName );
 			var sessions = JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListOktaSessionCache );
 			if( sessions is not null ) {
 				return sessions;
@@ -46,21 +36,5 @@ internal class OktaSessionStorage {
 			return new();
 		}
 		return new();
-	}
-
-	internal static string SessionsFileName() {
-		return Path.Join( UserHomeDir(), ".bmx", "sessions" );
-	}
-
-	internal static string BmxDir() {
-		return Path.Join( UserHomeDir(), ".bmx" );
-	}
-
-	internal static bool ConfigFileExists() {
-		return File.Exists( Path.Join( UserHomeDir(), ".bmx", "config" ) );
-	}
-
-	internal static string UserHomeDir() {
-		return Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	}
 }
