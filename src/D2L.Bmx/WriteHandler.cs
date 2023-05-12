@@ -45,7 +45,7 @@ internal class WriteHandler {
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, headless: false, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive: false, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		var accounts = accountState.Accounts;
