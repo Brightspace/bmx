@@ -12,11 +12,10 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
-		var configLocation = Path.Join( Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ), ".bmx",
-			"config" );
+		var configFileName = Utilities.CONFIG_FILE_NAME;
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
-		var configBuilder = new ConfigurationBuilder().AddIniFile( configLocation, optional: true );
+		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
 
 		bool.TryParse( configBuilder.Build()["allow_project_configs"], out bool shouldReadProjectConfig );
 
@@ -55,7 +54,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 	}
 
 	public void SaveConfiguration( BmxConfig config ) {
-		using StreamWriter writer = new StreamWriter( ConfigFileName(), false );
+		using var writer = new StreamWriter( Utilities.CONFIG_FILE_NAME, append: false );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
 			writer.WriteLine( $"org={config.Org}" );
@@ -66,14 +65,6 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		if( config.DefaultDuration.HasValue ) {
 			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
 		}
-	}
-
-	private static string ConfigFileName() {
-		return Path.Join( UserHomeDir(), ".bmx", "config" );
-	}
-
-	internal static string UserHomeDir() {
-		return Environment.GetFolderPath( Environment.SpecialFolder.UserProfile );
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file
