@@ -28,7 +28,7 @@ internal class AwsClient : IAwsClient {
 			foreach( XmlElement roleNode in roleNodes ) {
 				// SAML has value: <principal-arn>, <role-arn>
 				// The last part of the role-arn is a human readable name
-				var nodeContents = roleNode.InnerText.Split( "," );
+				string[] nodeContents = roleNode.InnerText.Split( "," );
 
 				roles.Add( new AwsRole(
 					RoleName: nodeContents[1].Split( "/" )[1],
@@ -69,15 +69,15 @@ internal class AwsClient : IAwsClient {
 	}
 
 	private XmlDocument ParseSamlToken( string encodedSaml ) {
-		var samlStatements = encodedSaml.Split( ";" );
+		string[] samlStatements = encodedSaml.Split( ";" );
 
 		// Process the B64 Encoded SAML string to get valid XML doc
 		var samlString = new StringBuilder();
-		foreach( var inputValueString in samlStatements ) {
+		foreach( string inputValueString in samlStatements ) {
 			samlString.Append( WebUtility.HtmlDecode( inputValueString ) );
 		}
 
-		var samlData = Convert.FromBase64String( samlString.ToString() );
+		byte[] samlData = Convert.FromBase64String( samlString.ToString() );
 
 		var samlToken = new XmlDocument();
 		samlToken.LoadXml( Encoding.UTF8.GetString( samlData ) );

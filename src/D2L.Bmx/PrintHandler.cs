@@ -54,7 +54,7 @@ internal class PrintHandler {
 		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
-		var accounts = accountState.Accounts;
+		string[] accounts = accountState.Accounts;
 
 		if( string.IsNullOrEmpty( account ) ) {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
@@ -66,9 +66,9 @@ internal class PrintHandler {
 			}
 		}
 
-		var accountCredentials = await _oktaApi.GetAccountAsync( accountState, account );
+		string accountCredentials = await _oktaApi.GetAccountAsync( accountState, account );
 		var roleState = _awsClient.GetRoles( accountCredentials );
-		var roles = roleState.Roles;
+		string[] roles = roleState.Roles;
 
 		if( string.IsNullOrEmpty( role ) ) {
 			if( !string.IsNullOrEmpty( config.Role ) ) {

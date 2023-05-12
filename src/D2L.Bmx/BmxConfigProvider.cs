@@ -11,7 +11,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
-		var configLocation = Path.Join( Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ), ".bmx",
+		string configLocation = Path.Join( Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ), ".bmx",
 			"config" );
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)

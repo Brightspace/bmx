@@ -4,7 +4,7 @@ internal static class ConsolePrompter {
 
 	public static string PromptOrg() {
 		Console.Write( "Okta org: " );
-		var org = Console.ReadLine();
+		string? org = Console.ReadLine();
 		if( string.IsNullOrEmpty( org ) ) {
 			throw new BmxException( "Invalid org input" );
 		}
@@ -14,7 +14,7 @@ internal static class ConsolePrompter {
 
 	public static string PromptProfile() {
 		Console.Write( "AWS profile: " );
-		var profile = Console.ReadLine();
+		string? profile = Console.ReadLine();
 		if( string.IsNullOrEmpty( profile ) ) {
 			throw new BmxException( "Invalid profile input" );
 		}
@@ -24,7 +24,7 @@ internal static class ConsolePrompter {
 
 	public static string PromptUser() {
 		Console.Write( "Okta Username: " );
-		var user = Console.ReadLine();
+		string? user = Console.ReadLine();
 		if( string.IsNullOrEmpty( user ) ) {
 			throw new BmxException( "Invalid user input" );
 		}
