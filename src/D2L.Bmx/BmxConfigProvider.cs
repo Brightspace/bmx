@@ -5,17 +5,17 @@ namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
 	BmxConfig GetConfiguration();
+	void SaveConfiguration( BmxConfig config );
 }
 
 internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
-		string configLocation = Path.Join( Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ), ".bmx",
-			"config" );
+		string configFileName = BmxPaths.CONFIG_FILE_NAME;
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
-		var configBuilder = new ConfigurationBuilder().AddIniFile( configLocation, optional: true );
+		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
 
 		bool.TryParse( configBuilder.Build()["allow_project_configs"], out bool shouldReadProjectConfig );
 
@@ -51,6 +51,20 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Profile: config["profile"],
 			DefaultDuration: defaultDuration
 		);
+	}
+
+	public void SaveConfiguration( BmxConfig config ) {
+		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, append: false );
+
+		if( !string.IsNullOrEmpty( config.Org ) ) {
+			writer.WriteLine( $"org={config.Org}" );
+		}
+		if( !string.IsNullOrEmpty( config.User ) ) {
+			writer.WriteLine( $"user={config.User}" );
+		}
+		if( config.DefaultDuration.HasValue ) {
+			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
+		}
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file

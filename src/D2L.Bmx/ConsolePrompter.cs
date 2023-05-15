@@ -32,6 +32,16 @@ internal static class ConsolePrompter {
 		return user;
 	}
 
+	public static int? PromptDefaultDuration() {
+		Console.Write( "Default duration of session in minutes (optional, default: 60): " );
+		string? input = Console.ReadLine();
+		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
+			return null;
+		}
+
+		return defaultDuration;
+	}
+
 	public static string PromptAccount( string[] accounts ) {
 		Console.WriteLine( "Available accounts:" );
 		for( int i = 0; i < accounts.Length; i++ ) {
