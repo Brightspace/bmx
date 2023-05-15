@@ -22,7 +22,7 @@ internal class Authenticator {
 		}
 
 		Console.Write( "Okta Password: " );
-		var password = "";
+		string password = "";
 
 		// TODO: remove nomask
 		while( true ) {
@@ -45,7 +45,7 @@ internal class Authenticator {
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-			var selectedMfaIndex = PromptMfa( mfaOptions );
+			int selectedMfaIndex = PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
 			string mfaInput = "";
 
@@ -88,13 +88,13 @@ internal class Authenticator {
 		string user,
 		IOktaApi oktaApi
 	) {
-		var sessionId = GetCachedOktaSessionId( user, org );
+		string? sessionId = GetCachedOktaSessionId( user, org );
 		if( string.IsNullOrEmpty( sessionId ) ) {
 			return new( SuccessfulAuthentication: false, OktaSessionId: "" );
 		}
 
 		oktaApi.AddSession( sessionId );
-		var userId = await oktaApi.GetMeResponseAsync( sessionId );
+		string? userId = await oktaApi.GetMeResponseAsync( sessionId );
 		if( !string.IsNullOrEmpty( userId ) ) {
 			return new( SuccessfulAuthentication: true, OktaSessionId: userId );
 		}

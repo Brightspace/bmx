@@ -40,7 +40,7 @@ var printOutputOption = new Option<string>(
 	description: "the output format [bash|powershell|json]"
 	);
 printOutputOption.AddValidator( result => {
-	var output = result.GetValueForOption( printOutputOption );
+	string? output = result.GetValueForOption( printOutputOption );
 	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
 		"bash", "powershell", "json"
 	};

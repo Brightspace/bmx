@@ -12,7 +12,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
-		var configFileName = BmxPaths.CONFIG_FILE_NAME;
+		string configFileName = BmxPaths.CONFIG_FILE_NAME;
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );

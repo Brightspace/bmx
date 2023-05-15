@@ -149,7 +149,7 @@ internal class OktaApi : IOktaApi {
 				return null;
 			}
 
-			var meJson = await meResponse.Content.ReadAsStringAsync();
+			string meJson = await meResponse.Content.ReadAsStringAsync();
 			var me = await meResponse.Content.ReadFromJsonAsync( SourceGenerationContext.Default.OktaMeResponse );
 			return me?.Id;
 		} catch( HttpRequestException ) {
@@ -161,7 +161,7 @@ internal class OktaApi : IOktaApi {
 
 	private string ExtractAwsSaml( string htmlResponse ) {
 		// HTML page is fairly malformed, grab just the <input> with the SAML data for further processing
-		var inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
+		string inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
 		var inputRegex = new Regex( inputRegexPattern, RegexOptions.Compiled );
 
 		// Access the SAML data from the parsed <input>
