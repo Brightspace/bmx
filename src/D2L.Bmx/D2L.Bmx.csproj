@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetName>bmx</TargetName>
+    <AssemblyName>bmx</AssemblyName>
     <PublishAot>true</PublishAot>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
