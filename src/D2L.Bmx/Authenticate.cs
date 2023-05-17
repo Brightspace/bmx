@@ -126,17 +126,23 @@ internal class Authenticator {
 	}
 
 	private static int PromptMfa( MfaOption[] mfaOptions ) {
-
 		Console.WriteLine( "MFA Required" );
-		for( int i = 0; i < mfaOptions.Length; i++ ) {
-			Console.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].Name}" );
-		}
-		Console.Write( "Select an available MFA option: " );
-		if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
-			throw new BmxException( "Invalid account selection" );
+		if( mfaOptions.Length > 1 ) {
+			for( int i = 0; i < mfaOptions.Length; i++ ) {
+				Console.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].Name}" );
+			}
+			Console.Write( "Select an available MFA option: " );
+			if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
+				throw new BmxException( "Invalid account selection" );
+			}
+			return index;
+		} else if( mfaOptions.Length == 0 ) {//idk, is mfaOptions' length gaurenteed to be >= 1?
+			throw new BmxException( "No MFA method have been set up for the current user." );
+		} else {
+			Console.WriteLine( $"MFA method: {mfaOptions[0].Provider}: {mfaOptions[0].Name}" );
+			return 1;
 		}
 
-		return index;
 	}
 
 	private static string PromptMfaInput( string mfaInputPrompt ) {
