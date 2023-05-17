@@ -109,13 +109,13 @@ internal class PrintHandler {
 		Console.WriteLine( string.Join( '\n',
 			$"export AWS_SESSION_TOKEN='{credentials.SessionToken}'",
 			$"export AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}'",
-			$"export AWS_SECRET_KEY_ID='{credentials.SecretAccessKey}'" ) );
+			$"export AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}'" ) );
 	}
 	private void PrintPowershell( AwsCredentials credentials ) {
 		Console.WriteLine( string.Join( ' ',
 			$"$env:AWS_SESSION_TOKEN='{credentials.SessionToken}';",
 			$"$env:AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}';",
-			$"$env:AWS_SECRET_KEY_ID='{credentials.SecretAccessKey}';" ) );
+			$"$env:AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}';" ) );
 	}
 	private void PrintJson( AwsCredentials credentials ) {
 
