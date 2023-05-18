@@ -127,12 +127,11 @@ internal class Authenticator {
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}
 	private static int MatchDefaultMFAoption( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
-		for( int i = 0; i < mfaOptions.Length; i++ ) {
-			if( ( mfaOptions[i].Provider == DefautMFAProvider ) && ( mfaOptions[i].Name == DefaultMFAmethod ) ) {
-				return i;
-			}
-		}
-		return -1;
+		return Array.IndexOf( mfaOptions,
+			mfaOptions.FirstOrDefault( option =>
+				option.Provider == DefautMFAProvider && option.Name == DefaultMFAmethod
+			)
+		);
 	}
 	private static int PromptMfa( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
 		Console.WriteLine( "MFA Required" );
