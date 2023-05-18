@@ -11,23 +11,28 @@ on:
     paths:
       - "src/**"
       - ".github/workflows/publish.yml"
-  repository_dispatch:
-    types: [create-release]
-    client_payload:
+  workflow_dispatch:
+    inputs:
       release_tag:
         required: true
+        description: 'Tag for the new release'
 
 jobs:
   create_release:
-    if: github.event_name == 'repository_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - name: Create release
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           GH_TOKEN: ${{ github.token }}
+        shell: pwsh
         run: |
-          gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+          $releaseUrl = gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+          $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
+          Write-Output "::set-output name=release_id::$releaseId"
 
   build:
     needs: create_release
@@ -54,10 +59,10 @@ jobs:
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -96,10 +101,10 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
