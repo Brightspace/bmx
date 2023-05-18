@@ -122,7 +122,7 @@ jobs:
   publish_release:
     needs: [create_release, build, build_docker]
     if: |
-      ${{ !failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'false' }}
+      ${{ !failure() && github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
