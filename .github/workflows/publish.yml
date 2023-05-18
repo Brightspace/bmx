@@ -25,7 +25,7 @@ on:
 
 jobs:
   create_release:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create.outputs.release_id }}
@@ -124,7 +124,8 @@ jobs:
   publish_release:
     needs: [create_release, build, build_docker]
     if: |
-      ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == false }}
+      github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == false
+      && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
