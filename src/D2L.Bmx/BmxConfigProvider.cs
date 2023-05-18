@@ -49,7 +49,8 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Account: config["account"],
 			Role: config["role"],
 			Profile: config["profile"],
-			DefaultDuration: defaultDuration
+			DefaultDuration: defaultDuration,
+			DefaultMFA: config["default_MFA"]
 		);
 	}
 
@@ -64,6 +65,9 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		}
 		if( config.DefaultDuration.HasValue ) {
 			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
+		}
+		if( !string.IsNullOrEmpty( config.DefaultMFA ) ) {
+			writer.WriteLine( $"default_MFA={config.DefaultMFA}" );
 		}
 	}
 

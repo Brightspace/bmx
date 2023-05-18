@@ -55,6 +55,9 @@ var writeOutputOption = new Option<string>(
 var profileOption = new Option<string>(
 	name: "--profile",
 	description: "aws profile name" );
+var MFAOption = new Option<string>(
+	name: "--dftMFA",
+	description: "the defaultMFA in the provider_method format (eg. OKTA_question)" );
 
 var rootCommand = new RootCommand();
 
@@ -63,6 +66,7 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 		orgOption,
 		userOption,
 		durationOption,
+		MFAOption
 	};
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
@@ -72,7 +76,8 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
-			defaultDuration: context.ParseResult.GetValueForOption( durationOption )
+			defaultDuration: context.ParseResult.GetValueForOption( durationOption ),
+			defaultMFA: context.ParseResult.GetValueForOption( MFAOption )
 		);
 	} catch( BmxException e ) {
 		Console.Error.WriteLine( e.Message );

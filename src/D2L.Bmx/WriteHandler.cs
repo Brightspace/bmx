@@ -25,7 +25,8 @@ internal class WriteHandler {
 		string? profile
 	) {
 		var config = _configProvider.GetConfiguration();
-
+		var DefautMFAProvider = "";
+		var DefaultMFAmethod = "";
 		// ask user to input org if org flag isn't set
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
@@ -44,8 +45,16 @@ internal class WriteHandler {
 			}
 		};
 
+		if( !string.IsNullOrEmpty( config.DefaultMFA ) ) {
+			var defaultMFA = config.DefaultMFA.Split( "_" );
+			if( defaultMFA.Length == 2 ) {
+				DefautMFAProvider = defaultMFA[0];
+				DefaultMFAmethod = defaultMFA[1];
+			}
+		}
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive: false, _oktaApi );
+		var authState = await Authenticator.AuthenticateAsync( org, user,
+		nomask, nonInteractive: false, _oktaApi, DefautMFAProvider, DefaultMFAmethod );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		string[] accounts = accountState.Accounts;

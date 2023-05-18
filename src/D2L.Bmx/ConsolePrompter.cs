@@ -67,4 +67,11 @@ internal static class ConsolePrompter {
 
 		return roles[index - 1];
 	}
+	public static string? PromptDefaultMFA() {
+		//1.Make user log in with username + password, get the list for them, save it as a int choice
+		//2.Or ask for Provider - method pair (Have to update it here everytime we add a new method)
+		Console.Write( "Default MFA choice (optional, Provider_Method format): " );
+		string? dftMFA = Console.ReadLine();
+		return dftMFA;
+	}
 }
