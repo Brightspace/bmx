@@ -128,9 +128,9 @@ internal class Authenticator {
 	}
 	private static int MatchDefaultMFAoption( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
 		return Array.IndexOf( mfaOptions,
-			mfaOptions.FirstOrDefault( option =>
+			Array.Find( mfaOptions, option =>
 				option.Provider == DefautMFAProvider && option.Name == DefaultMFAmethod
-			)
+)
 		);
 	}
 	private static int PromptMfa( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
