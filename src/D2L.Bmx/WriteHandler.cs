@@ -25,8 +25,8 @@ internal class WriteHandler {
 		string? profile
 	) {
 		var config = _configProvider.GetConfiguration();
-		var DefautMFAProvider = "";
-		var DefaultMFAmethod = "";
+		string DefautMFAProvider = "";
+		string DefaultMFAmethod = "";
 		// ask user to input org if org flag isn't set
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
@@ -46,7 +46,7 @@ internal class WriteHandler {
 		};
 
 		if( !string.IsNullOrEmpty( config.DefaultMFA ) ) {
-			var defaultMFA = config.DefaultMFA.Split( "_" );
+			string[] defaultMFA = config.DefaultMFA.Split( "_" );
 			if( defaultMFA.Length == 2 ) {
 				DefautMFAProvider = defaultMFA[0];
 				DefaultMFAmethod = defaultMFA[1];
