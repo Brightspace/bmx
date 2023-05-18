@@ -16,8 +16,8 @@ on:
       release_tag:
         required: true
         description: 'Tag for the new release'
-    dry_run:
-      description: 'If true, the draft release will not be finalized'
+    prerelease:
+      description: 'If true, the release will be set as a prerelease and not impact the latest tag'
       type: boolean
       required: true
       default: false
@@ -33,10 +33,12 @@ jobs:
       - name: Create release
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          PRERELEASE: ${{ github.events.input.prerelease }}
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --generate-notes --title "Release $env:RELEASE_TAG"
+          $prereleaseFlag = if ($env:PRERELEASE -eq $true) { '--prerelease' } else { '' }
+          $releaseUrl = gh release create "$env:RELEASE_TAG" $prereleaseFlag --draft --generate-notes --title "Release $env:RELEASE_TAG"
           if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
 
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
@@ -124,8 +126,7 @@ jobs:
   publish_release:
     needs: [create_release, build, build_docker]
     if: |
-      github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == false
-      && github.ref == 'refs/heads/main'
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
