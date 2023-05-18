@@ -16,6 +16,12 @@ on:
       release_tag:
         required: true
         description: 'Tag for the new release'
+    dry_run:
+      description: 'If true, the draft release will not be finalized'
+      type: boolean
+      required: true
+      default: false
+
 
 jobs:
   create_release:
@@ -112,3 +118,18 @@ jobs:
           chmod +x "bmx"
           tar -czvf "bmx-$PLATFORM.tar.gz" "bmx"
           gh release upload "$RELEASE_TAG" "bmx-$PLATFORM.tar.gz"
+
+  publish_release:
+    needs: [create_release, build, build_docker]
+    if: |
+      ${{ !failure() && github.event_name == 'workflow_dispatch' `
+        && github.event.inputs.dry_run == 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: finalize release
+        run: |
+          gh release update "$env:RELEASE_ID" --draft=false
