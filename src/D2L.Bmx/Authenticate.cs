@@ -126,7 +126,10 @@ internal class Authenticator {
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}
-	private static int MatchdefaultMfaoption( MfaOption[] mfaOptions, string defaultMfaProvider, string defaultMfamethod ) {
+	private static int MatchdefaultMfaoption(
+		MfaOption[] mfaOptions,
+		string defaultMfaProvider,
+		string defaultMfamethod ) {
 		return Array.IndexOf( mfaOptions,
 			Array.Find( mfaOptions, option =>
 				option.Provider == defaultMfaProvider && option.Name == defaultMfamethod
