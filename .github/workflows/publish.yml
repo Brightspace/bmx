@@ -36,9 +36,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $releaseUrl = gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+          $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --generate-notes --title "Release $env:RELEASE_TAG"
+          if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
+
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
-          Write-Output "::set-output name=release_id::$releaseId"
+          "release_id=$releaseId" >> $env:GITHUB_OUTPUT
 
   build:
     needs: create_release
@@ -131,5 +133,5 @@ jobs:
     steps:
       - name: finalize release
         run: |
-          # gh release edit "$env:RELEASE_ID" --draft=false
+          # gh release edit "$RELEASE_ID" --draft=false
           echo ":)"
