@@ -7,5 +7,5 @@ internal record BmxConfig(
 	string? Role,
 	string? Profile,
 	int? DefaultDuration,
-	string? DefaultMFA
+	string? defaultMfa
 );

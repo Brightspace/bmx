@@ -28,7 +28,7 @@ internal class ConfigureHandler {
 		}
 
 		if( defaultMFA is null ) {
-			defaultMFA = ConsolePrompter.PromptDefaultMFA();
+			defaultMFA = ConsolePrompter.PromptdefaultMfa();
 		}
 
 
@@ -39,7 +39,7 @@ internal class ConfigureHandler {
 			Role: null,
 			Profile: null,
 			DefaultDuration: defaultDuration,
-			DefaultMFA: defaultMFA );
+			defaultMfa: defaultMFA );
 		_configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
 	}

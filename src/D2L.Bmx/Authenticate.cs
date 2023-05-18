@@ -11,8 +11,8 @@ internal class Authenticator {
 		bool nomask,
 		bool nonInteractive,
 		IOktaApi oktaApi,
-		string DefautMFAProvider,
-		string DefaultMFAmethod ) {
+		string defaultMfaProvider,
+		string defaultMfamethod ) {
 
 		oktaApi.SetOrganization( org );
 
@@ -47,7 +47,7 @@ internal class Authenticator {
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-			int selectedMfaIndex = PromptMfa( mfaOptions, DefautMFAProvider, DefaultMFAmethod );
+			int selectedMfaIndex = PromptMfa( mfaOptions, defaultMfaProvider, defaultMfamethod );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
 			string mfaInput = "";
 
@@ -126,16 +126,16 @@ internal class Authenticator {
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}
-	private static int MatchDefaultMFAoption( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
+	private static int MatchdefaultMfaoption( MfaOption[] mfaOptions, string defaultMfaProvider, string defaultMfamethod ) {
 		return Array.IndexOf( mfaOptions,
 			Array.Find( mfaOptions, option =>
-				option.Provider == DefautMFAProvider && option.Name == DefaultMFAmethod
+				option.Provider == defaultMfaProvider && option.Name == defaultMfamethod
 )
 		);
 	}
-	private static int PromptMfa( MfaOption[] mfaOptions, string DefautMFAProvider, string DefaultMFAmethod ) {
+	private static int PromptMfa( MfaOption[] mfaOptions, string defaultMfaProvider, string defaultMfamethod ) {
 		Console.WriteLine( "MFA Required" );
-		int Defaultchoice = MatchDefaultMFAoption( mfaOptions, DefautMFAProvider, DefaultMFAmethod );
+		int Defaultchoice = MatchdefaultMfaoption( mfaOptions, defaultMfaProvider, defaultMfamethod );
 		if( Defaultchoice != -1 ) {
 			Console.WriteLine(
 				$"Using Default MFA method: {mfaOptions[Defaultchoice].Provider}: {mfaOptions[Defaultchoice].Name}"
