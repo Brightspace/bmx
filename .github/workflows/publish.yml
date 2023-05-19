@@ -38,8 +38,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          $prereleaseFlag = if ($env:PRERELEASE -eq $true) { '--prerelease' } else { '' }
-          $releaseUrl = gh release create "$env:RELEASE_TAG" $prereleaseFlag --draft --generate-notes --title "Release $env:RELEASE_TAG"
+          if ($env:PRERELEASE -eq 'true') {
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
+          } else {
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --generate-notes --title "Release $env:RELEASE_TAG"
+          }
           if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
 
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
