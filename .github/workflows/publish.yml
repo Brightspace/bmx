@@ -136,4 +136,4 @@ jobs:
     steps:
       - name: finalize release
         run: |
-          gh release edit "$RELEASE_ID" --draft=false
+          gh release edit "$RELEASE_ID" --draft=false --repo Brightspace/bmx
