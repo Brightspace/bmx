@@ -84,7 +84,7 @@ jobs:
           if ($env:PLATFORM -eq 'win') {
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win.zip"
             gh release upload "$env:RELEASE_TAG" "bmx-win.zip"
-          } else if ($env:PLATFORM -eq 'osx') {
+          } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
             tar -czvf "bmx-osx.tar.gz" "bmx"
             gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
