@@ -31,6 +31,7 @@ jobs:
       release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - name: Create release
+        id: create
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
           PRERELEASE: ${{ github.events.input.prerelease }}
