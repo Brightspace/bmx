@@ -48,20 +48,23 @@ internal class ConsolePrompter : IConsolePrompter {
 
 	string IConsolePrompter.PromptPassword() {
 		Console.Error.Write( "Okta Password: " );
-		string password = "";
+		var passwordChars = new List<char>();
 
 		while( true ) {
-			var input = Console.ReadKey( intercept: true );
+			ConsoleKeyInfo input = Console.ReadKey( intercept: true );
 			if( input.Key == ConsoleKey.Enter ) {
 				Console.Error.Write( '\n' );
 				break;
-			} else if( input.Key == ConsoleKey.Backspace && password.Length > 0 ) {
-				password = password.Remove( password.Length - 1, 1 );
+			}
+
+			if( input.Key == ConsoleKey.Backspace && passwordChars.Count > 0 ) {
+				passwordChars.RemoveAt( passwordChars.Count - 1 );
 			} else if( !char.IsControl( input.KeyChar ) ) {
-				password += input.KeyChar;
+				passwordChars.Add( input.KeyChar );
 			}
 		}
-		return password;
+
+		return new string( passwordChars.ToArray() );
 	}
 
 	int? IConsolePrompter.PromptDefaultDuration() {
