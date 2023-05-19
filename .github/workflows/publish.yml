@@ -24,7 +24,7 @@ on:
 
 jobs:
   create_release:
-    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.events.input.prerelease == 'true')
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.prerelease == 'true')
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create.outputs.release_id }}
@@ -32,8 +32,8 @@ jobs:
       - name: Create release
         id: create
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
-          PRERELEASE: ${{ github.events.input.prerelease }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          PRERELEASE: ${{ github.event.inputs.prerelease }}
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
