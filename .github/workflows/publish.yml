@@ -11,23 +11,42 @@ on:
     paths:
       - "src/**"
       - ".github/workflows/publish.yml"
-  repository_dispatch:
-    types: [create-release]
-    client_payload:
+  workflow_dispatch:
+    inputs:
       release_tag:
         required: true
+        description: 'Tag for the new release'
+    prerelease:
+      description: 'If true, the release will be set as a prerelease and not impact the latest tag'
+      type: boolean
+      required: true
+      default: false
+
 
 jobs:
   create_release:
-    if: github.event_name == 'repository_dispatch'
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.events.input.prerelease == 'true')
     runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - name: Create release
+        id: create
         env:
           RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          PRERELEASE: ${{ github.events.input.prerelease }}
           GH_TOKEN: ${{ github.token }}
+        shell: pwsh
         run: |
-          gh release create "$RELEASE_TAG" --draft --generate-notes --title "Release $RELEASE_TAG"
+          if ($env:PRERELEASE -eq 'true') {
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
+          } else {
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --generate-notes --title "Release $env:RELEASE_TAG"
+          }
+          if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
+
+          $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
+          "release_id=$releaseId" >> $env:GITHUB_OUTPUT
 
   build:
     needs: create_release
@@ -54,10 +73,10 @@ jobs:
         run: |
           dotnet publish -r $env:PLATFORM-x64 -c Release -o build
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -96,10 +115,10 @@ jobs:
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
       - name: upload build
-        if: github.event_name == 'repository_dispatch'
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
@@ -107,3 +126,15 @@ jobs:
           chmod +x "bmx"
           tar -czvf "bmx-$PLATFORM.tar.gz" "bmx"
           gh release upload "$RELEASE_TAG" "bmx-$PLATFORM.tar.gz"
+
+  publish_release:
+    needs: [create_release, build, build_docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: finalize release
+        run: |
+          gh release edit "$RELEASE_ID" --draft=false
