@@ -43,7 +43,7 @@ internal class WriteHandler {
 			} else {
 				org = _consolePrompter.PromptOrg();
 			}
-		};
+		}
 
 		// ask user to input username if user flag isn't set
 		if( string.IsNullOrEmpty( user ) ) {
@@ -52,7 +52,7 @@ internal class WriteHandler {
 			} else {
 				user = _consolePrompter.PromptUser();
 			}
-		};
+		}
 
 		// Asks for user password input, or logs them in through caches
 		var authState = await _oktaAuthenticator.AuthenticateAsync( org, user, nonInteractive: false, _oktaApi );

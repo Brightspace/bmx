@@ -50,7 +50,6 @@ internal class ConsolePrompter : IConsolePrompter {
 		Console.Error.Write( "Okta Password: " );
 		string password = "";
 
-		// TODO: remove nomask
 		while( true ) {
 			var input = Console.ReadKey( intercept: true );
 			if( input.Key == ConsoleKey.Enter ) {

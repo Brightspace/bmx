@@ -46,7 +46,7 @@ internal class PrintHandler {
 			} else {
 				throw new BmxException( "Org value was not provided" );
 			}
-		};
+		}
 
 		// ask user to input username if user flag isn't set
 		if( string.IsNullOrEmpty( user ) ) {
@@ -57,7 +57,7 @@ internal class PrintHandler {
 			} else {
 				throw new BmxException( "User value was not provided" );
 			}
-		};
+		}
 
 		// Asks for user password input, or logs them in through caches
 		var authState = await _oktaAuthenticator.AuthenticateAsync( org, user, nonInteractive, _oktaApi );

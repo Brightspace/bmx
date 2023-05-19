@@ -18,11 +18,11 @@ internal class ConfigureHandler {
 
 		if( string.IsNullOrEmpty( org ) ) {
 			org = _consolePrompter.PromptOrg();
-		};
+		}
 
 		if( string.IsNullOrEmpty( user ) ) {
 			user = _consolePrompter.PromptUser();
-		};
+		}
 
 		if( defaultDuration is null ) {
 			defaultDuration = _consolePrompter.PromptDefaultDuration();
