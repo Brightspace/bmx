@@ -126,8 +126,6 @@ jobs:
 
   publish_release:
     needs: [create_release, build, build_docker]
-    if: |
-      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
