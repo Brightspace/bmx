@@ -8,11 +8,21 @@ internal class PrintHandler {
 	private readonly IBmxConfigProvider _configProvider;
 	private readonly IOktaApi _oktaApi;
 	private readonly IAwsClient _awsClient;
+	private readonly OktaAuthenticator _oktaAuthenticator;
+	private readonly IConsolePrompter _consolePrompter;
 
-	public PrintHandler( IBmxConfigProvider configProvider, IOktaApi oktaApi, IAwsClient awsClient ) {
+	public PrintHandler(
+		IBmxConfigProvider configProvider,
+		IOktaApi oktaApi,
+		IAwsClient awsClient,
+		OktaAuthenticator oktaAuthenticator,
+		IConsolePrompter consolePrompter
+	) {
 		_configProvider = configProvider;
 		_oktaApi = oktaApi;
 		_awsClient = awsClient;
+		_oktaAuthenticator = oktaAuthenticator;
+		_consolePrompter = consolePrompter;
 	}
 
 	public async Task HandleAsync(
@@ -21,7 +31,6 @@ internal class PrintHandler {
 		string? account,
 		string? role,
 		int? duration,
-		bool nomask,
 		bool nonInteractive,
 		string? output
 	) {
@@ -33,7 +42,7 @@ internal class PrintHandler {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
 			} else if( !nonInteractive ) {
-				org = ConsolePrompter.PromptOrg();
+				org = _consolePrompter.PromptOrg();
 			} else {
 				throw new BmxException( "Org value was not provided" );
 			}
@@ -44,14 +53,14 @@ internal class PrintHandler {
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
 			} else if( !nonInteractive ) {
-				user = ConsolePrompter.PromptUser();
+				user = _consolePrompter.PromptUser();
 			} else {
 				throw new BmxException( "User value was not provided" );
 			}
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive, _oktaApi );
+		var authState = await _oktaAuthenticator.AuthenticateAsync( org, user, nonInteractive, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		string[] accounts = accountState.Accounts;
@@ -60,7 +69,7 @@ internal class PrintHandler {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
 				account = config.Account;
 			} else if( !nonInteractive ) {
-				account = ConsolePrompter.PromptAccount( accounts );
+				account = _consolePrompter.PromptAccount( accounts );
 			} else {
 				throw new BmxException( "Account value was not provided" );
 			}
@@ -74,7 +83,7 @@ internal class PrintHandler {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
 				role = config.Role;
 			} else if( !nonInteractive ) {
-				role = ConsolePrompter.PromptRole( roles );
+				role = _consolePrompter.PromptRole( roles );
 			} else {
 				throw new BmxException( "Role value was not provided" );
 			}

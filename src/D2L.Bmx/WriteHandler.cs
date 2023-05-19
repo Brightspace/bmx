@@ -8,10 +8,21 @@ internal class WriteHandler {
 	private readonly IBmxConfigProvider _configProvider;
 	private readonly IOktaApi _oktaApi;
 	private readonly IAwsClient _awsClient;
-	public WriteHandler( IBmxConfigProvider configProvider, IOktaApi oktaApi, IAwsClient awsClient ) {
+	private readonly OktaAuthenticator _oktaAuthenticator;
+	private readonly IConsolePrompter _consolePrompter;
+
+	public WriteHandler(
+		IBmxConfigProvider configProvider,
+		IOktaApi oktaApi,
+		IAwsClient awsClient,
+		OktaAuthenticator oktaAuthenticator,
+		IConsolePrompter consolePrompter
+	) {
 		_configProvider = configProvider;
 		_oktaApi = oktaApi;
 		_awsClient = awsClient;
+		_oktaAuthenticator = oktaAuthenticator;
+		_consolePrompter = consolePrompter;
 	}
 
 	public async Task HandleAsync(
@@ -20,7 +31,6 @@ internal class WriteHandler {
 		string? account,
 		string? role,
 		int? duration,
-		bool nomask,
 		string? output,
 		string? profile
 	) {
@@ -31,7 +41,7 @@ internal class WriteHandler {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
 			} else {
-				org = ConsolePrompter.PromptOrg();
+				org = _consolePrompter.PromptOrg();
 			}
 		};
 
@@ -40,12 +50,12 @@ internal class WriteHandler {
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
 			} else {
-				user = ConsolePrompter.PromptUser();
+				user = _consolePrompter.PromptUser();
 			}
 		};
 
 		// Asks for user password input, or logs them in through caches
-		var authState = await Authenticator.AuthenticateAsync( org, user, nomask, nonInteractive: false, _oktaApi );
+		var authState = await _oktaAuthenticator.AuthenticateAsync( org, user, nonInteractive: false, _oktaApi );
 
 		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
 		string[] accounts = accountState.Accounts;
@@ -54,7 +64,7 @@ internal class WriteHandler {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
 				account = config.Account;
 			} else {
-				account = ConsolePrompter.PromptAccount( accounts );
+				account = _consolePrompter.PromptAccount( accounts );
 			}
 		}
 
@@ -66,7 +76,7 @@ internal class WriteHandler {
 			if( !string.IsNullOrEmpty( config.Role ) ) {
 				role = config.Role;
 			} else {
-				role = ConsolePrompter.PromptRole( roles );
+				role = _consolePrompter.PromptRole( roles );
 			}
 		}
 
@@ -85,7 +95,7 @@ internal class WriteHandler {
 			if( !string.IsNullOrEmpty( config.Profile ) ) {
 				profile = config.Profile;
 			} else {
-				profile = ConsolePrompter.PromptProfile();
+				profile = _consolePrompter.PromptProfile();
 			}
 		}
 

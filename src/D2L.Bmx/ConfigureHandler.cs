@@ -3,9 +3,11 @@ namespace D2L.Bmx;
 internal class ConfigureHandler {
 
 	private readonly IBmxConfigProvider _configProvider;
+	private readonly IConsolePrompter _consolePrompter;
 
-	public ConfigureHandler( IBmxConfigProvider configProvider ) {
+	public ConfigureHandler( IBmxConfigProvider configProvider, IConsolePrompter consolePrompter ) {
 		_configProvider = configProvider;
+		_consolePrompter = consolePrompter;
 	}
 
 	public void Handle(
@@ -15,15 +17,15 @@ internal class ConfigureHandler {
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
-			org = ConsolePrompter.PromptOrg();
+			org = _consolePrompter.PromptOrg();
 		};
 
 		if( string.IsNullOrEmpty( user ) ) {
-			user = ConsolePrompter.PromptUser();
+			user = _consolePrompter.PromptUser();
 		};
 
 		if( defaultDuration is null ) {
-			defaultDuration = ConsolePrompter.PromptDefaultDuration();
+			defaultDuration = _consolePrompter.PromptDefaultDuration();
 		}
 
 		BmxConfig config = new(

@@ -1,16 +1,23 @@
-using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
 
-namespace D2L.Bmx;
+namespace D2L.Bmx.Okta;
 
-internal class Authenticator {
-	async public static Task<OktaAuthenticatedState> AuthenticateAsync(
+internal class OktaAuthenticator {
+	private readonly IConsolePrompter _consolePrompter;
+	private readonly IOktaSessionStorage _sessionStorage;
+
+	public OktaAuthenticator( IConsolePrompter consolePrompter, IOktaSessionStorage sessionStorage ) {
+		_consolePrompter = consolePrompter;
+		_sessionStorage = sessionStorage;
+	}
+
+	public async Task<OktaAuthenticatedState> AuthenticateAsync(
 		string org,
 		string user,
-		bool nomask,
 		bool nonInteractive,
-		IOktaApi oktaApi ) {
+		IOktaApi oktaApi
+	) {
 
 		oktaApi.SetOrganization( org );
 
@@ -21,21 +28,7 @@ internal class Authenticator {
 			throw new BmxException( "Authentication failed. No cached session" );
 		}
 
-		Console.Write( "Okta Password: " );
-		string password = "";
-
-		// TODO: remove nomask
-		while( true ) {
-			var input = Console.ReadKey( intercept: true );
-			if( input.Key == ConsoleKey.Enter ) {
-				Console.Write( '\n' );
-				break;
-			} else if( input.Key == ConsoleKey.Backspace && password.Length > 0 ) {
-				password = password.Remove( password.Length - 1, 1 );
-			} else if( !char.IsControl( input.KeyChar ) ) {
-				password += input.KeyChar;
-			}
-		}
+		string password = _consolePrompter.PromptPassword();
 
 		var authState = await oktaApi.AuthenticateAsync( new AuthenticateOptions( user, password ) )
 			.ConfigureAwait( false );
@@ -45,21 +38,21 @@ internal class Authenticator {
 		if( authState.OktaStateToken is not null ) {
 
 			var mfaOptions = authState.MfaOptions;
-			int selectedMfaIndex = PromptMfa( mfaOptions );
+			int selectedMfaIndex = _consolePrompter.PromptMfa( mfaOptions );
 			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
 			string mfaInput = "";
 
 			// TODO: Handle retry
 			if( selectedMfa.Type == MfaType.Challenge ) {
-				mfaInput = PromptMfaInput( "Code" );
+				mfaInput = _consolePrompter.PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Sms ) {
 				await oktaApi.IssueMfaChallengeAsync( authState, selectedMfaIndex - 1 );
-				mfaInput = PromptMfaInput( "Code" );
+				mfaInput = _consolePrompter.PromptMfaInput( "Code" );
 			} else if( selectedMfa.Type == MfaType.Question ) {
-				mfaInput = PromptMfaInput( "Answer" );
+				mfaInput = _consolePrompter.PromptMfaInput( "Answer" );
 			} else if( selectedMfa.Type == MfaType.Unknown ) {
 				// Identical to Code based workflow for now (capture same behaviour as BMX current)
-				PromptMfaInput( selectedMfa.Name );
+				_consolePrompter.PromptMfaInput( selectedMfa.Name );
 				throw new NotImplementedException();
 			}
 			sessionToken = await oktaApi.AuthenticateChallengeMfaAsync( authState, selectedMfaIndex - 1, mfaInput );
@@ -74,7 +67,7 @@ internal class Authenticator {
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			} else {
-				Console.WriteLine( "No config file found. Your Okta session will not be cached. " +
+				Console.Error.WriteLine( "No config file found. Your Okta session will not be cached. " +
 				"Consider running `bmx configure` if you own this machine." );
 			}
 			return new( SuccessfulAuthentication: true, OktaSessionId: sessionResp.Id );
@@ -83,7 +76,7 @@ internal class Authenticator {
 		throw new BmxException( "Authentication Failed" );
 	}
 
-	public static async Task<OktaAuthenticatedState> AuthenticateFromCacheAsync(
+	private async Task<OktaAuthenticatedState> AuthenticateFromCacheAsync(
 		string org,
 		string user,
 		IOktaApi oktaApi
@@ -101,15 +94,15 @@ internal class Authenticator {
 		return new( SuccessfulAuthentication: false, OktaSessionId: "" );
 	}
 
-	private static void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
+	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
 		var existingSessions = ReadOktaSessionCacheFile();
 		existingSessions.Add( session );
 
-		OktaSessionStorage.SaveSessions( existingSessions );
+		_sessionStorage.SaveSessions( existingSessions );
 	}
 
-	private static string? GetCachedOktaSessionId( string userId, string org ) {
+	private string? GetCachedOktaSessionId( string userId, string org ) {
 		if( !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 			return null;
 		}
@@ -119,40 +112,10 @@ internal class Authenticator {
 		return session?.SessionId;
 	}
 
-	private static List<OktaSessionCache> ReadOktaSessionCacheFile() {
-		var sourceCache = OktaSessionStorage.Sessions();
+	private List<OktaSessionCache> ReadOktaSessionCacheFile() {
+		var sourceCache = _sessionStorage.Sessions();
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
-	}
-
-	private static int PromptMfa( MfaOption[] mfaOptions ) {
-		Console.WriteLine( "MFA Required" );
-		if( mfaOptions.Length > 1 ) {
-			for( int i = 0; i < mfaOptions.Length; i++ ) {
-				Console.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].Name}" );
-			}
-			Console.Write( "Select an available MFA option: " );
-			if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
-				throw new BmxException( "Invalid account selection" );
-			}
-			return index;
-		} else if( mfaOptions.Length == 0 ) {//idk, is mfaOptions' length gaurenteed to be >= 1?
-			throw new BmxException( "No MFA method have been set up for the current user." );
-		} else {
-			Console.WriteLine( $"MFA method: {mfaOptions[0].Provider}: {mfaOptions[0].Name}" );
-			return 1;
-		}
-
-	}
-
-	private static string PromptMfaInput( string mfaInputPrompt ) {
-		Console.Write( $"{mfaInputPrompt}: " );
-		string? mfaInput = Console.ReadLine();
-
-		if( mfaInput is not null ) {
-			return mfaInput;
-		}
-		throw new BmxException( "Invalid Mfa Input" );
 	}
 
 }
