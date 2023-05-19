@@ -16,11 +16,11 @@ on:
       release_tag:
         required: true
         description: 'Tag for the new release'
-    prerelease:
-      description: 'If true, the release will be set as a prerelease and not impact the latest tag'
-      type: boolean
-      required: true
-      default: false
+      prerelease:
+        description: 'If true, the release will be set as a prerelease and not impact the latest tag'
+        type: boolean
+        required: true
+        default: false
 
 
 jobs:
