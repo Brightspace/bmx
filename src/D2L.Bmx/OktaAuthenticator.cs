@@ -63,26 +63,18 @@ internal class OktaAuthenticator {
 		string? sessionToken = null;
 
 		if( authState.OktaStateToken is not null ) {
+			OktaMfaFactor mfaFactor = _consolePrompter.SelectMfa( authState.OktaMfaFactors );
 
-			var mfaOptions = authState.MfaOptions;
-			int selectedMfaIndex = _consolePrompter.PromptMfa( mfaOptions );
-			var selectedMfa = mfaOptions[selectedMfaIndex - 1];
-			string mfaInput = "";
+			if( !IsMfaFactorTypeSupported( mfaFactor.FactorType ) ) {
+				throw new BmxException( "Selected MFA not supported by BMX." );
+			}
 
 			// TODO: Handle retry
-			if( selectedMfa.Type == MfaType.Challenge ) {
-				mfaInput = _consolePrompter.PromptMfaInput( "Code" );
-			} else if( selectedMfa.Type == MfaType.Sms ) {
-				await _oktaApi.IssueMfaChallengeAsync( authState, selectedMfaIndex - 1 );
-				mfaInput = _consolePrompter.PromptMfaInput( "Code" );
-			} else if( selectedMfa.Type == MfaType.Question ) {
-				mfaInput = _consolePrompter.PromptMfaInput( "Answer" );
-			} else if( selectedMfa.Type == MfaType.Unknown ) {
-				// Identical to Code based workflow for now (capture same behaviour as BMX current)
-				_consolePrompter.PromptMfaInput( selectedMfa.Name );
-				throw new NotImplementedException();
+			if( mfaFactor.FactorType is "sms" or "call" or "email" ) {
+				await _oktaApi.IssueMfaChallengeAsync( authState, mfaFactor );
 			}
-			sessionToken = await _oktaApi.AuthenticateChallengeMfaAsync( authState, selectedMfaIndex - 1, mfaInput );
+			string mfaResponse = _consolePrompter.GetMfaResponse( mfaFactor.FactorType == "question" ? "Answer" : "PassCode" );
+			sessionToken = await _oktaApi.VerifyMfaChallengeResponseAsync( authState, mfaFactor, mfaResponse );
 		} else if( authState.OktaSessionToken is not null ) {
 			sessionToken = authState.OktaSessionToken;
 		}
@@ -143,6 +135,18 @@ internal class OktaAuthenticator {
 		var sourceCache = _sessionStorage.Sessions();
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
+	}
+
+	private static bool IsMfaFactorTypeSupported( string mfaFactorType ) {
+		return mfaFactorType is
+			"call"
+			or "email"
+			or "question"
+			or "sms"
+			or "token:hardware"
+			or "token:hotp"
+			or "token:software:totp"
+			or "token";
 	}
 
 }
