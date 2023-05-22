@@ -1,6 +1,5 @@
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
-using D2L.Bmx.Okta.State;
 
 namespace D2L.Bmx;
 
@@ -49,21 +48,19 @@ internal class OktaAuthenticator {
 
 		_oktaApi.SetOrganization( org );
 
-		var cachedSession = await AuthenticateFromCacheAsync( org, user, _oktaApi );
-		if( cachedSession.SuccessfulAuthentication ) {
+		if( await TryAuthenticateFromCacheAsync( org, user, _oktaApi ) ) {
 			return _oktaApi;
-		} else if( nonInteractive ) {
+		}
+		if( nonInteractive ) {
 			throw new BmxException( "Authentication failed. No cached session" );
 		}
 
 		string password = _consolePrompter.PromptPassword();
 
-		var authState = await _oktaApi.AuthenticateAsync( new AuthenticateOptions( user, password ) );
+		var authnResponse = await _oktaApi.AuthenticateAsync( user, password );
 
-		string? sessionToken = null;
-
-		if( authState.OktaStateToken is not null ) {
-			OktaMfaFactor mfaFactor = _consolePrompter.SelectMfa( authState.OktaMfaFactors );
+		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
+			OktaMfaFactor mfaFactor = _consolePrompter.SelectMfa( mfaInfo.Factors );
 
 			if( !IsMfaFactorTypeSupported( mfaFactor.FactorType ) ) {
 				throw new BmxException( "Selected MFA not supported by BMX." );
@@ -71,16 +68,15 @@ internal class OktaAuthenticator {
 
 			// TODO: Handle retry
 			if( mfaFactor.FactorType is "sms" or "call" or "email" ) {
-				await _oktaApi.IssueMfaChallengeAsync( authState, mfaFactor );
+				await _oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
 			}
 			string mfaResponse = _consolePrompter.GetMfaResponse( mfaFactor.FactorType == "question" ? "Answer" : "PassCode" );
-			sessionToken = await _oktaApi.VerifyMfaChallengeResponseAsync( authState, mfaFactor, mfaResponse );
-		} else if( authState.OktaSessionToken is not null ) {
-			sessionToken = authState.OktaSessionToken;
+			authnResponse = await _oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
 		}
 
-		if( !string.IsNullOrEmpty( sessionToken ) ) {
-			var sessionResp = await _oktaApi.CreateSessionAsync( new SessionOptions( sessionToken ) );
+		if( authnResponse is AuthenticateResponse.Success successInfo ) {
+			var sessionResp = await _oktaApi.CreateSessionAsync( successInfo.SessionToken );
+
 			// TODO: Consider making OktaAPI stateless as well (?)
 			_oktaApi.AddSession( sessionResp.Id );
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
@@ -95,22 +91,19 @@ internal class OktaAuthenticator {
 		throw new BmxException( "Authentication Failed" );
 	}
 
-	private async Task<OktaAuthenticatedState> AuthenticateFromCacheAsync(
+	private async Task<bool> TryAuthenticateFromCacheAsync(
 		string org,
 		string user,
 		IOktaApi oktaApi
 	) {
 		string? sessionId = GetCachedOktaSessionId( user, org );
 		if( string.IsNullOrEmpty( sessionId ) ) {
-			return new( SuccessfulAuthentication: false, OktaSessionId: "" );
+			return false;
 		}
 
 		oktaApi.AddSession( sessionId );
-		string? userId = await oktaApi.GetMeResponseAsync( sessionId );
-		if( !string.IsNullOrEmpty( userId ) ) {
-			return new( SuccessfulAuthentication: true, OktaSessionId: userId );
-		}
-		return new( SuccessfulAuthentication: false, OktaSessionId: "" );
+		string? userId = await oktaApi.GetCurrentUserIdAsync( sessionId );
+		return !string.IsNullOrEmpty( userId );
 	}
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {

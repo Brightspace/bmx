@@ -1,5 +1,5 @@
 namespace D2L.Bmx.Okta.Models;
 
-internal record SessionOptions(
+internal record CreateSessionRequest(
 	string SessionToken
 );

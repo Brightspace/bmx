@@ -13,16 +13,16 @@ namespace D2L.Bmx.Okta;
 internal interface IOktaApi {
 	void SetOrganization( string organization );
 	void AddSession( string sessionId );
-	Task<OktaAuthenticateState> AuthenticateAsync( AuthenticateOptions authOptions );
-	Task<string> VerifyMfaChallengeResponseAsync(
-		OktaAuthenticateState state,
-		OktaMfaFactor mfaFactor,
+	Task<AuthenticateResponse> AuthenticateAsync( string username, string password );
+	Task IssueMfaChallengeAsync( string stateToken, string factorId );
+	Task<AuthenticateResponse> VerifyMfaChallengeResponseAsync(
+		string stateToken,
+		string factorId,
 		string challengeResponse );
-	Task IssueMfaChallengeAsync( OktaAuthenticateState state, OktaMfaFactor mfaFactor );
-	Task<OktaSession> CreateSessionAsync( SessionOptions sessionOptions );
+	Task<OktaSession> CreateSessionAsync( string sessionToken );
 	Task<OktaAccountState> GetAccountsAsync( string accountType );
 	Task<string> GetAccountAsync( OktaAccountState state, string selectedAccount );
-	Task<string?> GetMeResponseAsync( string sessionId );
+	Task<string?> GetCurrentUserIdAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
@@ -49,64 +49,80 @@ internal class OktaApi : IOktaApi {
 		}
 	}
 
-	async Task<OktaAuthenticateState> IOktaApi.AuthenticateAsync( AuthenticateOptions authOptions ) {
+	async Task<AuthenticateResponse> IOktaApi.AuthenticateAsync( string username, string password ) {
 		var resp = await _httpClient.PostAsync( "authn",
 			new StringContent(
-				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateOptions ),
+				JsonSerializer.Serialize(
+					new AuthenticateRequest( username, password ),
+					SourceGenerationContext.Default.AuthenticateRequest ),
 				Encoding.Default,
 				"application/json" ) );
-		var authInitial = await JsonSerializer.DeserializeAsync(
-			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseInital );
+		var authnResponse = await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync(),
+			SourceGenerationContext.Default.AuthenticateResponseRaw );
 
-		if( authInitial?.StateToken is not null || authInitial?.SessionToken is not null ) {
-			return new OktaAuthenticateState(
-				OktaStateToken: authInitial.StateToken,
-				OktaSessionToken: authInitial.SessionToken,
-				authInitial.Embedded?.Factors );
+		if( authnResponse is {
+			SessionToken: not null,
+			Status: AuthenticationStatus.SUCCESS
+		} ) {
+			return new AuthenticateResponse.Success( authnResponse.SessionToken );
+		}
+		if( authnResponse is {
+			StateToken: not null,
+			Embedded.Factors: not null,
+			Status: AuthenticationStatus.MFA_REQUIRED
+		} ) {
+			return new AuthenticateResponse.MfaRequired(
+				authnResponse.StateToken,
+				authnResponse.Embedded.Factors
+			);
 		}
 		throw new BmxException( "Error authenticating Okta" );
 	}
 
-	async Task IOktaApi.IssueMfaChallengeAsync( OktaAuthenticateState state, OktaMfaFactor mfaFactor ) {
-		var authOptions = new AuthenticateChallengeMfaOptions( FactorId: mfaFactor.Id, StateToken: state.OktaStateToken! );
+	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
+		var request = new IssueMfaChallengeRequest( StateToken: stateToken );
 
-		await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
+		await _httpClient.PostAsync( $"authn/factors/{factorId}/verify",
 			new StringContent(
-				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
+				JsonSerializer.Serialize( request, SourceGenerationContext.Default.IssueMfaChallengeRequest ),
 				Encoding.Default,
 				"application/json" ) );
 	}
 
-	async Task<string> IOktaApi.VerifyMfaChallengeResponseAsync(
-		OktaAuthenticateState state,
-		OktaMfaFactor mfaFactor,
+	async Task<AuthenticateResponse> IOktaApi.VerifyMfaChallengeResponseAsync(
+		string stateToken,
+		string factorId,
 		string challengeResponse
 	) {
-		var authOptions = new AuthenticateChallengeMfaOptions(
-			FactorId: mfaFactor.Id,
-			StateToken: state.OktaStateToken!,
+		var request = new VerifyMfaChallengeResponseRequest(
+			StateToken: stateToken,
 			PassCode: challengeResponse );
 
-		var resp = await _httpClient.PostAsync( $"authn/factors/{authOptions.FactorId}/verify",
+		var resp = await _httpClient.PostAsync( $"authn/factors/{factorId}/verify",
 			new StringContent(
-				JsonSerializer.Serialize( authOptions, SourceGenerationContext.Default.AuthenticateChallengeMfaOptions ),
+				JsonSerializer.Serialize( request, SourceGenerationContext.Default.VerifyMfaChallengeResponseRequest ),
 				Encoding.Default,
 				"application/json" ) );
-		var authSuccess = await JsonSerializer.DeserializeAsync<AuthenticateResponseSuccess>(
-			await resp.Content.ReadAsStreamAsync(), SourceGenerationContext.Default.AuthenticateResponseSuccess );
-		if( authSuccess?.SessionToken is not null ) {
-			return authSuccess.SessionToken;
+		var authnResponse = await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync(),
+			SourceGenerationContext.Default.AuthenticateResponseRaw );
+		if( authnResponse?.SessionToken is not null ) {
+			return new AuthenticateResponse.Success( authnResponse.SessionToken );
 		}
 		throw new BmxException( "Error authenticating Okta challenge MFA" );
 	}
 
-	async Task<OktaSession> IOktaApi.CreateSessionAsync( SessionOptions sessionOptions ) {
+	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
 		var resp = await _httpClient.PostAsync( "sessions",
 			new StringContent(
-				JsonSerializer.Serialize( sessionOptions, SourceGenerationContext.Default.SessionOptions ),
+				JsonSerializer.Serialize(
+					new CreateSessionRequest( sessionToken ),
+					SourceGenerationContext.Default.CreateSessionRequest ),
 				Encoding.Default,
 				"application/json" ) );
-		var session = await JsonSerializer.DeserializeAsync<OktaSession>( await resp.Content.ReadAsStreamAsync(),
+		var session = await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync(),
 			SourceGenerationContext.Default.OktaSession );
 		if( session is not null ) {
 			return session;
@@ -140,14 +156,12 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Account could not be found" );
 	}
 
-	async Task<string?> IOktaApi.GetMeResponseAsync( string sessionId ) {
+	async Task<string?> IOktaApi.GetCurrentUserIdAsync( string sessionId ) {
 		try {
 			using var meResponse = await _httpClient.GetAsync( "users/me" );
 			if( !meResponse.IsSuccessStatusCode ) {
 				return null;
 			}
-
-			string meJson = await meResponse.Content.ReadAsStringAsync();
 			var me = await meResponse.Content.ReadFromJsonAsync( SourceGenerationContext.Default.OktaMeResponse );
 			return me?.Id;
 		} catch( HttpRequestException ) {
@@ -157,7 +171,7 @@ internal class OktaApi : IOktaApi {
 		}
 	}
 
-	private string ExtractAwsSaml( string htmlResponse ) {
+	private static string ExtractAwsSaml( string htmlResponse ) {
 		// HTML page is fairly malformed, grab just the <input> with the SAML data for further processing
 		string inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
 		var inputRegex = new Regex( inputRegexPattern, RegexOptions.Compiled );
@@ -172,6 +186,5 @@ internal class OktaApi : IOktaApi {
 			return samlData.InnerText;
 		}
 		throw new BmxException( "Error extracting SAML data" );
-
 	}
 }
