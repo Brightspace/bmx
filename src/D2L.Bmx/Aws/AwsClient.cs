@@ -62,7 +62,7 @@ internal class AwsClient : IAwsClient {
 				SessionToken: authResp.Credentials.SessionToken,
 				AccessKeyId: authResp.Credentials.AccessKeyId,
 				SecretAccessKey: authResp.Credentials.SecretAccessKey,
-				Expiration: authResp.Credentials.Expiration
+				Expiration: authResp.Credentials.Expiration.ToUniversalTime()
 			);
 		}
 		throw new BmxException( "Invalid role selection" );
