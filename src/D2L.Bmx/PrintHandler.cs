@@ -1,28 +1,17 @@
 using D2L.Bmx.Aws;
-using D2L.Bmx.Okta;
 
 namespace D2L.Bmx;
 
 internal class PrintHandler {
-
-	private readonly IBmxConfigProvider _configProvider;
-	private readonly IOktaApi _oktaApi;
-	private readonly IAwsClient _awsClient;
-	private readonly OktaAuthenticator _oktaAuthenticator;
-	private readonly IConsolePrompter _consolePrompter;
+	private readonly OktaAuthenticator _oktaAuth;
+	private readonly AwsCredsCreator _awsCreds;
 
 	public PrintHandler(
-		IBmxConfigProvider configProvider,
-		IOktaApi oktaApi,
-		IAwsClient awsClient,
-		OktaAuthenticator oktaAuthenticator,
-		IConsolePrompter consolePrompter
+		OktaAuthenticator oktaAuth,
+		AwsCredsCreator awsCreds
 	) {
-		_configProvider = configProvider;
-		_oktaApi = oktaApi;
-		_awsClient = awsClient;
-		_oktaAuthenticator = oktaAuthenticator;
-		_consolePrompter = consolePrompter;
+		_oktaAuth = oktaAuth;
+		_awsCreds = awsCreds;
 	}
 
 	public async Task HandleAsync(
@@ -34,82 +23,20 @@ internal class PrintHandler {
 		bool nonInteractive,
 		string? output
 	) {
-
-		var config = _configProvider.GetConfiguration();
-
-		// ask user to input org if org flag isn't set
-		if( string.IsNullOrEmpty( org ) ) {
-			if( !string.IsNullOrEmpty( config.Org ) ) {
-				org = config.Org;
-			} else if( !nonInteractive ) {
-				org = _consolePrompter.PromptOrg();
-			} else {
-				throw new BmxException( "Org value was not provided" );
-			}
-		}
-
-		// ask user to input username if user flag isn't set
-		if( string.IsNullOrEmpty( user ) ) {
-			if( !string.IsNullOrEmpty( config.User ) ) {
-				user = config.User;
-			} else if( !nonInteractive ) {
-				user = _consolePrompter.PromptUser();
-			} else {
-				throw new BmxException( "User value was not provided" );
-			}
-		}
-
-		// Asks for user password input, or logs them in through caches
-		var authState = await _oktaAuthenticator.AuthenticateAsync( org, user, nonInteractive, _oktaApi );
-
-		var accountState = await _oktaApi.GetAccountsAsync( authState, "amazon_aws" );
-		string[] accounts = accountState.Accounts;
-
-		if( string.IsNullOrEmpty( account ) ) {
-			if( !string.IsNullOrEmpty( config.Account ) ) {
-				account = config.Account;
-			} else if( !nonInteractive ) {
-				account = _consolePrompter.PromptAccount( accounts );
-			} else {
-				throw new BmxException( "Account value was not provided" );
-			}
-		}
-
-		string accountCredentials = await _oktaApi.GetAccountAsync( accountState, account );
-		var roleState = _awsClient.GetRoles( accountCredentials );
-		string[] roles = roleState.Roles;
-
-		if( string.IsNullOrEmpty( role ) ) {
-			if( !string.IsNullOrEmpty( config.Role ) ) {
-				role = config.Role;
-			} else if( !nonInteractive ) {
-				role = _consolePrompter.PromptRole( roles );
-			} else {
-				throw new BmxException( "Role value was not provided" );
-			}
-		}
-
-		if( duration is null ) {
-			if( config.DefaultDuration is not null ) {
-				duration = config.DefaultDuration;
-			} else {
-				duration = 60;
-			}
-		}
-
-		var tokens = await _awsClient.GetTokensAsync( roleState, role, duration.GetValueOrDefault() );
+		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
+		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
-			PrintBash( tokens );
+			PrintBash( awsCreds );
 		} else if( string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
-			PrintPowershell( tokens );
+			PrintPowershell( awsCreds );
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
-			PrintJson( tokens );
+			PrintJson( awsCreds );
 		} else {
 			if( OperatingSystem.IsWindows() ) {
-				PrintPowershell( tokens );
+				PrintPowershell( awsCreds );
 			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
-				PrintBash( tokens );
+				PrintBash( awsCreds );
 			}
 		}
 	}
