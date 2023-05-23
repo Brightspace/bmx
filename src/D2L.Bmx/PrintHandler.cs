@@ -106,36 +106,39 @@ internal class PrintHandler {
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( tokens );
 		} else {
-			if( System.OperatingSystem.IsWindows() ) {
+			if( OperatingSystem.IsWindows() ) {
 				PrintPowershell( tokens );
-			} else if( System.OperatingSystem.IsMacOS() || System.OperatingSystem.IsLinux() ) {
+			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
 				PrintBash( tokens );
 			}
 		}
 	}
 
-	private void PrintBash( AwsCredentials credentials ) {
-		Console.WriteLine( string.Join( '\n',
-			$"export AWS_SESSION_TOKEN='{credentials.SessionToken}'",
-			$"export AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}'",
-			$"export AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}'" ) );
+	private static void PrintBash( AwsCredentials credentials ) {
+		Console.WriteLine( $"""
+			export AWS_SESSION_TOKEN='{credentials.SessionToken}'
+			export AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}'
+			export AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}'
+			""" );
 	}
-	private void PrintPowershell( AwsCredentials credentials ) {
-		Console.WriteLine( string.Join( ' ',
-			$"$env:AWS_SESSION_TOKEN='{credentials.SessionToken}';",
-			$"$env:AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}';",
-			$"$env:AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}';" ) );
-	}
-	private void PrintJson( AwsCredentials credentials ) {
 
-		string iso8601Expiration = credentials.Expiration.ToString( "yyyy-MM-ddTHH:mm:ss.fffffffK" );
-		Console.WriteLine( "{" );
-		Console.WriteLine( string.Join( '\n',
-			"\t\"Version\": 1,",
-			$"\t\"AccessKeyId\": \"{credentials.AccessKeyId}\",",
-			$"\t\"SecretAccessKey\": \"{credentials.SecretAccessKey}\",",
-			$"\t\"SessionToken\": \"{credentials.SessionToken}\",",
-			$"\t\"Expiration\": \"{iso8601Expiration}\"" ) );
-		Console.WriteLine( "}" );
+	private static void PrintPowershell( AwsCredentials credentials ) {
+		Console.WriteLine( $"""
+			$env:AWS_SESSION_TOKEN='{credentials.SessionToken}';
+			$env:AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}';
+			$env:AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}';
+			""" );
+	}
+
+	private static void PrintJson( AwsCredentials credentials ) {
+		Console.WriteLine( $$"""
+		{
+			"Version": 1,
+			"AccessKeyId": "{{credentials.AccessKeyId}}",
+			"SecretAccessKey": "{{credentials.SecretAccessKey}}",
+			"SessionToken": "{{credentials.SessionToken}}",
+			"Expiration": "{{credentials.Expiration:o}}"
+		}
+		""" );
 	}
 }
