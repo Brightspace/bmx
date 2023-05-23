@@ -12,6 +12,8 @@ internal interface IConsolePrompter {
 	string PromptRole( string[] roles );
 	int PromptMfa( MfaOption[] mfaOptions );
 	string PromptMfaInput( string mfaInputPrompt );
+	bool PromptAllowProjectConfig();
+
 }
 
 internal class ConsolePrompter : IConsolePrompter {
@@ -76,7 +78,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		return defaultDuration;
 	}
 
-	public static bool PromptAllowProjectConfig() {
+	bool IConsolePrompter.PromptAllowProjectConfig() {
 		Console.Error.Write( "Allow project configs? (true/false, default: false): " );
 		string? input = Console.ReadLine();
 		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
