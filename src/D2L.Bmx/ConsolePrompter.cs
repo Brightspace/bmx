@@ -13,7 +13,6 @@ internal interface IConsolePrompter {
 	int PromptMfa( MfaOption[] mfaOptions );
 	string PromptMfaInput( string mfaInputPrompt );
 	bool PromptAllowProjectConfig();
-
 }
 
 internal class ConsolePrompter : IConsolePrompter {
