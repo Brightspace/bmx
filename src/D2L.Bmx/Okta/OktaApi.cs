@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Okta.State;
+
 namespace D2L.Bmx.Okta;
 
 internal interface IOktaApi {

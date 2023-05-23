@@ -31,10 +31,6 @@ var nonInteractiveOption = new Option<bool>(
 	name: "--non-interactive",
 	getDefaultValue: () => false,
 	description: "If the print handler should be run without user input and assume all information is provided" );
-var nomaskOption = new Option<bool>(
-	name: "--nomask",
-	getDefaultValue: () => false,
-	description: "set to not mask the password, helps with debugging" );
 var printOutputOption = new Option<string>(
 	name: "--output",
 	description: "the output format [bash|powershell|json]"
@@ -67,7 +63,8 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider() );
+		new BmxConfigProvider(),
+		new ConsolePrompter() );
 	try {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -86,7 +83,6 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	{
 		accountOption,
 		durationOption,
-		nomaskOption,
 		orgOption,
 		printOutputOption,
 		roleOption,
@@ -95,10 +91,13 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	};
 
 printCommand.SetHandler( async ( InvocationContext context ) => {
+	var consolePrompter = new ConsolePrompter();
 	var handler = new PrintHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
+		new OktaAuthenticator( consolePrompter, new OktaSessionStorage() ),
+		consolePrompter );
 	try {
 		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -106,7 +105,6 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 			account: context.ParseResult.GetValueForOption( accountOption ),
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
 			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 			output: context.ParseResult.GetValueForOption( printOutputOption )
 		);
@@ -122,7 +120,6 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" )
 	{
 		accountOption,
 		durationOption,
-		nomaskOption,
 		orgOption,
 		writeOutputOption,
 		profileOption,
@@ -131,10 +128,13 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" )
 	};
 
 writeCommand.SetHandler( async ( InvocationContext context ) => {
+	var consolePrompter = new ConsolePrompter();
 	var handler = new WriteHandler(
 		new BmxConfigProvider(),
 		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ) );
+		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
+		new OktaAuthenticator( consolePrompter, new OktaSessionStorage() ),
+		consolePrompter );
 	try {
 		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -142,7 +142,6 @@ writeCommand.SetHandler( async ( InvocationContext context ) => {
 			account: context.ParseResult.GetValueForOption( accountOption ),
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nomask: context.ParseResult.GetValueForOption( nomaskOption ),
 			output: context.ParseResult.GetValueForOption( writeOutputOption ),
 			profile: context.ParseResult.GetValueForOption( profileOption )
 		);

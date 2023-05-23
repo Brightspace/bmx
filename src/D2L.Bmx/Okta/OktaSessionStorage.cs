@@ -3,9 +3,13 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx.Okta;
 
-internal class OktaSessionStorage {
+internal interface IOktaSessionStorage {
+	void SaveSessions( List<OktaSessionCache> sessions );
+	List<OktaSessionCache> Sessions();
+}
 
-	internal static void SaveSessions( List<OktaSessionCache> sessions ) {
+internal class OktaSessionStorage : IOktaSessionStorage {
+	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
 
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
@@ -13,7 +17,7 @@ internal class OktaSessionStorage {
 		File.WriteAllText( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
-	internal static List<OktaSessionCache> Sessions() {
+	List<OktaSessionCache> IOktaSessionStorage.Sessions() {
 
 		string bmxDirectory = BmxPaths.BMX_DIR;
 		string sessionsFileName = BmxPaths.SESSIONS_FILE_NAME;
