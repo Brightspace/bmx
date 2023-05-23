@@ -38,8 +38,16 @@ internal static class ConsolePrompter {
 		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
 			return null;
 		}
-
 		return defaultDuration;
+	}
+
+	public static bool PromptAllowProjectConfig() {
+		Console.Write( "Allow project configs? (true/false, default: false): " );
+		string? input = Console.ReadLine();
+		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
+			return false;
+		}
+		return allowProjectConfigs;
 	}
 
 	public static string PromptAccount( string[] accounts ) {

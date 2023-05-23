@@ -6,5 +6,6 @@ internal record BmxConfig(
 	string? Account,
 	string? Role,
 	string? Profile,
-	int? DefaultDuration
+	int? DefaultDuration,
+	bool AllowProjectConfigs
 );

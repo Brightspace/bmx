@@ -26,13 +26,16 @@ internal class ConfigureHandler {
 			defaultDuration = ConsolePrompter.PromptDefaultDuration();
 		}
 
+		var allowProjectConfigs = ConsolePrompter.PromptAllowProjectConfig();
+
 		BmxConfig config = new(
 			Org: org,
 			User: user,
 			Account: null,
 			Role: null,
 			Profile: null,
-			DefaultDuration: defaultDuration );
+			DefaultDuration: defaultDuration,
+			allowProjectConfigs );
 		_configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
 	}
