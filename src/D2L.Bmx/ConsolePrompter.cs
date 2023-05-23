@@ -12,6 +12,7 @@ internal interface IConsolePrompter {
 	string PromptRole( string[] roles );
 	int PromptMfa( MfaOption[] mfaOptions );
 	string PromptMfaInput( string mfaInputPrompt );
+	bool PromptAllowProjectConfig();
 }
 
 internal class ConsolePrompter : IConsolePrompter {
@@ -68,13 +69,21 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	int? IConsolePrompter.PromptDefaultDuration() {
-		Console.Error.Write( "Default duration of session in minutes (optional, default: 60): " );
+		Console.Error.Write( "Default duration of AWS sessions in minutes (optional, default: 60): " );
 		string? input = Console.ReadLine();
 		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
 			return null;
 		}
-
 		return defaultDuration;
+	}
+
+	bool IConsolePrompter.PromptAllowProjectConfig() {
+		Console.Error.Write( "Allow project level .bmx config file? (true/false, default: false): " );
+		string? input = Console.ReadLine();
+		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
+			return false;
+		}
+		return allowProjectConfigs;
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {

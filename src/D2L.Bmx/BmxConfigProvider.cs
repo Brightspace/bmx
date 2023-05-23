@@ -49,7 +49,8 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Account: config["account"],
 			Role: config["role"],
 			Profile: config["profile"],
-			DefaultDuration: defaultDuration
+			DefaultDuration: defaultDuration,
+			AllowProjectConfigs: shouldReadProjectConfig
 		);
 	}
 
@@ -64,6 +65,9 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		}
 		if( config.DefaultDuration.HasValue ) {
 			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
+		}
+		if( config.AllowProjectConfigs ) {
+			writer.WriteLine( $"allow_project_configs={config.AllowProjectConfigs}" );
 		}
 	}
 
