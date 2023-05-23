@@ -42,7 +42,7 @@ internal static class ConsolePrompter {
 	}
 
 	public static bool PromptAllowProjectConfig() {
-		Console.Write( "Allow project configs? (true/false, default: false): " );
+		Console.Error.Write( "Allow project configs? (true/false, default: false): " );
 		string? input = Console.ReadLine();
 		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
 			return false;
