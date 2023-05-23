@@ -13,7 +13,7 @@ RUN wget https://dot.net/v1/dotnet-install.sh \
 WORKDIR /source
 
 COPY . .
-RUN dotnet publish -c release -r linux-musl-x64 -o app
+RUN dotnet publish src/D2L.Bmx -c release -r linux-musl-x64 -o app
 
 FROM scratch as export
 COPY --from=build /source/app /
