@@ -56,15 +56,8 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	public void SaveConfiguration( BmxConfig config ) {
 
-		string bmxDirectory = BmxPaths.BMX_DIR;
-		string configFileName = BmxPaths.CONFIG_FILE_NAME;
-
-		if( !Directory.Exists( bmxDirectory ) ) {
-			Directory.CreateDirectory( bmxDirectory );
-		}
-
-		if( !File.Exists( configFileName ) ) {
-			File.WriteAllText( configFileName, "" );
+		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
+			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
 
 		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, append: false );
