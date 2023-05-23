@@ -50,7 +50,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Role: config["role"],
 			Profile: config["profile"],
 			DefaultDuration: defaultDuration,
-			shouldReadProjectConfig
+			AllowProjectConfigs: shouldReadProjectConfig
 		);
 	}
 
