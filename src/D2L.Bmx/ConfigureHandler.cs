@@ -28,7 +28,7 @@ internal class ConfigureHandler {
 			defaultDuration = _consolePrompter.PromptDefaultDuration();
 		}
 
-		var allowProjectConfigs = ConsolePrompter.PromptAllowProjectConfig();
+		bool allowProjectConfigs = ConsolePrompter.PromptAllowProjectConfig();
 
 		BmxConfig config = new(
 			Org: org,
