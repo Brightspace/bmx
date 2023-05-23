@@ -64,7 +64,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		}
 
 		if( !File.Exists( configFileName ) ) {
-			File.WriteAllText( configFileName, "[]" );
+			File.WriteAllText( configFileName, "" );
 		}
 
 		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, append: false );
