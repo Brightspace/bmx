@@ -24,7 +24,7 @@ on:
 
 jobs:
   create_release:
-    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.events.input.prerelease == 'true')
+    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.prerelease == 'true')
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create.outputs.release_id }}
@@ -32,15 +32,15 @@ jobs:
       - name: Create release
         id: create
         env:
-          RELEASE_TAG: ${{ github.event.client_payload.release_tag }}
-          PRERELEASE: ${{ github.events.input.prerelease }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          PRERELEASE: ${{ github.event.inputs.prerelease }}
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           if ($env:PRERELEASE -eq 'true') {
-              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
           } else {
-              $releaseUrl = gh release create "$env:RELEASE_TAG" --draft --generate-notes --title "Release $env:RELEASE_TAG"
+              $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --generate-notes --title "Release $env:RELEASE_TAG"
           }
           if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
 
@@ -84,7 +84,7 @@ jobs:
           if ($env:PLATFORM -eq 'win') {
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win.zip"
             gh release upload "$env:RELEASE_TAG" "bmx-win.zip"
-          } else if ($env:PLATFORM -eq 'osx') {
+          } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
             tar -czvf "bmx-osx.tar.gz" "bmx"
             gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
@@ -136,4 +136,4 @@ jobs:
     steps:
       - name: finalize release
         run: |
-          gh release edit "$RELEASE_ID" --draft=false
+          gh release edit "$RELEASE_TAG" --draft=false --repo Brightspace/bmx
