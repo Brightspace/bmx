@@ -54,12 +54,11 @@ var profileOption = new Option<string>(
 
 var rootCommand = new RootCommand();
 
-var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" )
-	{
-		orgOption,
-		userOption,
-		durationOption,
-	};
+var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" ) {
+	orgOption,
+	userOption,
+	durationOption,
+};
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
@@ -79,25 +78,30 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 
 rootCommand.Add( configureCommand );
 
-var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" )
-	{
-		accountOption,
-		durationOption,
-		orgOption,
-		printOutputOption,
-		roleOption,
-		userOption,
-		nonInteractiveOption
-	};
+var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" ) {
+	accountOption,
+	durationOption,
+	orgOption,
+	printOutputOption,
+	roleOption,
+	userOption,
+	nonInteractiveOption,
+};
 
 printCommand.SetHandler( async ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new PrintHandler(
-		new BmxConfigProvider(),
-		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
-		new OktaAuthenticator( consolePrompter, new OktaSessionStorage() ),
-		consolePrompter );
+		new OktaAuthenticator(
+			new OktaApi(),
+			new OktaSessionStorage(),
+			consolePrompter,
+			config ),
+		new AwsCredsCreator(
+			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
+			consolePrompter,
+			config )
+	);
 	try {
 		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -116,25 +120,33 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 
 rootCommand.Add( printCommand );
 
-var writeCommand = new Command( "write", "Write to AWS credentials file" )
-	{
-		accountOption,
-		durationOption,
-		orgOption,
-		writeOutputOption,
-		profileOption,
-		roleOption,
-		userOption,
-	};
+var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
+	accountOption,
+	durationOption,
+	orgOption,
+	writeOutputOption,
+	profileOption,
+	roleOption,
+	userOption,
+	nonInteractiveOption,
+};
 
 writeCommand.SetHandler( async ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new WriteHandler(
-		new BmxConfigProvider(),
-		new OktaApi(),
-		new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
-		new OktaAuthenticator( consolePrompter, new OktaSessionStorage() ),
-		consolePrompter );
+		new OktaAuthenticator(
+			new OktaApi(),
+			new OktaSessionStorage(),
+			consolePrompter,
+			config ),
+		new AwsCredsCreator(
+			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
+			consolePrompter,
+			config ),
+		consolePrompter,
+		config
+	);
 	try {
 		await handler.HandleAsync(
 			org: context.ParseResult.GetValueForOption( orgOption ),
@@ -142,6 +154,7 @@ writeCommand.SetHandler( async ( InvocationContext context ) => {
 			account: context.ParseResult.GetValueForOption( accountOption ),
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
+			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 			output: context.ParseResult.GetValueForOption( writeOutputOption ),
 			profile: context.ParseResult.GetValueForOption( profileOption )
 		);
@@ -153,5 +166,4 @@ writeCommand.SetHandler( async ( InvocationContext context ) => {
 
 rootCommand.Add( writeCommand );
 
-// version and help commands are not implemented. they can be called as flags (--version and --help respectively). However they can be added later if necessary
 return await rootCommand.InvokeAsync( args );

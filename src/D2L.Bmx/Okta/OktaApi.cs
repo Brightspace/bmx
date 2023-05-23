@@ -18,7 +18,7 @@ internal interface IOktaApi {
 		string challengeResponse );
 	Task IssueMfaChallengeAsync( OktaAuthenticateState state, int selectedMfaIndex );
 	Task<OktaSession> CreateSessionAsync( SessionOptions sessionOptions );
-	Task<OktaAccountState> GetAccountsAsync( OktaAuthenticatedState state, string accountType );
+	Task<OktaAccountState> GetAccountsAsync( string accountType );
 	Task<string> GetAccountAsync( OktaAccountState state, string selectedAccount );
 	Task<string?> GetMeResponseAsync( string sessionId );
 }
@@ -115,7 +115,7 @@ internal class OktaApi : IOktaApi {
 		throw new BmxException( "Error creating Okta session" );
 	}
 
-	async Task<OktaAccountState> IOktaApi.GetAccountsAsync( OktaAuthenticatedState state, string accountType ) {
+	async Task<OktaAccountState> IOktaApi.GetAccountsAsync( string accountType ) {
 		var resp = await _httpClient.GetAsync(
 			"users/me/appLinks" );
 
