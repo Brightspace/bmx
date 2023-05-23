@@ -69,7 +69,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	int? IConsolePrompter.PromptDefaultDuration() {
-		Console.Error.Write( "Default duration of session in minutes (optional, default: 60): " );
+		Console.Error.Write( "Default duration of AWS sessions in minutes (optional, default: 60): " );
 		string? input = Console.ReadLine();
 		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
 			return null;
@@ -78,7 +78,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	bool IConsolePrompter.PromptAllowProjectConfig() {
-		Console.Error.Write( "Allow project configs? (true/false, default: false): " );
+		Console.Error.Write( "Allow project level .bmx config file? (true/false, default: false): " );
 		string? input = Console.ReadLine();
 		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
 			return false;
