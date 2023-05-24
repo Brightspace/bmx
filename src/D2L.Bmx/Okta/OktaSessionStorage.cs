@@ -10,9 +10,6 @@ internal interface IOktaSessionStorage {
 }
 
 internal class OktaSessionStorage : IOktaSessionStorage {
-
-	//Update permission to 600 when a new entry is added
-
 	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
