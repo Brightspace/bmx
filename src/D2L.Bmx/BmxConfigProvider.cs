@@ -69,9 +69,10 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			//maybe we cannot delete it somehow
 		}
 
-		var op = new FileStreamOptions();
-		op.Mode = FileMode.Create; //Append false, overrite old
-		op.Access = FileAccess.ReadWrite;
+		var op = new FileStreamOptions {
+			Mode = FileMode.Create,
+			Access = FileAccess.Write,
+		};
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			op.UnixCreateMode = UnixFileMode.SetUser | UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
