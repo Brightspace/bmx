@@ -18,7 +18,7 @@ internal interface IConsolePrompter {
 internal class ConsolePrompter : IConsolePrompter {
 
 	string IConsolePrompter.PromptOrg() {
-		Console.Error.Write( "Okta org: " );
+		Console.Error.Write( "The tenant name or full domain name of the Okta organization: " );
 		string? org = Console.ReadLine();
 		if( string.IsNullOrEmpty( org ) ) {
 			throw new BmxException( "Invalid org input" );

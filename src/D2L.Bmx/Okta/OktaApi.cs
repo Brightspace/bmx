@@ -38,7 +38,11 @@ internal class OktaApi : IOktaApi {
 	}
 
 	void IOktaApi.SetOrganization( string organization ) {
-		_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
+		if( !organization.Contains( '.' ) ) {
+			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
+		} else {
+			_httpClient.BaseAddress = new Uri( $"https://{organization}/api/v1/" );
+		}
 	}
 
 	void IOktaApi.AddSession( string sessionId ) {
