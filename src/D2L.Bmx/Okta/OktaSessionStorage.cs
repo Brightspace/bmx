@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using D2L.Bmx.Okta.Models;
 
@@ -10,11 +11,10 @@ internal interface IOktaSessionStorage {
 
 internal class OktaSessionStorage : IOktaSessionStorage {
 	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
-
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
-		File.WriteAllText( BmxPaths.SESSIONS_FILE_NAME, jsonString );
+		WriteTextToFile( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
 	List<OktaSessionCache> IOktaSessionStorage.Sessions() {
@@ -27,7 +27,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 		}
 
 		if( !File.Exists( sessionsFileName ) ) {
-			File.WriteAllText( sessionsFileName, "[]" );
+			WriteTextToFile( sessionsFileName, "[]" );
 		}
 
 		try {
@@ -40,5 +40,17 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 			return new();
 		}
 		return new();
+	}
+
+	private void WriteTextToFile( string path, string Content ) {
+		var op = new FileStreamOptions {
+			Mode = FileMode.Create,
+			Access = FileAccess.Write,
+		};
+		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+		}
+		using var writer = new StreamWriter( path, op );
+		writer.Write( Content );
 	}
 }

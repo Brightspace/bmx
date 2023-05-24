@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
+
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
@@ -55,12 +57,17 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 	}
 
 	public void SaveConfiguration( BmxConfig config ) {
-
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
-
-		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, append: false );
+		var op = new FileStreamOptions {
+			Mode = FileMode.Create,
+			Access = FileAccess.Write,
+		};
+		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+		}
+		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, op );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
 			writer.WriteLine( $"org={config.Org}" );
