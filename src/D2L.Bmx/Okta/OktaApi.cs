@@ -2,10 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using System.Xml;
 using D2L.Bmx.Okta.Models;
-using D2L.Bmx.Okta.State;
 
 namespace D2L.Bmx.Okta;
 
@@ -19,13 +16,12 @@ internal interface IOktaApi {
 		string factorId,
 		string challengeResponse );
 	Task<OktaSession> CreateSessionAsync( string sessionToken );
-	Task<OktaAccountState> GetAccountsAsync( string accountType );
-	Task<string> GetAccountAsync( OktaAccountState state, string selectedAccount );
+	Task<OktaApp[]> GetAwsAccountAppsAsync();
+	Task<string> GetPageAsync( string samlLoginUrl );
 	Task<string?> GetCurrentUserIdAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
-
 	private readonly CookieContainer _cookieContainer;
 	private readonly HttpClient _httpClient;
 
@@ -127,31 +123,17 @@ internal class OktaApi : IOktaApi {
 		return session ?? throw new BmxException( "Error creating Okta session" );
 	}
 
-	async Task<OktaAccountState> IOktaApi.GetAccountsAsync( string accountType ) {
-		var resp = await _httpClient.GetAsync( "users/me/appLinks" );
-
-		var accounts = await JsonSerializer.DeserializeAsync(
-			await resp.Content.ReadAsStreamAsync(),
+	async Task<OktaApp[]> IOktaApi.GetAwsAccountAppsAsync() {
+		var apps = await _httpClient.GetFromJsonAsync(
+			"users/me/appLinks",
 			SourceGenerationContext.Default.OktaAppArray );
 
-		if( accounts is not null ) {
-			return new OktaAccountState( accounts, accountType );
-		}
-		throw new BmxException( "Error retrieving Okta accounts" );
+		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
+			?? throw new BmxException( "Error retrieving AWS accounts from Okta" );
 	}
 
-	async Task<string> IOktaApi.GetAccountAsync( OktaAccountState state, string selectedAccount ) {
-		var account = Array.Find(
-			state.OktaApps,
-			app => string.Equals( app.Label, selectedAccount, StringComparison.OrdinalIgnoreCase ) );
-		if( account is not null ) {
-			var linkUri = new Uri( account.LinkUrl );
-
-			var resp = await _httpClient.GetAsync( linkUri );
-			return ExtractAwsSaml( await resp.Content.ReadAsStringAsync() );
-		}
-
-		throw new BmxException( "Account could not be found" );
+	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
+		return await _httpClient.GetStringAsync( samlLoginUrl );
 	}
 
 	async Task<string?> IOktaApi.GetCurrentUserIdAsync( string sessionId ) {
@@ -167,22 +149,5 @@ internal class OktaApi : IOktaApi {
 		} catch( JsonException ) {
 			return null;
 		}
-	}
-
-	private static string ExtractAwsSaml( string htmlResponse ) {
-		// HTML page is fairly malformed, grab just the <input> with the SAML data for further processing
-		string inputRegexPattern = "<input name=\"SAMLResponse\" type=\"hidden\" value=\".*?\"/>";
-		var inputRegex = new Regex( inputRegexPattern, RegexOptions.Compiled );
-
-		// Access the SAML data from the parsed <input>
-		var inputXml = new XmlDocument();
-		inputXml.LoadXml( inputRegex.Match( htmlResponse ).Value );
-
-		var samlData = inputXml.SelectSingleNode( "//@value" );
-
-		if( samlData is not null ) {
-			return samlData.InnerText;
-		}
-		throw new BmxException( "Error extracting SAML data" );
 	}
 }
