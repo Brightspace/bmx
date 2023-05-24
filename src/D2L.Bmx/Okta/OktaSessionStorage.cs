@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using D2L.Bmx.Okta.Models;
 
@@ -9,12 +10,31 @@ internal interface IOktaSessionStorage {
 }
 
 internal class OktaSessionStorage : IOktaSessionStorage {
-	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
 
+	//Update permission to 600 when a new entry is added
+	void WriteFile600( string path, string Content ) {
+
+		try {
+			if( File.Exists( path ) ) {
+				File.Delete( path );
+			}
+		} catch( IOException IOException ) {
+			//maybe we cannot delete it somehow
+		}
+		var op = new FileStreamOptions();
+		op.Mode = FileMode.Create; //Append false, overrite old
+		op.Access = FileAccess.ReadWrite;
+		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+			op.UnixCreateMode = UnixFileMode.SetUser | UnixFileMode.UserRead | UnixFileMode.UserWrite;
+		}
+		using var writer = new StreamWriter( path, op );
+		writer.Write( Content );
+	}
+	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
-		File.WriteAllText( BmxPaths.SESSIONS_FILE_NAME, jsonString );
+		WriteFile600( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
 	List<OktaSessionCache> IOktaSessionStorage.Sessions() {
@@ -27,7 +47,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 		}
 
 		if( !File.Exists( sessionsFileName ) ) {
-			File.WriteAllText( sessionsFileName, "[]" );
+			WriteFile600( sessionsFileName, "[]" );
 		}
 
 		try {
