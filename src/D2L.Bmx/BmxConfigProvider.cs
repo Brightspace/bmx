@@ -60,21 +60,12 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
-		//File permission is only applied on Create, so must delete old file
-		try {
-			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
-				File.Delete( BmxPaths.CONFIG_FILE_NAME );
-			}
-		} catch( IOException IOException ) {
-			//maybe we cannot delete it somehow
-		}
-
 		var op = new FileStreamOptions {
 			Mode = FileMode.Create,
 			Access = FileAccess.Write,
 		};
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			op.UnixCreateMode = UnixFileMode.SetUser | UnixFileMode.UserRead | UnixFileMode.UserWrite;
+			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, op );
 
