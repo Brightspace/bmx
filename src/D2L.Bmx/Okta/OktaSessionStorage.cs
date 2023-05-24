@@ -41,6 +41,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 		}
 		return new();
 	}
+
 	private void WriteTextToFile( string path, string Content ) {
 		var op = new FileStreamOptions {
 			Mode = FileMode.Create,
