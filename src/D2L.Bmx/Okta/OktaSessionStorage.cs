@@ -12,7 +12,7 @@ internal interface IOktaSessionStorage {
 internal class OktaSessionStorage : IOktaSessionStorage {
 
 	//Update permission to 600 when a new entry is added
-	void WriteFile600( string path, string Content ) {
+	private void WriteFile600( string path, string Content ) {
 
 		try {
 			if( File.Exists( path ) ) {
