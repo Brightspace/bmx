@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 namespace D2L.Bmx.Okta.Models;
 
 internal record AuthenticateResponseInital(
@@ -8,7 +9,7 @@ internal record AuthenticateResponseInital(
 	string? StateToken,
 	string? SessionToken,
 	[property: JsonPropertyName( "_embedded" )]
-	AuthenticateResponseEmbeddedInitial Embedded
+	AuthenticateResponseEmbeddedInitial? Embedded
 );
 
 internal record AuthenticateResponseSuccess(
@@ -19,8 +20,15 @@ internal record AuthenticateResponseSuccess(
 );
 
 internal struct AuthenticateResponseEmbeddedInitial {
-	public OktaMfaFactor[] Factors { get; set; }
+	public OktaMfaFactor[]? Factors { get; set; }
 }
+
+internal record OktaMfaFactor(
+	string Id,
+	string FactorType,
+	string Provider,
+	string VendorName
+);
 
 internal enum AuthenticationStatus {
 	UNKNOWN,

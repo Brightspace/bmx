@@ -8,11 +8,11 @@ internal interface IConsolePrompter {
 	string PromptUser();
 	string PromptPassword();
 	int? PromptDefaultDuration();
+	bool PromptAllowProjectConfig();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
-	int PromptMfa( MfaOption[] mfaOptions );
-	string PromptMfaInput( string mfaInputPrompt );
-	bool PromptAllowProjectConfig();
+	OktaMfaFactor SelectMfa( OktaMfaFactor[]? mfaOptions );
+	string GetMfaResponse( string mfaInputPrompt );
 }
 
 internal class ConsolePrompter : IConsolePrompter {
@@ -112,27 +112,29 @@ internal class ConsolePrompter : IConsolePrompter {
 		return roles[index - 1];
 	}
 
-	int IConsolePrompter.PromptMfa( MfaOption[] mfaOptions ) {
+	OktaMfaFactor IConsolePrompter.SelectMfa( OktaMfaFactor[]? mfaOptions ) {
 		Console.Error.WriteLine( "MFA Required" );
-		if( mfaOptions.Length > 1 ) {
-			for( int i = 0; i < mfaOptions.Length; i++ ) {
-				Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].Name}" );
-			}
-			Console.Error.Write( "Select an available MFA option: " );
-			if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
-				throw new BmxException( "Invalid account selection" );
-			}
-			return index;
-		} else if( mfaOptions.Length == 0 ) {//idk, is mfaOptions' length guaranteed to be >= 1?
+
+		if( mfaOptions is not { Length: > 0 } ) {
 			throw new BmxException( "No MFA method have been set up for the current user." );
-		} else {
-			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}: {mfaOptions[0].Name}" );
-			return 1;
 		}
 
+		if( mfaOptions.Length == 1 ) {
+			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}: {mfaOptions[0].FactorType}" );
+			return mfaOptions[0];
+		}
+
+		for( int i = 0; i < mfaOptions.Length; i++ ) {
+			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].FactorType}" );
+		}
+		Console.Error.Write( "Select an available MFA option: " );
+		if( !int.TryParse( Console.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
+			throw new BmxException( "Invalid account selection" );
+		}
+		return mfaOptions[index - 1];
 	}
 
-	string IConsolePrompter.PromptMfaInput( string mfaInputPrompt ) {
+	string IConsolePrompter.GetMfaResponse( string mfaInputPrompt ) {
 		Console.Error.Write( $"{mfaInputPrompt}: " );
 		string? mfaInput = Console.ReadLine();
 
