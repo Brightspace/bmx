@@ -9,7 +9,7 @@ using D2L.Bmx.Okta;
 
 var orgOption = new Option<string>(
 	name: "--org",
-	description: "the okta org api to target" );
+	description: "the tenant name or full domain name of the Okta organization" );
 var userOption = new Option<string>(
 	name: "--user",
 	description: "the user to authenticate with" );
