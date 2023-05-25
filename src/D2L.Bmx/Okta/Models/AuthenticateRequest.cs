@@ -1,6 +1,6 @@
 namespace D2L.Bmx.Okta.Models;
 
-internal record AuthenticateOptions(
+internal record AuthenticateRequest(
 	string Username,
 	string Password
 );

@@ -1,13 +1,14 @@
 using System.Text.Json.Serialization;
 using D2L.Bmx.Okta.Models;
+
 namespace D2L.Bmx.Okta;
 
 [JsonSourceGenerationOptions( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
-[JsonSerializable( typeof( AuthenticateOptions ) )]
-[JsonSerializable( typeof( AuthenticateChallengeMfaOptions ) )]
-[JsonSerializable( typeof( SessionOptions ) )]
-[JsonSerializable( typeof( AuthenticateResponseInital ) )]
-[JsonSerializable( typeof( AuthenticateResponseSuccess ) )]
+[JsonSerializable( typeof( AuthenticateRequest ) )]
+[JsonSerializable( typeof( IssueMfaChallengeRequest ) )]
+[JsonSerializable( typeof( VerifyMfaChallengeResponseRequest ) )]
+[JsonSerializable( typeof( CreateSessionRequest ) )]
+[JsonSerializable( typeof( AuthenticateResponseRaw ) )]
 [JsonSerializable( typeof( OktaSession ) )]
 [JsonSerializable( typeof( OktaApp[] ) )]
 [JsonSerializable( typeof( OktaMeResponse ) )]

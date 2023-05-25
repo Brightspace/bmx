@@ -11,7 +11,7 @@ internal interface IConsolePrompter {
 	bool PromptAllowProjectConfig();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
-	OktaMfaFactor SelectMfa( OktaMfaFactor[]? mfaOptions );
+	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
 	string GetMfaResponse( string mfaInputPrompt );
 }
 
@@ -112,10 +112,10 @@ internal class ConsolePrompter : IConsolePrompter {
 		return roles[index - 1];
 	}
 
-	OktaMfaFactor IConsolePrompter.SelectMfa( OktaMfaFactor[]? mfaOptions ) {
+	OktaMfaFactor IConsolePrompter.SelectMfa( OktaMfaFactor[] mfaOptions ) {
 		Console.Error.WriteLine( "MFA Required" );
 
-		if( mfaOptions is not { Length: > 0 } ) {
+		if( mfaOptions.Length == 0 ) {
 			throw new BmxException( "No MFA method have been set up for the current user." );
 		}
 
