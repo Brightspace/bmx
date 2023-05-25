@@ -132,7 +132,7 @@ internal class OktaAuthenticator {
 	}
 
 	private List<OktaSessionCache> ReadOktaSessionCacheFile() {
-		var sourceCache = _sessionStorage.Sessions();
+		var sourceCache = _sessionStorage.GetSessions();
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}

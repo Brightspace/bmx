@@ -6,43 +6,36 @@ namespace D2L.Bmx.Okta;
 
 internal interface IOktaSessionStorage {
 	void SaveSessions( List<OktaSessionCache> sessions );
-	List<OktaSessionCache> Sessions();
+	List<OktaSessionCache> GetSessions();
 }
 
 internal class OktaSessionStorage : IOktaSessionStorage {
 	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
+		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
+			Directory.CreateDirectory( BmxPaths.BMX_DIR );
+		}
+
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
 			SourceGenerationContext.Default.ListOktaSessionCache );
 		WriteTextToFile( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
-	List<OktaSessionCache> IOktaSessionStorage.Sessions() {
-
-		string bmxDirectory = BmxPaths.BMX_DIR;
-		string sessionsFileName = BmxPaths.SESSIONS_FILE_NAME;
-
-		if( !Directory.Exists( bmxDirectory ) ) {
-			Directory.CreateDirectory( bmxDirectory );
-		}
-
-		if( !File.Exists( sessionsFileName ) ) {
-			WriteTextToFile( sessionsFileName, "[]" );
+	List<OktaSessionCache> IOktaSessionStorage.GetSessions() {
+		if( !File.Exists( BmxPaths.SESSIONS_FILE_NAME ) ) {
+			return new();
 		}
 
 		try {
-			string sessionsJson = File.ReadAllText( sessionsFileName );
-			var sessions = JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListOktaSessionCache );
-			if( sessions is not null ) {
-				return sessions;
-			}
+			string sessionsJson = File.ReadAllText( BmxPaths.SESSIONS_FILE_NAME );
+			return JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListOktaSessionCache )
+				?? new();
 		} catch( JsonException ) {
 			return new();
 		}
-		return new();
 	}
 
-	private void WriteTextToFile( string path, string Content ) {
+	private static void WriteTextToFile( string path, string content ) {
 		var op = new FileStreamOptions {
 			Mode = FileMode.Create,
 			Access = FileAccess.Write,
@@ -51,6 +44,6 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var writer = new StreamWriter( path, op );
-		writer.Write( Content );
+		writer.Write( content );
 	}
 }
