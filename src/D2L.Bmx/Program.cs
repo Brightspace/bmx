@@ -60,21 +60,17 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 	durationOption,
 };
 
-configureCommand.SetHandler( ( InvocationContext context ) => {
+configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var handler = new ConfigureHandler(
 		new BmxConfigProvider(),
 		new ConsolePrompter() );
-	try {
-		handler.Handle(
-			org: context.ParseResult.GetValueForOption( orgOption ),
-			user: context.ParseResult.GetValueForOption( userOption ),
-			defaultDuration: context.ParseResult.GetValueForOption( durationOption )
-		);
-	} catch( BmxException e ) {
-		Console.Error.WriteLine( e.Message );
-		context.ExitCode = 1;
-	}
-} );
+	handler.Handle(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption ),
+		defaultDuration: context.ParseResult.GetValueForOption( durationOption )
+	);
+	return Task.CompletedTask;
+} ) );
 
 rootCommand.Add( configureCommand );
 
@@ -88,7 +84,7 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	nonInteractiveOption,
 };
 
-printCommand.SetHandler( async ( InvocationContext context ) => {
+printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new PrintHandler(
@@ -102,21 +98,16 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 			consolePrompter,
 			config )
 	);
-	try {
-		await handler.HandleAsync(
-			org: context.ParseResult.GetValueForOption( orgOption ),
-			user: context.ParseResult.GetValueForOption( userOption ),
-			account: context.ParseResult.GetValueForOption( accountOption ),
-			role: context.ParseResult.GetValueForOption( roleOption ),
-			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-			output: context.ParseResult.GetValueForOption( printOutputOption )
-		);
-	} catch( BmxException e ) {
-		Console.Error.WriteLine( e.Message );
-		context.ExitCode = 1;
-	}
-} );
+	return handler.HandleAsync(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption ),
+		account: context.ParseResult.GetValueForOption( accountOption ),
+		role: context.ParseResult.GetValueForOption( roleOption ),
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
+		output: context.ParseResult.GetValueForOption( printOutputOption )
+	);
+} ) );
 
 rootCommand.Add( printCommand );
 
@@ -131,7 +122,7 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 	nonInteractiveOption,
 };
 
-writeCommand.SetHandler( async ( InvocationContext context ) => {
+writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new WriteHandler(
@@ -147,23 +138,37 @@ writeCommand.SetHandler( async ( InvocationContext context ) => {
 		consolePrompter,
 		config
 	);
-	try {
-		await handler.HandleAsync(
-			org: context.ParseResult.GetValueForOption( orgOption ),
-			user: context.ParseResult.GetValueForOption( userOption ),
-			account: context.ParseResult.GetValueForOption( accountOption ),
-			role: context.ParseResult.GetValueForOption( roleOption ),
-			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-			output: context.ParseResult.GetValueForOption( writeOutputOption ),
-			profile: context.ParseResult.GetValueForOption( profileOption )
-		);
-	} catch( BmxException e ) {
-		Console.Error.WriteLine( e.Message );
-		context.ExitCode = 1;
-	}
-} );
+	return handler.HandleAsync(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption ),
+		account: context.ParseResult.GetValueForOption( accountOption ),
+		role: context.ParseResult.GetValueForOption( roleOption ),
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
+		output: context.ParseResult.GetValueForOption( writeOutputOption ),
+		profile: context.ParseResult.GetValueForOption( profileOption )
+	);
+} ) );
 
 rootCommand.Add( writeCommand );
 
 return await rootCommand.InvokeAsync( args );
+
+static async Task RunWithErrorHandlingAsync( InvocationContext context, Func<Task> handle ) {
+	try {
+		await handle();
+	} catch( Exception e ) {
+		Console.ResetColor();
+		Console.ForegroundColor = ConsoleColor.Red;
+		if( e is BmxException ) {
+			Console.Error.WriteLine( e.Message );
+		} else {
+			Console.Error.WriteLine( "BMX exited with unexpected internal error" );
+		}
+		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {
+			Console.Error.WriteLine( e );
+		}
+		Console.ResetColor();
+		context.ExitCode = 1;
+	}
+}
