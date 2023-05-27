@@ -41,13 +41,10 @@ internal class WriteHandler {
 			}
 		}
 
-		var credentialsFile = new SharedCredentialsFile();
-		if( !string.IsNullOrEmpty( output ) ) {
-			if( !Path.IsPathRooted( output ) ) {
-				output = "./" + output;
-			}
-			credentialsFile = new SharedCredentialsFile( output );
+		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
+			output = "./" + output;
 		}
+		var credentialsFile = new SharedCredentialsFile( output );
 
 		var profileOptions = new CredentialProfileOptions {
 			Token = awsCreds.SessionToken,
