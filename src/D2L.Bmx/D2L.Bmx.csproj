@@ -7,7 +7,6 @@
     <TargetFramework>net7.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
     <RootNamespace>D2L.Bmx</RootNamespace>
-    <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +18,13 @@
     <PackageReference Include="runtime.osx-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
     <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- https://github.com/dotnet/linker/blob/main/docs/data-formats.md#descriptor-format -->
+    <EmbeddedResource Include="ILLink.Descriptors.xml">
+      <LogicalName>ILLink.Descriptors.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
