@@ -27,10 +27,12 @@ durationOption.AddValidator( result => {
 		result.ErrorMessage = "Invalid duration";
 	}
 } );
-var nonInteractiveOption = new Option<bool>(
+var nonInteractiveFlag = new Option<bool>(
 	name: "--non-interactive",
-	getDefaultValue: () => false,
 	description: "If the print handler should be run without user input and assume all information is provided" );
+var allowProjectConfigsFlag = new Option<bool>(
+	name: "--allow-project-configs",
+	description: "Allows project level .bmx config files to be used" );
 var printOutputOption = new Option<string>(
 	name: "--output",
 	description: "the output format [bash|powershell|json]"
@@ -68,7 +70,8 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 		handler.Handle(
 			org: context.ParseResult.GetValueForOption( orgOption ),
 			user: context.ParseResult.GetValueForOption( userOption ),
-			defaultDuration: context.ParseResult.GetValueForOption( durationOption )
+			defaultDuration: context.ParseResult.GetValueForOption( durationOption ),
+			allowProjectConfigs: context.ParseResult.GetValueForOption( allowProjectConfigsFlag )
 		);
 	} catch( BmxException e ) {
 		Console.Error.WriteLine( e.Message );
@@ -85,12 +88,13 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	printOutputOption,
 	roleOption,
 	userOption,
-	nonInteractiveOption,
+	nonInteractiveFlag,
 };
 
 printCommand.SetHandler( async ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider().GetConfiguration(
+		context.ParseResult.GetValueForOption( allowProjectConfigsFlag ) );
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -109,7 +113,7 @@ printCommand.SetHandler( async ( InvocationContext context ) => {
 			account: context.ParseResult.GetValueForOption( accountOption ),
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
+			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveFlag ),
 			output: context.ParseResult.GetValueForOption( printOutputOption )
 		);
 	} catch( BmxException e ) {
@@ -128,12 +132,13 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 	profileOption,
 	roleOption,
 	userOption,
-	nonInteractiveOption,
+	nonInteractiveFlag,
 };
 
 writeCommand.SetHandler( async ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider().GetConfiguration(
+		context.ParseResult.GetValueForOption( allowProjectConfigsFlag ) );
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -154,7 +159,7 @@ writeCommand.SetHandler( async ( InvocationContext context ) => {
 			account: context.ParseResult.GetValueForOption( accountOption ),
 			role: context.ParseResult.GetValueForOption( roleOption ),
 			duration: context.ParseResult.GetValueForOption( durationOption ),
-			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
+			nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveFlag ),
 			output: context.ParseResult.GetValueForOption( writeOutputOption ),
 			profile: context.ParseResult.GetValueForOption( profileOption )
 		);

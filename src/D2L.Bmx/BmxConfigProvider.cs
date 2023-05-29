@@ -6,28 +6,31 @@ using Microsoft.Extensions.FileProviders.Physical;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
-	BmxConfig GetConfiguration();
+	BmxConfig GetConfiguration( bool allowProjectConfigs );
 	void SaveConfiguration( BmxConfig config );
 }
 
 internal class BmxConfigProvider : IBmxConfigProvider {
 
-	public BmxConfig GetConfiguration() {
+	public BmxConfig GetConfiguration( bool allowProjectConfigs ) {
+
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
 
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
 
-		bool.TryParse( configBuilder.Build()["allow_project_configs"], out bool shouldReadProjectConfig );
+		if( !allowProjectConfigs ) {
+			bool.TryParse( configBuilder.Build()["allow_project_configs"], out allowProjectConfigs );
+		}
 
 		FileInfo? projectConfigInfo = null;
 
-		if( shouldReadProjectConfig ) {
+		if( allowProjectConfigs ) {
 			projectConfigInfo = GetProjectConfigFileInfo();
 		}
 
-		if( shouldReadProjectConfig && projectConfigInfo is not null ) {
+		if( allowProjectConfigs && projectConfigInfo is not null ) {
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
 			var fileProvider =
 				new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
@@ -52,7 +55,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Role: config["role"],
 			Profile: config["profile"],
 			DefaultDuration: defaultDuration,
-			AllowProjectConfigs: shouldReadProjectConfig
+			AllowProjectConfigs: allowProjectConfigs
 		);
 	}
 

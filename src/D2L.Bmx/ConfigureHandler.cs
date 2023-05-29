@@ -13,7 +13,8 @@ internal class ConfigureHandler {
 	public void Handle(
 		string? org,
 		string? user,
-		int? defaultDuration
+		int? defaultDuration,
+		bool allowProjectConfigs
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
@@ -28,7 +29,9 @@ internal class ConfigureHandler {
 			defaultDuration = _consolePrompter.PromptDefaultDuration();
 		}
 
-		bool allowProjectConfigs = _consolePrompter.PromptAllowProjectConfig();
+		if( !allowProjectConfigs ) {
+			allowProjectConfigs = _consolePrompter.PromptAllowProjectConfig();
+		}
 
 		BmxConfig config = new(
 			Org: org,
