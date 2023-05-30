@@ -43,9 +43,9 @@ internal class PrintHandler {
 
 	private static void PrintBash( AwsCredentials credentials ) {
 		Console.WriteLine( $"""
-			export AWS_SESSION_TOKEN='{credentials.SessionToken}'
-			export AWS_ACCESS_KEY_ID='{credentials.AccessKeyId}'
-			export AWS_SECRET_ACCESS_KEY='{credentials.SecretAccessKey}'
+			export AWS_SESSION_TOKEN={credentials.SessionToken}
+			export AWS_ACCESS_KEY_ID={credentials.AccessKeyId}
+			export AWS_SECRET_ACCESS_KEY={credentials.SecretAccessKey}
 			""" );
 	}
 
