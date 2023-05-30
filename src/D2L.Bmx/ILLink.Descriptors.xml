@@ -1,0 +1,16 @@
+<!--
+  Specify assemblies/types/members in this file to keep them from being trimmed.
+  This enalbes us to use native AOT with non-trim-friendly libraries.
+  It's more surgical than using the "partial" trim mode, and results in smaller executables.
+  See:
+    https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options#root-descriptors
+    https://github.com/dotnet/linker/blob/main/docs/data-formats.md#descriptor-format
+-->
+<linker>
+  <assembly fullname="AWSSDK.Core">
+    <!-- https://github.com/aws/aws-sdk-net/issues/2531 -->
+    <type fullname="Amazon.Util.Internal.PlatformServices.ApplicationInfo" />
+    <type fullname="Amazon.Util.Internal.PlatformServices.EnvironmentInfo" />
+    <type fullname="Amazon.Util.Internal.PlatformServices.NetworkReachability" />
+  </assembly>
+</linker>
