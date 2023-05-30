@@ -66,6 +66,10 @@ jobs:
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
+      - name: set up .NET
+        uses: Brightspace/third-party-actions@actions/setup-dotnet
+        with:
+          dotnet-version: 7.0.x
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
