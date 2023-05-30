@@ -14,7 +14,7 @@ internal class ConfigureHandler {
 		string? org,
 		string? user,
 		int? defaultDuration,
-		bool allowProjectConfigs
+		bool? allowProjectConfigs
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
@@ -29,7 +29,7 @@ internal class ConfigureHandler {
 			defaultDuration = _consolePrompter.PromptDefaultDuration();
 		}
 
-		if( !allowProjectConfigs ) {
+		if( allowProjectConfigs is null ) {
 			allowProjectConfigs = _consolePrompter.PromptAllowProjectConfig();
 		}
 
@@ -40,7 +40,7 @@ internal class ConfigureHandler {
 			Role: null,
 			Profile: null,
 			DefaultDuration: defaultDuration,
-			AllowProjectConfigs: allowProjectConfigs );
+			AllowProjectConfigs: allowProjectConfigs.GetValueOrDefault() );
 		_configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
 	}
