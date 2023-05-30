@@ -1,16 +1,19 @@
 FROM ubuntu:18.04 AS build
 
-RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates
-RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb \
-    --no-check-certificate -O packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
-RUN rm packages-microsoft-prod.deb
-
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       dotnet-sdk-7.0 clang zlib1g-dev
+    && apt-get install -y --no-install-recommends wget ca-certificates clang zlib1g-dev
+
+RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+RUN wget https://dot.net/v1/dotnet-install.sh \
+    && chmod +x ./dotnet-install.sh \
+    && ./dotnet-install.sh --channel 7.0 --install-dir /usr/share/dotnet
 
 WORKDIR /source
+
+# we have InvariantGlobalization=true in csproj file, so this shouldn't be necessary,
+# but the build still blows up without this env var ¯\_(ツ)_/¯
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx -c release -r linux-x64 -o app

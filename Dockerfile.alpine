@@ -1,8 +1,7 @@
 FROM amd64/alpine:3.15 AS build
 
 RUN apk update \
-    && apk add clang build-base bash icu-libs krb5-libs \
-    libgcc libintl libssl1.1 libstdc++ zlib zlib-dev
+    && apk add clang build-base bash zlib-dev
 
 RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
@@ -11,6 +10,10 @@ RUN wget https://dot.net/v1/dotnet-install.sh \
     && ./dotnet-install.sh --channel 7.0 --install-dir /usr/share/dotnet
 
 WORKDIR /source
+
+# we have InvariantGlobalization=true in csproj file, so this shouldn't be necessary,
+# but the build still blows up without this env var ¯\_(ツ)_/¯
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx -c release -r linux-musl-x64 -o app

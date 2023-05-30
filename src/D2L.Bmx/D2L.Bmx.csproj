@@ -5,20 +5,19 @@
     <PublishAot>true</PublishAot>
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <RootNamespace>D2L.Bmx</RootNamespace>
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.37" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="7.0.0" />
-    <PackageReference Include="runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
-    <PackageReference Include="runtime.osx-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
-    <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.2.23101.9" />
+    <PackageReference Include="runtime.linux-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
+    <PackageReference Include="runtime.osx-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
+    <PackageReference Include="runtime.win-x64.Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.4.23259.5" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
