@@ -29,7 +29,6 @@ durationOption.AddValidator( result => {
 } );
 var nonInteractiveOption = new Option<bool>(
 	name: "--non-interactive",
-	getDefaultValue: () => false,
 	description: "If the print handler should be run without user input and assume all information is provided" );
 var allowProjectConfigsOption = new Option<bool?>(
 	name: "--allow-project-configs",
