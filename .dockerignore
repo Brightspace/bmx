@@ -1,0 +1,7 @@
+build
+publish
+.git
+**/bin
+**/obj
+**/.vs
+**/.idea
