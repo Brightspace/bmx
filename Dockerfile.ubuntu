@@ -11,12 +11,19 @@ RUN wget https://dot.net/v1/dotnet-install.sh \
 
 WORKDIR /source
 
-# we have InvariantGlobalization=true in csproj file, so this shouldn't be necessary,
-# but the build still blows up without this env var ¯\_(ツ)_/¯
+# We have InvariantGlobalization=true in csproj so BMX will never need ICU libs at runtime.
+# However, the .NET SDK itself still needs to be told to use invariant globalization at its runtime,
+# otherwise any dotnet command will fail in this container without ICU libs.
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 
+# Configs change less frequently than code.
+# Make configs & dependencies a separate layer to improve caching & build time on code change.
+COPY Directory.Build.props Directory.Build.props
+COPY src/D2L.Bmx/D2L.Bmx.csproj src/D2L.Bmx/D2L.Bmx.csproj
+RUN dotnet restore src/D2L.Bmx -r linux-x64
+
 COPY . .
-RUN dotnet publish src/D2L.Bmx -c release -r linux-x64 -o app
+RUN dotnet publish src/D2L.Bmx --no-restore -c release -r linux-x64 -o app
 
 FROM scratch as export
 COPY --from=build /source/app /
