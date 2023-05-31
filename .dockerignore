@@ -1,0 +1,6 @@
+build
+publish
+**/bin
+**/obj
+**/.vs
+**/.idea
