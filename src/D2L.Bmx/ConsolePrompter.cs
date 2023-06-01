@@ -10,7 +10,6 @@ internal interface IConsolePrompter {
 	string PromptUser();
 	string PromptPassword();
 	int? PromptDefaultDuration();
-	bool PromptAllowProjectConfig();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
@@ -101,15 +100,6 @@ internal class ConsolePrompter : IConsolePrompter {
 			return null;
 		}
 		return defaultDuration;
-	}
-
-	bool IConsolePrompter.PromptAllowProjectConfig() {
-		Console.Error.Write( "Allow project level .bmx config file? (true/false, default: false): " );
-		string? input = _stdinReader.ReadLine();
-		if( input is null || !bool.TryParse( input, out bool allowProjectConfigs ) ) {
-			return false;
-		}
-		return allowProjectConfigs;
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {

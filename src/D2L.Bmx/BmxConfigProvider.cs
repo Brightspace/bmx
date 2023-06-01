@@ -19,15 +19,9 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
 
-		bool.TryParse( configBuilder.Build()["allow_project_configs"], out bool shouldReadProjectConfig );
+		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
-		FileInfo? projectConfigInfo = null;
-
-		if( shouldReadProjectConfig ) {
-			projectConfigInfo = GetProjectConfigFileInfo();
-		}
-
-		if( shouldReadProjectConfig && projectConfigInfo is not null ) {
+		if( projectConfigInfo is not null ) {
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
 			var fileProvider =
 				new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
@@ -51,8 +45,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Account: config["account"],
 			Role: config["role"],
 			Profile: config["profile"],
-			DefaultDuration: defaultDuration,
-			AllowProjectConfigs: shouldReadProjectConfig
+			DefaultDuration: defaultDuration
 		);
 	}
 
@@ -77,9 +70,6 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		}
 		if( config.DefaultDuration.HasValue ) {
 			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
-		}
-		if( config.AllowProjectConfigs ) {
-			writer.WriteLine( $"allow_project_configs={config.AllowProjectConfigs}" );
 		}
 	}
 
