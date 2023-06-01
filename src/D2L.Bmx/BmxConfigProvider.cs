@@ -19,8 +19,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
 
-		FileInfo? projectConfigInfo = null;
-		projectConfigInfo = GetProjectConfigFileInfo();
+		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
