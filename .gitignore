@@ -1,8 +1,8 @@
-# DotNet7
-**/bin
-**/obj
-**/.vs
-.vs/
+build/
+publish/
 
-# Rider
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
 .idea/
