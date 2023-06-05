@@ -98,7 +98,10 @@ internal class ConsolePrompter : IConsolePrompter {
 				char key = readKey();
 
 				if( key == CTRL_C ) {
-					throw new BmxException( "" );
+					// Ctrl+C should terminate the program.
+					// Using an empty string as the exception message because this message is displayed to the user,
+					// but the user doesn't need to see anything when they themselves ended the program.
+					throw new BmxException( string.Empty );
 				}
 				if( key == '\n' || key == '\r' ) {
 					// when the terminal is in raw mode, writing \r is needed to start the new line properly
