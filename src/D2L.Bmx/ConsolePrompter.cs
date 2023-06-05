@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.Text;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
@@ -17,11 +17,16 @@ internal interface IConsolePrompter {
 }
 
 internal class ConsolePrompter : IConsolePrompter {
+	private const char CTRL_C = '\u0003';
+	private const char CTRL_U = '\u0015';
+	private const char DEL = '\u007f';
+	private static readonly bool IS_WINDOWS = OperatingSystem.IsWindows();
+
 	// When taking user console input on Unix-y platforms, .NET copies the input data to stdout, leading to incorrect
 	// `bmx print` output. See https://github.com/dotnet/runtime/issues/22314.
 	// We read from stdin (fd = 0) directly on these platforms to bypass .NET's incorrect handling.
 	private readonly TextReader _stdinReader =
-		RuntimeInformation.IsOSPlatform( OSPlatform.Windows )
+		IS_WINDOWS
 		? Console.In
 		: new StreamReader( new FileStream(
 			new Microsoft.Win32.SafeHandles.SafeFileHandle( 0, ownsHandle: false ),
@@ -59,38 +64,71 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptPassword() {
+		Func<char> readKey;
+		if( IS_WINDOWS ) {
+			// On Windows, Console.ReadKey calls native console API, and will fail without a console attached
+			if( Console.IsInputRedirected ) {
+				Console.Error.WriteLine( """
+					====== WARNING ======
+					Input to BMX is redirected. Password input may be displayed on screen!
+					If you're using mintty (with Git Bash, Cygwin, MSYS2 etc.), consider switching
+					to Windows Terminal for a better experience.
+					If you must use mintty, prefix your bmx command with 'winpty '.
+					=====================
+					""" );
+				readKey = () => (char)_stdinReader.Read();
+			} else {
+				readKey = () => Console.ReadKey( intercept: true ).KeyChar;
+			}
+		} else {
+			readKey = () => (char)_stdinReader.Read();
+		}
+
 		Console.Error.Write( "Okta Password: " );
 
-		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			var passwordChars = new List<char>();
+		string? originalTerminalSettings = null;
+		try {
+			if( !IS_WINDOWS ) {
+				originalTerminalSettings = GetCurrentTerminalSettings();
+				EnableTerminalRawMode();
+			}
+
+			var passwordBuilder = new StringBuilder();
 			while( true ) {
-				ConsoleKeyInfo input = Console.ReadKey( intercept: true );
-				if( input.Key == ConsoleKey.Enter ) {
-					Console.Error.Write( '\n' );
-					break;
+				char key = readKey();
+
+				if( key == CTRL_C ) {
+					// Ctrl+C should terminate the program.
+					// Using an empty string as the exception message because this message is displayed to the user,
+					// but the user doesn't need to see anything when they themselves ended the program.
+					throw new BmxException( string.Empty );
+				}
+				if( key == '\n' || key == '\r' ) {
+					// when the terminal is in raw mode, writing \r is needed to start the new line properly
+					Console.Error.Write( "\r\n" );
+					return passwordBuilder.ToString();
 				}
 
-				if( input.Key == ConsoleKey.Backspace && passwordChars.Count > 0 ) {
-					passwordChars.RemoveAt( passwordChars.Count - 1 );
-				} else if( !char.IsControl( input.KeyChar ) ) {
-					passwordChars.Add( input.KeyChar );
+				if( key == CTRL_U ) {
+					string moveLeftString = new( '\b', passwordBuilder.Length );
+					string emptyString = new( ' ', passwordBuilder.Length );
+					Console.Error.Write( moveLeftString + emptyString + moveLeftString );
+					passwordBuilder.Clear();
+				} else
+				// The backsapce key is received as the DEL character in raw mode
+				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
+					Console.Error.Write( "\b \b" );
+					passwordBuilder.Length--;
+				} else if( !char.IsControl( key ) ) {
+					Console.Error.Write( '*' );
+					passwordBuilder.Append( key );
 				}
 			}
-			return new string( passwordChars.ToArray() );
-		}
-
-		string? password;
-		try {
-			// disable the terminal from echoing user input
-			using var stty = Process.Start( "stty", "-echo" );
-			stty.WaitForExit();
-			password = _stdinReader.ReadLine();
 		} finally {
-			using var stty = Process.Start( "stty", "echo" );
-			stty.WaitForExit();
+			if( !IS_WINDOWS && !string.IsNullOrEmpty( originalTerminalSettings ) ) {
+				SetTerminalSettings( originalTerminalSettings );
+			}
 		}
-		Console.Error.WriteLine();
-		return password ?? throw new BmxException( "No password entered" );
 	}
 
 	int? IConsolePrompter.PromptDefaultDuration() {
@@ -158,5 +196,24 @@ internal class ConsolePrompter : IConsolePrompter {
 			return mfaInput;
 		}
 		throw new BmxException( "Invalid Mfa Input" );
+	}
+
+	private static string GetCurrentTerminalSettings() {
+		var startInfo = new ProcessStartInfo( "stty" );
+		startInfo.ArgumentList.Add( "--save" );
+		startInfo.RedirectStandardOutput = true;
+		using var p = Process.Start( startInfo ) ?? throw new BmxException( "Terminal error" );
+		p.WaitForExit();
+		return p.StandardOutput.ReadToEnd().Trim();
+	}
+
+	private static void EnableTerminalRawMode() {
+		using var p = Process.Start( "stty", new[] { "raw", "-echo" } );
+		p.WaitForExit();
+	}
+
+	private static void SetTerminalSettings( string settings ) {
+		using var p = Process.Start( "stty", settings );
+		p.WaitForExit();
 	}
 }
