@@ -11,7 +11,6 @@ internal interface IBmxConfigProvider {
 }
 
 internal class BmxConfigProvider : IBmxConfigProvider {
-
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
@@ -75,23 +74,30 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file
 	private static FileInfo? GetProjectConfigFileInfo() {
-		DirectoryInfo? currentDirectory = new( Directory.GetCurrentDirectory() );
+		try {
+			DirectoryInfo? currentDirectory = new( Directory.GetCurrentDirectory() );
 
-		while( currentDirectory is not null ) {
-			var bmxConfigFiles = currentDirectory.GetFiles( ".bmx" );
+			// limit the maximum search depth to avoid infinite loop even if there's any symlink trickery
+			for( int i = 0; i < 2000 && currentDirectory is not null; i++ ) {
+				var bmxConfigFiles = currentDirectory.GetFiles( ".bmx" );
 
-			if( bmxConfigFiles.Length > 1 ) {
-				// TODO: Log this
-				return null;
+				if( bmxConfigFiles.Length > 1 ) {
+					// TODO: Log this
+					return null;
+				}
+
+				if( bmxConfigFiles.Length == 1 ) {
+					return bmxConfigFiles[0];
+				}
+
+				currentDirectory = currentDirectory.Parent;
 			}
 
-			if( bmxConfigFiles.Length == 1 ) {
-				return bmxConfigFiles[0];
-			}
-
-			currentDirectory = currentDirectory.Parent;
+			return null;
+		} catch( Exception ) {
+			// if there's any error finding a .bmx file, assume it doesn't exist rather than crash the app
+			// TODO: debug log?
+			return null;
 		}
-
-		return null;
 	}
 }
