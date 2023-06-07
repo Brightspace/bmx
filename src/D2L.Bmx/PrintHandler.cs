@@ -21,16 +21,16 @@ internal class PrintHandler {
 		string? role,
 		int? duration,
 		bool nonInteractive,
-		string? output
+		string? format
 	) {
 		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
 		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
-		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
+		if( string.Equals( format, "bash", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( awsCreds );
-		} else if( string.Equals( output, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
+		} else if( string.Equals( format, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintPowershell( awsCreds );
-		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
+		} else if( string.Equals( format, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
 			if( OperatingSystem.IsWindows() ) {
