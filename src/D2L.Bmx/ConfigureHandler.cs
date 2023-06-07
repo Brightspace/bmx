@@ -13,7 +13,7 @@ internal class ConfigureHandler {
 	public void Handle(
 		string? org,
 		string? user,
-		int? defaultDuration
+		int? duration
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
@@ -24,8 +24,8 @@ internal class ConfigureHandler {
 			user = _consolePrompter.PromptUser();
 		}
 
-		if( defaultDuration is null ) {
-			defaultDuration = _consolePrompter.PromptDefaultDuration();
+		if( duration is null ) {
+			duration = _consolePrompter.PromptDuration();
 		}
 
 		BmxConfig config = new(
@@ -34,7 +34,7 @@ internal class ConfigureHandler {
 			Account: null,
 			Role: null,
 			Profile: null,
-			DefaultDuration: defaultDuration
+			Duration: duration
 		);
 		_configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );

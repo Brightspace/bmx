@@ -30,12 +30,12 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 
 		var config = configBuilder.Build();
 
-		int? defaultDuration = null;
-		if( !string.IsNullOrEmpty( config["default_duration"] ) ) {
-			if( ( !int.TryParse( config["default_duration"], out int configDuration ) || configDuration < 1 ) ) {
+		int? duration = null;
+		if( !string.IsNullOrEmpty( config["duration"] ) ) {
+			if( !int.TryParse( config["duration"], out int configDuration ) || configDuration < 1 ) {
 				throw new BmxException( "Invalid duration in config" );
 			}
-			defaultDuration = configDuration;
+			duration = configDuration;
 		}
 
 		return new BmxConfig(
@@ -44,7 +44,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Account: config["account"],
 			Role: config["role"],
 			Profile: config["profile"],
-			DefaultDuration: defaultDuration
+			Duration: duration
 		);
 	}
 
@@ -67,8 +67,8 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		if( !string.IsNullOrEmpty( config.User ) ) {
 			writer.WriteLine( $"user={config.User}" );
 		}
-		if( config.DefaultDuration.HasValue ) {
-			writer.WriteLine( $"default_duration={config.DefaultDuration}" );
+		if( config.Duration.HasValue ) {
+			writer.WriteLine( $"duration={config.Duration}" );
 		}
 	}
 
