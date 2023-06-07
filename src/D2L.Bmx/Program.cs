@@ -7,53 +7,25 @@ using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 
+var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" );
+
+// common options
 var orgOption = new Option<string>(
 	name: "--org",
 	description: "the tenant name or full domain name of the Okta organization" );
 var userOption = new Option<string>(
 	name: "--user",
 	description: "the user to authenticate with" );
-var accountOption = new Option<string>(
-	name: "--account",
-	description: "the account name to auth against" );
-var roleOption = new Option<string>(
-	name: "--role",
-	description: "the desired role to assume" );
 var durationOption = new Option<int?>(
 	name: "--duration",
 	description: "duration of session in minutes" );
 durationOption.AddValidator( result => {
-	if( result.GetValueForOption( durationOption ) < 1 ) {
-		result.ErrorMessage = "Invalid duration";
+	if( result.GetValueForOption( durationOption ) < 15 ) {
+		result.ErrorMessage = "duration must be at least 15";
 	}
 } );
-var nonInteractiveOption = new Option<bool>(
-	name: "--non-interactive",
-	getDefaultValue: () => false,
-	description: "If the print handler should be run without user input and assume all information is provided" );
-var printOutputOption = new Option<string>(
-	name: "--output",
-	description: "the output format [bash|powershell|json]"
-	);
-printOutputOption.AddValidator( result => {
-	string? output = result.GetValueForOption( printOutputOption );
-	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
-		"bash", "powershell", "json"
-	};
 
-	if( !string.IsNullOrEmpty( output ) && !supportedOutputs.Contains( output ) ) {
-		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
-	}
-} );
-var writeOutputOption = new Option<string>(
-	name: "--output",
-	description: "write to the specified file path instead of ~/.aws/credentials" );
-var profileOption = new Option<string>(
-	name: "--profile",
-	description: "aws profile name" );
-
-var rootCommand = new RootCommand();
-
+// bmx configure
 var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" ) {
 	orgOption,
 	userOption,
@@ -73,6 +45,32 @@ configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandli
 } ) );
 
 rootCommand.Add( configureCommand );
+
+// print & write common options
+var accountOption = new Option<string>(
+	name: "--account",
+	description: "the account name to auth against" );
+var roleOption = new Option<string>(
+	name: "--role",
+	description: "the desired role to assume" );
+var nonInteractiveOption = new Option<bool>(
+	name: "--non-interactive",
+	description: "Run non-interactively without showing any prompts." );
+
+// bmx print
+var printOutputOption = new Option<string>(
+	name: "--output",
+	description: "the output format [bash|powershell|json]" );
+printOutputOption.AddValidator( result => {
+	string? output = result.GetValueForOption( printOutputOption );
+	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
+		"bash", "powershell", "json"
+	};
+
+	if( !string.IsNullOrEmpty( output ) && !supportedOutputs.Contains( output ) ) {
+		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
+	}
+} );
 
 var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" ) {
 	accountOption,
@@ -110,6 +108,14 @@ printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 } ) );
 
 rootCommand.Add( printCommand );
+
+// bmx write
+var writeOutputOption = new Option<string>(
+	name: "--output",
+	description: "write to the specified file path instead of ~/.aws/credentials" );
+var profileOption = new Option<string>(
+	name: "--profile",
+	description: "aws profile name" );
 
 var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 	accountOption,
@@ -152,8 +158,10 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 
 rootCommand.Add( writeCommand );
 
+// start bmx
 return await rootCommand.InvokeAsync( args );
 
+// helper functions
 static async Task RunWithErrorHandlingAsync( InvocationContext context, Func<Task> handle ) {
 	try {
 		await handle();
