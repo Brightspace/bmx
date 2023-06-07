@@ -65,8 +65,8 @@ internal class AwsCredsCreator {
 		) ?? throw new BmxException( $"Role {role} could not be found" );
 
 		if( duration is null or 0 ) {
-			if( _config.DefaultDuration is not ( null or 0 ) ) {
-				duration = _config.DefaultDuration;
+			if( _config.Duration is not ( null or 0 ) ) {
+				duration = _config.Duration;
 			} else {
 				duration = 60;
 			}

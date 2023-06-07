@@ -9,7 +9,7 @@ internal interface IConsolePrompter {
 	string PromptProfile();
 	string PromptUser();
 	string PromptPassword();
-	int? PromptDefaultDuration();
+	int? PromptDuration();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
@@ -131,13 +131,13 @@ internal class ConsolePrompter : IConsolePrompter {
 		}
 	}
 
-	int? IConsolePrompter.PromptDefaultDuration() {
-		Console.Error.Write( "Default duration of AWS sessions in minutes (optional, default: 60): " );
+	int? IConsolePrompter.PromptDuration() {
+		Console.Error.Write( "Duration of AWS sessions in minutes (optional, default: 60): " );
 		string? input = _stdinReader.ReadLine();
-		if( input is null || !int.TryParse( input, out int defaultDuration ) || defaultDuration <= 0 ) {
+		if( input is null || !int.TryParse( input, out int duration ) || duration <= 0 ) {
 			return null;
 		}
-		return defaultDuration;
+		return duration;
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {

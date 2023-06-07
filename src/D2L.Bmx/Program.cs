@@ -67,7 +67,7 @@ configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandli
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		defaultDuration: context.ParseResult.GetValueForOption( durationOption )
+		duration: context.ParseResult.GetValueForOption( durationOption )
 	);
 	return Task.CompletedTask;
 } ) );
