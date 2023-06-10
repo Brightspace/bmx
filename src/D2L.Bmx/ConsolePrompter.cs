@@ -115,7 +115,7 @@ internal class ConsolePrompter : IConsolePrompter {
 					Console.Error.Write( moveLeftString + emptyString + moveLeftString );
 					passwordBuilder.Clear();
 				} else
-				// The backsapce key is received as the DEL character in raw mode
+				// The backspace key is received as the DEL character in raw mode
 				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
 					Console.Error.Write( "\b \b" );
 					passwordBuilder.Length--;

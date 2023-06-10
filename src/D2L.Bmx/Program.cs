@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using Amazon.Runtime;
@@ -20,8 +21,12 @@ var durationOption = new Option<int?>(
 	name: "--duration",
 	description: "duration of session in minutes" );
 durationOption.AddValidator( result => {
-	if( result.GetValueForOption( durationOption ) < 15 ) {
-		result.ErrorMessage = "duration must be at least 15";
+	if( !(
+		result.Tokens is [Token token, ..]
+		&& int.TryParse( token.Value, out int duration )
+		&& duration >= 15 && duration <= 720
+	) ) {
+		result.ErrorMessage = "Duration must be an integer between 15 and 720";
 	}
 } );
 
@@ -32,7 +37,7 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 	durationOption,
 };
 
-configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
 		new BmxConfigProvider(),
 		new ConsolePrompter() );
@@ -42,7 +47,7 @@ configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandli
 		duration: context.ParseResult.GetValueForOption( durationOption )
 	);
 	return Task.CompletedTask;
-} ) );
+} );
 
 rootCommand.Add( configureCommand );
 
@@ -88,7 +93,7 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	nonInteractiveOption,
 };
 
-printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new PrintHandler(
@@ -111,7 +116,7 @@ printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption )
 	);
-} ) );
+} );
 
 rootCommand.Add( printCommand );
 
@@ -134,7 +139,7 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 	nonInteractiveOption,
 };
 
-writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
 	var handler = new WriteHandler(
@@ -160,29 +165,25 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption )
 	);
-} ) );
+} );
 
 rootCommand.Add( writeCommand );
 
 // start bmx
-return await rootCommand.InvokeAsync( args );
-
-// helper functions
-static async Task RunWithErrorHandlingAsync( InvocationContext context, Func<Task> handle ) {
-	try {
-		await handle();
-	} catch( Exception e ) {
+return await new CommandLineBuilder( rootCommand )
+	.UseDefaults()
+	.UseExceptionHandler( ( exception, context ) => {
 		Console.ResetColor();
 		Console.ForegroundColor = ConsoleColor.Red;
-		if( e is BmxException ) {
-			Console.Error.WriteLine( e.Message );
+		if( exception is BmxException ) {
+			Console.Error.WriteLine( exception.Message );
 		} else {
 			Console.Error.WriteLine( "BMX exited with unexpected internal error" );
 		}
 		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {
-			Console.Error.WriteLine( e );
+			Console.Error.WriteLine( exception );
 		}
 		Console.ResetColor();
-		context.ExitCode = 1;
-	}
-}
+	} )
+	.Build()
+	.InvokeAsync( args );
