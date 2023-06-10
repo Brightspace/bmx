@@ -60,15 +60,21 @@ var nonInteractiveOption = new Option<bool>(
 // bmx print
 var formatOption = new Option<string>(
 	name: "--format",
-	description: "the output format [bash|powershell|json]" );
+	getDefaultValue: () => OperatingSystem.IsWindows() ? PrintFormat.PowerShell : PrintFormat.Bash,
+	description: "the output format" );
+/* Intentionally not using:
+	- an enum, because .NET will happily parse any integer as an enum (even when outside of defined values) and
+	System.CommandLine shows internal enum type name to users when there's a parsing error;
+	- `FromAmong`, because it doesn't support case insensitive matching. This may change in future versions of
+	System.CommandLine.
+*/
+formatOption.AddCompletions( _ => PrintFormat.All );
 formatOption.AddValidator( result => {
-	string? format = result.GetValueForOption( formatOption );
-	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
-		"bash", "powershell", "json"
-	};
-
-	if( !string.IsNullOrEmpty( format ) && !supportedOutputs.Contains( format ) ) {
-		result.ErrorMessage = "Unsupported format. Please select from Bash, PowerShell, or JSON";
+	if( !(
+		result.GetValueForOption( formatOption ) is string format
+		&& PrintFormat.All.Contains( format )
+	) ) {
+		result.ErrorMessage = $"Unsupported value for --format. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
 

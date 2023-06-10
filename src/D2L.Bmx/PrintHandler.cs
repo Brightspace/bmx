@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using D2L.Bmx.Aws;
 
 namespace D2L.Bmx;
@@ -26,18 +27,14 @@ internal class PrintHandler {
 		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
 		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
-		if( string.Equals( format, "bash", StringComparison.OrdinalIgnoreCase ) ) {
+		if( string.Equals( format, PrintFormat.Bash, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( awsCreds );
-		} else if( string.Equals( format, "powershell", StringComparison.OrdinalIgnoreCase ) ) {
+		} else if( string.Equals( format, PrintFormat.PowerShell, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintPowershell( awsCreds );
-		} else if( string.Equals( format, "json", StringComparison.OrdinalIgnoreCase ) ) {
+		} else if( string.Equals( format, PrintFormat.Json, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
-			if( OperatingSystem.IsWindows() ) {
-				PrintPowershell( awsCreds );
-			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
-				PrintBash( awsCreds );
-			}
+			throw new UnreachableException();
 		}
 	}
 
