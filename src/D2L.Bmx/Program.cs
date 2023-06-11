@@ -8,8 +8,6 @@ using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 
-var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" );
-
 // common options
 var orgOption = new Option<string>(
 	name: "--org",
@@ -17,9 +15,30 @@ var orgOption = new Option<string>(
 var userOption = new Option<string>(
 	name: "--user",
 	description: "the user to authenticate with" );
+
+// bmx login
+var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
+	orgOption,
+	userOption,
+};
+loginCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new LoginHandler( new OktaAuthenticator(
+		new OktaApi(),
+		new OktaSessionStorage(),
+		new ConsolePrompter(),
+		new BmxConfigProvider().GetConfiguration()
+	) );
+	return handler.HandleAsync(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption )
+	);
+} );
+
+// configure & print & write common options
 var durationOption = new Option<int?>(
 	name: "--duration",
 	description: "duration of session in minutes" );
+
 durationOption.AddValidator( result => {
 	if( !(
 		result.Tokens is [Token token, ..]
@@ -48,8 +67,6 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 	);
 	return Task.CompletedTask;
 } );
-
-rootCommand.Add( configureCommand );
 
 // print & write common options
 var accountOption = new Option<string>(
@@ -118,8 +135,6 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 	);
 } );
 
-rootCommand.Add( printCommand );
-
 // bmx write
 var outputOption = new Option<string>(
 	name: "--output",
@@ -167,7 +182,14 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 	);
 } );
 
-rootCommand.Add( writeCommand );
+// root command
+var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" ) {
+	// put more frequently used commands first, as the order here affects help text
+	printCommand,
+	writeCommand,
+	loginCommand,
+	configureCommand,
+};
 
 // start bmx
 return await new CommandLineBuilder( rootCommand )
