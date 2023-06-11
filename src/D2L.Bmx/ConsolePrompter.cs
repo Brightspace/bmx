@@ -34,7 +34,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		) );
 
 	string IConsolePrompter.PromptOrg() {
-		Console.Error.Write( "The tenant name or full domain name of the Okta organization: " );
+		Console.Error.Write( $"{ParameterDescriptions.Org}: " );
 		string? org = _stdinReader.ReadLine();
 		if( string.IsNullOrEmpty( org ) ) {
 			throw new BmxException( "Invalid org input" );
@@ -44,7 +44,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptProfile() {
-		Console.Error.Write( "AWS profile: " );
+		Console.Error.Write( $"{ParameterDescriptions.Profile}: " );
 		string? profile = _stdinReader.ReadLine();
 		if( string.IsNullOrEmpty( profile ) ) {
 			throw new BmxException( "Invalid profile input" );
@@ -54,7 +54,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptUser() {
-		Console.Error.Write( "Okta Username: " );
+		Console.Error.Write( $"{ParameterDescriptions.User}: " );
 		string? user = _stdinReader.ReadLine();
 		if( string.IsNullOrEmpty( user ) ) {
 			throw new BmxException( "Invalid user input" );
@@ -84,7 +84,7 @@ internal class ConsolePrompter : IConsolePrompter {
 			readKey = () => (char)_stdinReader.Read();
 		}
 
-		Console.Error.Write( "Okta Password: " );
+		Console.Error.Write( $"{ParameterDescriptions.Password}: " );
 
 		string? originalTerminalSettings = null;
 		try {
@@ -132,7 +132,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	int? IConsolePrompter.PromptDuration() {
-		Console.Error.Write( "Duration of AWS sessions in minutes (optional, default: 60): " );
+		Console.Error.Write( $"{ParameterDescriptions.Duration} (optional, default: 60): " );
 		string? input = _stdinReader.ReadLine();
 		if( input is null || !int.TryParse( input, out int duration ) || duration <= 0 ) {
 			return null;
@@ -174,16 +174,16 @@ internal class ConsolePrompter : IConsolePrompter {
 		}
 
 		if( mfaOptions.Length == 1 ) {
-			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}: {mfaOptions[0].FactorType}" );
+			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}-{mfaOptions[0].FactorType}" );
 			return mfaOptions[0];
 		}
 
 		for( int i = 0; i < mfaOptions.Length; i++ ) {
-			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}: {mfaOptions[i].FactorType}" );
+			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}-{mfaOptions[i].FactorType}" );
 		}
 		Console.Error.Write( "Select an available MFA option: " );
 		if( !int.TryParse( _stdinReader.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
-			throw new BmxException( "Invalid account selection" );
+			throw new BmxException( "Invalid MFA selection" );
 		}
 		return mfaOptions[index - 1];
 	}
@@ -195,7 +195,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		if( mfaInput is not null ) {
 			return mfaInput;
 		}
-		throw new BmxException( "Invalid Mfa Input" );
+		throw new BmxException( "Invalid MFA Input" );
 	}
 
 	private static string GetCurrentTerminalSettings() {

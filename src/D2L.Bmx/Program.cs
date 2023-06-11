@@ -11,10 +11,10 @@ using D2L.Bmx.Okta;
 // common options
 var orgOption = new Option<string>(
 	name: "--org",
-	description: "the tenant name or full domain name of the Okta organization" );
+	description: ParameterDescriptions.Org );
 var userOption = new Option<string>(
 	name: "--user",
-	description: "the user to authenticate with" );
+	description: ParameterDescriptions.User );
 
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
@@ -37,7 +37,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 // configure & print & write common options
 var durationOption = new Option<int?>(
 	name: "--duration",
-	description: "duration of session in minutes" );
+	description: ParameterDescriptions.Duration );
 
 durationOption.AddValidator( result => {
 	if( !(
@@ -50,7 +50,7 @@ durationOption.AddValidator( result => {
 } );
 
 // bmx configure
-var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" ) {
+var configureCommand = new Command( "configure", "Create or update the global BMX config file" ) {
 	orgOption,
 	userOption,
 	durationOption,
@@ -71,19 +71,19 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 // print & write common options
 var accountOption = new Option<string>(
 	name: "--account",
-	description: "the account name to auth against" );
+	description: ParameterDescriptions.Account );
 var roleOption = new Option<string>(
 	name: "--role",
-	description: "the desired role to assume" );
+	description: ParameterDescriptions.Role );
 var nonInteractiveOption = new Option<bool>(
 	name: "--non-interactive",
-	description: "Run non-interactively without showing any prompts." );
+	description: ParameterDescriptions.NonInteractive );
 
 // bmx print
 var formatOption = new Option<string>(
 	name: "--format",
 	getDefaultValue: () => OperatingSystem.IsWindows() ? PrintFormat.PowerShell : PrintFormat.Bash,
-	description: "the output format" );
+	description: ParameterDescriptions.Format );
 /* Intentionally not using:
 	- an enum, because .NET will happily parse any integer as an enum (even when outside of defined values) and
 	System.CommandLine shows internal enum type name to users when there's a parsing error;
@@ -100,12 +100,12 @@ formatOption.AddValidator( result => {
 	}
 } );
 
-var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" ) {
+var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
-	durationOption,
-	orgOption,
-	formatOption,
 	roleOption,
+	durationOption,
+	formatOption,
+	orgOption,
 	userOption,
 	nonInteractiveOption,
 };
@@ -138,18 +138,18 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 // bmx write
 var outputOption = new Option<string>(
 	name: "--output",
-	description: "write to the specified file path instead of ~/.aws/credentials" );
+	description: ParameterDescriptions.Output );
 var profileOption = new Option<string>(
 	name: "--profile",
-	description: "aws profile name" );
+	description: ParameterDescriptions.Profile );
 
-var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
+var writeCommand = new Command( "write", "Write AWS credentials to the credentials file" ) {
 	accountOption,
-	durationOption,
-	orgOption,
-	outputOption,
-	profileOption,
 	roleOption,
+	durationOption,
+	profileOption,
+	outputOption,
+	orgOption,
 	userOption,
 	nonInteractiveOption,
 };

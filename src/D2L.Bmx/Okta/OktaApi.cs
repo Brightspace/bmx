@@ -44,7 +44,7 @@ internal class OktaApi : IOktaApi {
 		if( _httpClient.BaseAddress is not null ) {
 			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
 		} else {
-			throw new BmxException( "Error adding session: http client base address is not defined" );
+			throw new InvalidOperationException( "Error adding session: http client base address is not defined" );
 		}
 	}
 
@@ -73,7 +73,7 @@ internal class OktaApi : IOktaApi {
 				authnResponse.Embedded.Factors
 			);
 		}
-		throw new BmxException( "Error authenticating Okta" );
+		throw new BmxException( "Error authenticating to Okta" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
@@ -107,7 +107,7 @@ internal class OktaApi : IOktaApi {
 		if( authnResponse?.SessionToken is not null ) {
 			return new AuthenticateResponse.Success( authnResponse.SessionToken );
 		}
-		throw new BmxException( "Error authenticating Okta challenge MFA" );
+		throw new BmxException( "Error verifying Okta MFA challenge response" );
 	}
 
 	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
