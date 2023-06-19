@@ -11,7 +11,6 @@
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.37" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="8.0.0-preview.5.23280.8" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="8.0.0-preview.5.23280.8" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="8.0.0-preview.5.23280.8" />
   </ItemGroup>
