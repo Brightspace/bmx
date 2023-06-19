@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <AssemblyName>bmx</AssemblyName>
     <PublishAot>true</PublishAot>
@@ -21,4 +22,5 @@
       <LogicalName>ILLink.Descriptors.xml</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+
 </Project>
