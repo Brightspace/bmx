@@ -69,7 +69,7 @@ jobs:
       - name: set up .NET
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
-          dotnet-version: 8.0.100-preview.5.23303.2
+          dotnet-version: 8.0.x
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
