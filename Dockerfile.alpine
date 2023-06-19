@@ -7,7 +7,7 @@ RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
 RUN wget https://dot.net/v1/dotnet-install.sh \
     && chmod +x ./dotnet-install.sh \
-    && ./dotnet-install.sh --channel 7.0 --install-dir /usr/share/dotnet
+    && ./dotnet-install.sh --channel 8.0 --version 8.0.100-preview.5.23303.2 --install-dir /usr/share/dotnet
 
 WORKDIR /source
 
@@ -23,7 +23,7 @@ COPY src/D2L.Bmx/D2L.Bmx.csproj src/D2L.Bmx/D2L.Bmx.csproj
 RUN dotnet restore src/D2L.Bmx -r linux-musl-x64
 
 COPY . .
-RUN dotnet publish src/D2L.Bmx --no-restore -c release -r linux-musl-x64 -o app
+RUN dotnet publish src/D2L.Bmx --no-restore -r linux-musl-x64 -o app
 
 FROM scratch as export
 COPY --from=build /source/app /
