@@ -22,10 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- https://github.com/dotnet/linker/blob/main/docs/data-formats.md#descriptor-format -->
-    <EmbeddedResource Include="ILLink.Descriptors.xml">
-      <LogicalName>ILLink.Descriptors.xml</LogicalName>
-    </EmbeddedResource>
+    <!-- https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options#root-descriptors -->
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
   </ItemGroup>
 
 </Project>
