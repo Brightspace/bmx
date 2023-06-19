@@ -69,12 +69,12 @@ jobs:
       - name: set up .NET
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.100-preview.5.23303.2
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
         run: |
-          dotnet publish -r $env:PLATFORM-x64 -c Release -o build
+          dotnet publish -r $env:PLATFORM-x64 -o build
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
