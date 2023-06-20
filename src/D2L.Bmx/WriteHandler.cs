@@ -61,7 +61,6 @@ internal class WriteHandler {
 		data[profile]["aws_access_key_id"] = awsCreds.AccessKeyId;
 		data[profile]["aws_secret_access_key"] = awsCreds.SecretAccessKey;
 		data[profile]["aws_session_token"] = awsCreds.SessionToken;
-		data[profile]["abxc"] = awsCreds.SessionToken;
 
 		_parser.WriteFile( credentialsFile.FilePath, data );
 	}
