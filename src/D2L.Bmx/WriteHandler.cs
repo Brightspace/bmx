@@ -2,24 +2,12 @@ using Amazon.Runtime.CredentialManagement;
 
 namespace D2L.Bmx;
 
-internal class WriteHandler {
-	private readonly OktaAuthenticator _oktaAuth;
-	private readonly AwsCredsCreator _awsCreds;
-	private readonly IConsolePrompter _consolePrompter;
-	private readonly BmxConfig _config;
-
-	public WriteHandler(
-		OktaAuthenticator oktaAuth,
-		AwsCredsCreator awsCreds,
-		IConsolePrompter consolePrompter,
-		BmxConfig config
-	) {
-		_oktaAuth = oktaAuth;
-		_awsCreds = awsCreds;
-		_consolePrompter = consolePrompter;
-		_config = config;
-	}
-
+internal class WriteHandler(
+	OktaAuthenticator oktaAuth,
+	AwsCredsCreator awsCredsCreator,
+	IConsolePrompter consolePrompter,
+	BmxConfig config
+) {
 	public async Task HandleAsync(
 		string? org,
 		string? user,
@@ -30,14 +18,14 @@ internal class WriteHandler {
 		string? output,
 		string? profile
 	) {
-		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
-		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
+		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive );
+		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.IsNullOrEmpty( profile ) ) {
-			if( !string.IsNullOrEmpty( _config.Profile ) ) {
-				profile = _config.Profile;
+			if( !string.IsNullOrEmpty( config.Profile ) ) {
+				profile = config.Profile;
 			} else {
-				profile = _consolePrompter.PromptProfile();
+				profile = consolePrompter.PromptProfile();
 			}
 		}
 
