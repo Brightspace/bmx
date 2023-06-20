@@ -37,6 +37,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          if ( -Not ( $env:RELEASE_TAG -match '^v3\.[0-9]+\.[0-9]+(-preview)*$' ) ){
+            echo "Tag name format incorrect"
+            exit(1)
+          }
           if ($env:PRERELEASE -eq 'true') {
               $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
           } else {
