@@ -6,6 +6,7 @@ using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
+using IniParser;
 
 var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" );
 
@@ -131,6 +132,7 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
+	var parser = new FileIniDataParser();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -142,7 +144,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 			consolePrompter,
 			config ),
 		consolePrompter,
-		config
+		config,
+		parser
 	);
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),

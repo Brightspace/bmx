@@ -1,6 +1,5 @@
 using Amazon.Runtime.CredentialManagement;
 using IniParser;
-using IniParser.Model.Configuration;
 
 namespace D2L.Bmx;
 
@@ -15,13 +14,14 @@ internal class WriteHandler {
 		OktaAuthenticator oktaAuth,
 		AwsCredsCreator awsCreds,
 		IConsolePrompter consolePrompter,
-		BmxConfig config
+		BmxConfig config,
+		FileIniDataParser parser
 	) {
 		_oktaAuth = oktaAuth;
 		_awsCreds = awsCreds;
 		_consolePrompter = consolePrompter;
 		_config = config;
-		_parser = new FileIniDataParser();
+		_parser = parser;
 	}
 
 	public async Task HandleAsync(
