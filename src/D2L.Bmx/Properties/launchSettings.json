@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "D2L.Bmx": {
+      "commandName": "Project",
+      "commandLineArgs": "write"
+    }
+  }
+}
