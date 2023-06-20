@@ -21,10 +21,6 @@ internal class WriteHandler {
 		_awsCreds = awsCreds;
 		_consolePrompter = consolePrompter;
 		_config = config;
-
-		var x = new IniParserConfiguration();
-
-
 		_parser = new FileIniDataParser();
 	}
 
