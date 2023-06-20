@@ -132,7 +132,6 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider().GetConfiguration();
-	var parser = new FileIniDataParser();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -145,7 +144,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 			config ),
 		consolePrompter,
 		config,
-		parser
+		new FileIniDataParser()
 	);
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
