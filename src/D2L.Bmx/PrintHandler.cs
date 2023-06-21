@@ -1,5 +1,5 @@
-using D2L.Bmx.Aws;
 using System.Diagnostics;
+using D2L.Bmx.Aws;
 
 namespace D2L.Bmx;
 
@@ -59,8 +59,8 @@ internal class PrintHandler {
 	}
 
 	private static string GetLinuxParentProcessName() {
-		var bmxProcId = Process.GetCurrentProcess().Id;
-		var ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
+		int bmxProcId = Process.GetCurrentProcess().Id;
+		string ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
 		return File.ReadAllText( $"/proc/{ppid}/comm" ).Trim();
 	}
 

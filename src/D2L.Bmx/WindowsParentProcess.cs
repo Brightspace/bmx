@@ -1,21 +1,22 @@
-using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace D2L.Bmx;
-class WindowsParentProcess {
+
+internal class WindowsParentProcess {
 
 	[DllImport( "kernel32.dll", SetLastError = true )]
-	static extern IntPtr CreateToolhelp32Snapshot( uint dwFlags, uint th32ProcId );
+	private static extern IntPtr CreateToolhelp32Snapshot( uint dwFlags, uint th32ProcId );
 
 	[DllImport( "kernel32.dll" )]
-	static extern bool Process32First( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
+	private static extern bool Process32First( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
 
 	[DllImport( "kernel32.dll" )]
-	static extern bool Process32Next( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
+	private static extern bool Process32Next( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
 
 	[StructLayout( LayoutKind.Sequential )]
-	struct PROCESSENTRY32 {
+	private struct PROCESSENTRY32 {
 		public uint dwSize;
 		public uint cntUsage;
 		public uint th32ProcessId;
@@ -29,12 +30,13 @@ class WindowsParentProcess {
 		public string szExeFile;
 	}
 
-	const uint TH32CS_SNAPPROCESS = 2;
+	private const uint TH32CS_SNAPPROCESS = 2;
 
+	[RequiresDynamicCode( "Calls System.Runtime.InteropServices.Marshal.SizeOf(Type)" )]
 	private static int GetParentProcessId() {
-		var bmxProcId = Process.GetCurrentProcess().Id;
+		int bmxProcId = Process.GetCurrentProcess().Id;
 		IntPtr snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
-		PROCESSENTRY32 procInfo = new PROCESSENTRY32();
+		var procInfo = new PROCESSENTRY32();
 		procInfo.dwSize = (uint)Marshal.SizeOf( typeof( PROCESSENTRY32 ) );
 
 		if( Process32First( snapshot, ref procInfo ) == false ) {
