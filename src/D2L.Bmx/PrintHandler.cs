@@ -1,4 +1,5 @@
 using D2L.Bmx.Aws;
+using System.Diagnostics;
 
 namespace D2L.Bmx;
 
@@ -33,12 +34,32 @@ internal class PrintHandler {
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
+			string parentProcName = "pwsh";
 			if( OperatingSystem.IsWindows() ) {
-				PrintPowershell( awsCreds );
+				parentProcName = WindowsParentProcess.GetParentProcessName();
 			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
-				PrintBash( awsCreds );
+				parentProcName = GetUnixParentProcessName();
+			}
+
+			Console.WriteLine( parentProcName );
+			switch( parentProcName ) {
+				case "pwsh":
+					PrintPowershell( awsCreds );
+					break;
+				case "bash":
+					PrintBash( awsCreds );
+					break;
+				default:
+					PrintPowershell( awsCreds );
+					break;
 			}
 		}
+	}
+
+	private static string GetUnixParentProcessName() {
+		var bmxProcId = Process.GetCurrentProcess().Id;
+		var ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
+		return File.ReadAllText( $"/proc/{ppid}/comm" ).Trim();
 	}
 
 	private static void PrintBash( AwsCredentials credentials ) {
