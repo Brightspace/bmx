@@ -1,6 +1,6 @@
-using D2L.Bmx.Aws;
 using System.Diagnostics;
 using System.Management.Automation;
+using D2L.Bmx.Aws;
 using Microsoft.PowerShell;
 
 namespace D2L.Bmx;
@@ -38,7 +38,7 @@ internal class PrintHandler {
 		} else {
 			var current = Process.GetCurrentProcess();
 			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
-			var parentProcName = parent?.ProcessName;
+			string? parentProcName = parent?.ProcessName;
 			switch( parentProcName ) {
 				case "pwsh":
 					PrintPowershell( awsCreds );
@@ -54,8 +54,8 @@ internal class PrintHandler {
 	}
 
 	private static string GetLinuxParentProcessName() {
-		var bmxProcId = Process.GetCurrentProcess().Id;
-		var ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
+		int bmxProcId = Process.GetCurrentProcess().Id;
+		string ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
 		return File.ReadAllText( $"/proc/{ppid}/comm" ).Trim();
 	}
 
