@@ -1,12 +1,11 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System;
 using System.Text;
 
 
 namespace D2L.Bmx;
 
-class MacParentProcess {
+internal class MacParentProcess {
 
 	[DllImport( "libproc.dylib", CharSet = CharSet.Ansi, SetLastError = true )]
 	public static extern int proc_pidinfo( int pid, int flavor, uint arg, ref PROC_PPIDINFO buffer, int buffersize );
@@ -22,7 +21,7 @@ class MacParentProcess {
 
 	public static string GetParentProcessName() {
 		int myPid = Process.GetCurrentProcess().Id;
-		PROC_PPIDINFO ppi = new PROC_PPIDINFO();
+		var ppi = new PROC_PPIDINFO();
 
 		int ret = proc_pidinfo( myPid, 4 /* PROC_PIDTBSDINFO */, 0, ref ppi, Marshal.SizeOf( ppi ) );
 		if( ret <= 0 ) {
@@ -30,7 +29,7 @@ class MacParentProcess {
 			return "";
 		}
 
-		StringBuilder procName = new StringBuilder( 1024 );
+		var procName = new StringBuilder( 1024 );
 		proc_name( ppi.ppi_ppid, procName, (uint)procName.Capacity );
 		return procName.ToString();
 	}
