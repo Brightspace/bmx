@@ -37,8 +37,10 @@ internal class PrintHandler {
 			string parentProcName = "pwsh";
 			if( OperatingSystem.IsWindows() ) {
 				parentProcName = WindowsParentProcess.GetParentProcessName();
-			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
-				parentProcName = GetUnixParentProcessName();
+			} else if( OperatingSystem.IsMacOS() ) {
+				parentProcName = MacParentProcess.GetParentProcessName();
+			} else if( OperatingSystem.IsLinux() ) {
+				parentProcName = GetLinuxParentProcessName();
 			}
 
 			Console.WriteLine( parentProcName );
@@ -56,7 +58,7 @@ internal class PrintHandler {
 		}
 	}
 
-	private static string GetUnixParentProcessName() {
+	private static string GetLinuxParentProcessName() {
 		var bmxProcId = Process.GetCurrentProcess().Id;
 		var ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
 		return File.ReadAllText( $"/proc/{ppid}/comm" ).Trim();
