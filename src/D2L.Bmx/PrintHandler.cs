@@ -39,6 +39,7 @@ internal class PrintHandler {
 			var current = Process.GetCurrentProcess();
 			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
 			var parentProcName = parent?.ProcessName;
+			Console.WriteLine( parentProcName );
 			switch( parentProcName ) {
 				case "pwsh":
 					PrintPowershell( awsCreds );
