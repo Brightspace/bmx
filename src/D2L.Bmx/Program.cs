@@ -6,6 +6,7 @@ using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
+using IniParser;
 
 var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" );
 
@@ -142,7 +143,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 			consolePrompter,
 			config ),
 		consolePrompter,
-		config
+		config,
+		new FileIniDataParser()
 	);
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
