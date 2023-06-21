@@ -39,25 +39,23 @@ internal class PrintHandler {
 			var current = Process.GetCurrentProcess();
 			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
 			var parentProcName = parent?.ProcessName;
-			Console.WriteLine( parentProcName );
 			switch( parentProcName ) {
 				case "pwsh":
 					PrintPowershell( awsCreds );
 					break;
 				case "bash":
+				case "zsh":
 					PrintBash( awsCreds );
 					break;
 				default:
-					PrintPowershell( awsCreds );
+					if( OperatingSystem.IsWindows() ) {
+						PrintPowershell( awsCreds );
+					} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+						PrintBash( awsCreds );
+					}
 					break;
 			}
 		}
-	}
-
-	private static string GetLinuxParentProcessName() {
-		var bmxProcId = Process.GetCurrentProcess().Id;
-		var ppid = File.ReadAllText( $"/proc/{bmxProcId}/stat" ).Split( " " )[3];
-		return File.ReadAllText( $"/proc/{ppid}/comm" ).Trim();
 	}
 
 	private static void PrintBash( AwsCredentials credentials ) {
