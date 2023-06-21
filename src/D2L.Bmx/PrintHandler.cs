@@ -36,18 +36,9 @@ internal class PrintHandler {
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
-			string parentProcName = "pwsh";
-			if( OperatingSystem.IsWindows() ) {
-				parentProcName = WindowsParentProcess.GetParentProcessName();
-			} else if( OperatingSystem.IsMacOS() ) {
-				parentProcName = MacParentProcess.GetParentProcessName();
-			} else if( OperatingSystem.IsLinux() ) {
-				parentProcName = GetLinuxParentProcessName();
-			}
 			var current = Process.GetCurrentProcess();
 			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
-			Console.WriteLine( parent?.ProcessName );
-			Console.WriteLine( parentProcName );
+			var parentProcName = parent?.ProcessName;
 			switch( parentProcName ) {
 				case "pwsh":
 					PrintPowershell( awsCreds );
