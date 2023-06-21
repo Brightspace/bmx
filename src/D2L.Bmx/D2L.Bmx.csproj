@@ -15,10 +15,8 @@
     <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="8.0.0-preview.5.23280.8" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="8.0.0-preview.5.23280.8" />
-    <PackageReference Include="Microsoft.PowerShell.Native" Version="7.4.0-preview.2" />
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.0-preview.3" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="System.Management" Version="8.0.0-preview.5.23280.8" />
     <PackageReference Include="System.Management.Automation" Version="7.4.0-preview.3" />
   </ItemGroup>
 
