@@ -1,5 +1,7 @@
 using D2L.Bmx.Aws;
 using System.Diagnostics;
+using System.Management.Automation;
+using Microsoft.PowerShell;
 
 namespace D2L.Bmx;
 
@@ -42,7 +44,9 @@ internal class PrintHandler {
 			} else if( OperatingSystem.IsLinux() ) {
 				parentProcName = GetLinuxParentProcessName();
 			}
-
+			var current = Process.GetCurrentProcess();
+			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
+			Console.WriteLine( parent?.ProcessName );
 			Console.WriteLine( parentProcName );
 			switch( parentProcName ) {
 				case "pwsh":

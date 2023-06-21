@@ -24,7 +24,7 @@ class MacParentProcess {
 		int myPid = Process.GetCurrentProcess().Id;
 		PROC_PPIDINFO ppi = new PROC_PPIDINFO();
 
-		int ret = proc_pidinfo( myPid, 4 /* PROC_PIDT_PPIDINFO */, 0, ref ppi, Marshal.SizeOf( ppi ) );
+		int ret = proc_pidinfo( myPid, 4 /* PROC_PIDTBSDINFO */, 0, ref ppi, Marshal.SizeOf( ppi ) );
 		if( ret <= 0 ) {
 			Console.WriteLine( "Error calling proc_pidinfo" );
 			return "";
