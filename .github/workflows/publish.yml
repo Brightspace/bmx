@@ -76,9 +76,12 @@ jobs:
           dotnet-version: 8.0.x
       - name: publish
         shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
         working-directory: src/D2L.Bmx
         run: |
-          dotnet publish -r $env:PLATFORM-x64 -o build
+          $versionWithoutv = "$env:RELEASE_TAG".TrimStart("v")
+          dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$env:RELEASE_TAG" -r $env:PLATFORM-x64 -o build
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh

@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AssemblyName>bmx</AssemblyName>
     <PublishAot>true</PublishAot>
-    <VersionPrefix>3.0.0</VersionPrefix>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
