@@ -82,9 +82,9 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           $version = "$env:RELEASE_TAG"
-          if [ -z "$version" ]; then
+          if ( -not $string -or $string -eq '' ){
             $version = "v3.0.0"
-          fi
+          }
           $versionWithoutv = "$version".TrimStart("v")
           dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$version" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
 
