@@ -70,11 +70,18 @@ jobs:
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
           dotnet-version: 8.0.x
+
       - name: publish
         shell: pwsh
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:PLATFORM-x64 -o build
+
+      - name: check size
+        shell: pwsh
+        working-directory: src/D2L.Bmx
+        run: Get-ChildItem build
+
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
@@ -111,12 +118,17 @@ jobs:
         uses: Brightspace/third-party-actions@actions/checkout
       - name: setup docker buildx
         uses: docker/setup-buildx-action@v2
+
       - name: publish
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
+
+      - name: check size
+        run: ls -l build
+
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: bash
