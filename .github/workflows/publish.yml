@@ -81,7 +81,7 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           $versionWithoutv = "$env:RELEASE_TAG".TrimStart("v")
-          dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$env:RELEASE_TAG" -r $env:PLATFORM-x64 -o build
+          dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$env:RELEASE_TAG" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
