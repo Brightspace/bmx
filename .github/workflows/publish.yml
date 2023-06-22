@@ -82,7 +82,7 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           $version = "$env:RELEASE_TAG"
-          if ( -not $string -or $string -eq '' ){
+          if ( -not $version -or $version -eq '' ){
             $version = "v3.0.0"
           }
           $versionWithoutv = "$version".TrimStart("v")
