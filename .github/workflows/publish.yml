@@ -80,10 +80,12 @@ jobs:
           RELEASE_TAG: ${{ github.event.inputs.release_tag }}
         working-directory: src/D2L.Bmx
         run: |
-          $versionWithoutv = "$env:RELEASE_TAG".TrimStart("v")
-          echo "$env:RELEASE_TAG"
-          echo $versionWithoutv
-          dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$env:RELEASE_TAG" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
+          $version = "$env:RELEASE_TAG"
+          if[-z "$version"];then
+            $version = "v3.0.0"
+          fi
+          $versionWithoutv = "$version".TrimStart("v")
+          dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$version" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
