@@ -81,6 +81,8 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           $versionWithoutv = "$env:RELEASE_TAG".TrimStart("v")
+          echo "$env:RELEASE_TAG"
+          echo $versionWithoutv
           dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$env:RELEASE_TAG" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
