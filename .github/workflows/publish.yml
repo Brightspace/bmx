@@ -87,7 +87,7 @@ jobs:
           fi
           $versionWithoutv = "$version".TrimStart("v")
           dotnet publish /p:Version="$versionWihtoutv" /p:InformationalVersion="$version" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
-          
+
       - name: check size
         shell: pwsh
         working-directory: src/D2L.Bmx
