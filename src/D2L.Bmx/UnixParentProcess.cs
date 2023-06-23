@@ -4,8 +4,8 @@ namespace D2L.Bmx;
 
 class UnixParentProcess {
 
-	public static string GetParentName() {
-		var parentPid = GetParentPid();
+	public static string GetParentProcessName() {
+		var parentPid = GetParentProcessPid();
 
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
@@ -23,7 +23,7 @@ class UnixParentProcess {
 		return parentProcName;
 	}
 
-	private static string GetParentPid() {
+	private static string GetParentProcessPid() {
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
