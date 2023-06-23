@@ -1,7 +1,4 @@
-using System.Diagnostics;
-using System.Management.Automation;
 using D2L.Bmx.Aws;
-using Microsoft.PowerShell;
 
 namespace D2L.Bmx;
 
@@ -36,21 +33,25 @@ internal class PrintHandler {
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
-			var current = Process.GetCurrentProcess();
-			var parent = ProcessCodeMethods.GetParentProcess( new PSObject( current ) ) as Process;
-			string? parentProcName = parent?.ProcessName;
-			switch( parentProcName ) {
+			string procName = "pwsh";
+			if( OperatingSystem.IsWindows() ) {
+				procName = WindowsParentProcess.GetParentProcessName();
+			} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+				procName = UnixParentProcess.GetParentProcessName();
+			}
+
+			switch( procName ) {
 				case "pwsh":
 					PrintPowershell( awsCreds );
 					break;
-				case "bash":
 				case "zsh":
+				case "bash":
 					PrintBash( awsCreds );
 					break;
 				default:
 					if( OperatingSystem.IsWindows() ) {
 						PrintPowershell( awsCreds );
-					} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+					} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
 						PrintBash( awsCreds );
 					}
 					break;
