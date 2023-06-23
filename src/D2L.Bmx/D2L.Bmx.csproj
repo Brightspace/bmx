@@ -7,6 +7,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <InvariantGlobalization>true</InvariantGlobalization>
     <RootNamespace>D2L.Bmx</RootNamespace>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,11 @@
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="8.0.0-preview.5.23280.8" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="System.Management.Automation" Version="7.4.0-preview.3" />
+  </ItemGroup>
+
+  <!-- temporarily needed until .NET 8 Preview 6 is released -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0-preview.23307.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,18 +2,10 @@ using D2L.Bmx.Aws;
 
 namespace D2L.Bmx;
 
-internal class PrintHandler {
-	private readonly OktaAuthenticator _oktaAuth;
-	private readonly AwsCredsCreator _awsCreds;
-
-	public PrintHandler(
-		OktaAuthenticator oktaAuth,
-		AwsCredsCreator awsCreds
-	) {
-		_oktaAuth = oktaAuth;
-		_awsCreds = awsCreds;
-	}
-
+internal class PrintHandler(
+	OktaAuthenticator oktaAuth,
+	AwsCredsCreator awsCredsCreator
+) {
 	public async Task HandleAsync(
 		string? org,
 		string? user,
@@ -23,8 +15,8 @@ internal class PrintHandler {
 		bool nonInteractive,
 		string? output
 	) {
-		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
-		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
+		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive );
+		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( awsCreds );
