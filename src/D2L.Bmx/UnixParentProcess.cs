@@ -17,7 +17,7 @@ internal class UnixParentProcess {
 		};
 
 		proc.Start();
-		string parentProcName = proc.StandardOutput.ReadToEnd().Trim();
+		string parentProcName = proc.StandardOutput.ReadToEnd().Trim().Replace( "-", "" );
 		proc.WaitForExit();
 		return parentProcName;
 	}
@@ -33,7 +33,7 @@ internal class UnixParentProcess {
 		};
 
 		proc.Start();
-		string parentPid = proc.StandardOutput.ReadToEnd().Trim().Replace( "-", "" );
+		string parentPid = proc.StandardOutput.ReadToEnd().Trim();
 		proc.WaitForExit();
 		return parentPid;
 	}
