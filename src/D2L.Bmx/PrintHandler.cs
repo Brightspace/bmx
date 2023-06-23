@@ -25,12 +25,13 @@ internal class PrintHandler(
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
-			string procName = "pwsh";
+			string procName = "none";
 			if( OperatingSystem.IsWindows() ) {
 				procName = WindowsParentProcess.GetParentProcessName();
 			} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
 				procName = UnixParentProcess.GetParentProcessName();
 			}
+			Console.WriteLine( procName );
 
 			switch( procName ) {
 				case "pwsh":
