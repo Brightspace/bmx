@@ -6,7 +6,7 @@ class UnixParentProcess {
 
 	public static string GetParentProcessName() {
 		var parentPid = GetParentProcessPid();
-
+		Console.WriteLine( $"pid is {parentPid}" );
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
