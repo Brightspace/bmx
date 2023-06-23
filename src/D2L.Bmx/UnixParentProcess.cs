@@ -5,7 +5,7 @@ namespace D2L.Bmx;
 internal class UnixParentProcess {
 
 	public static string GetParentProcessName() {
-		string parentPid = GetParentProcessPid( GetParentProcessPid() );
+		string parentPid = GetParentProcessId( GetParentProcessId() );
 		var proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
@@ -21,7 +21,7 @@ internal class UnixParentProcess {
 		proc.WaitForExit();
 		return parentProcName;
 	}
-	private static string GetParentProcessPid( string? pid = null ) {
+	private static string GetParentProcessId( string? pid = null ) {
 		var proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
