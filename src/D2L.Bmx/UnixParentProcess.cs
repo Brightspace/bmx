@@ -27,7 +27,7 @@ class UnixParentProcess {
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
-				Arguments = $"-c \"ps -p $$ -o ppid=\"",
+				Arguments = "-c \"ps -p $$ -o ppid=\"",
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
 				CreateNoWindow = true
