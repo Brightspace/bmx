@@ -2,12 +2,12 @@ using System.Diagnostics;
 
 namespace D2L.Bmx;
 
-class UnixParentProcess {
+internal class UnixParentProcess {
 
 	public static string GetParentName() {
-		var parentPid = GetParentPid();
+		string parentPid = GetParentPid();
 
-		Process proc = new Process {
+		var proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
 				Arguments = $"-c \"ps -p {parentPid} -o comm=\"",
@@ -24,10 +24,10 @@ class UnixParentProcess {
 	}
 
 	private static string GetParentPid() {
-		Process proc = new Process {
+		var proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
-				Arguments = $"-c \"ps -p $$ -o ppid=\"",
+				Arguments = "-c \"ps -p $$ -o ppid=\"",
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
 				CreateNoWindow = true
