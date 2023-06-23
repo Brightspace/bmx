@@ -6,9 +6,7 @@ class UnixParentProcess {
 
 	public static string GetParentProcessName() {
 		var parentPid = GetParentProcessPid();
-		Console.WriteLine( $"pid is {parentPid}" );
-		var xParentPid = GetXParentProcessPid( parentPid );
-		Console.WriteLine( $"{xParentPid}" );
+		var xParentPid = GetParentProcessPid( parentPid );
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
@@ -24,7 +22,7 @@ class UnixParentProcess {
 		proc.WaitForExit();
 		return parentProcName;
 	}
-	private static string GetXParentProcessPid( string pid ) {
+	private static string GetParentProcessPid( string pid ) {
 		Process proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
@@ -36,7 +34,7 @@ class UnixParentProcess {
 		};
 
 		proc.Start();
-		string parentPid = proc.StandardOutput.ReadToEnd().Trim();
+		string parentPid = proc.StandardOutput.ReadToEnd().Trim().Replace( "-", "" );
 		proc.WaitForExit();
 		return parentPid;
 	}
