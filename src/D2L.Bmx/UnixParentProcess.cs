@@ -25,7 +25,7 @@ internal class UnixParentProcess {
 		var proc = new Process {
 			StartInfo = new ProcessStartInfo {
 				FileName = "/bin/bash",
-				Arguments = String.IsNullOrEmpty( pid ) ? "-c \"ps -p $$ -o ppid=\"" : $"-c \"ps -p {pid} -o ppid=\"",
+				Arguments = string.IsNullOrEmpty( pid ) ? "-c \"ps -p $$ -o ppid=\"" : $"-c \"ps -p {pid} -o ppid=\"",
 				RedirectStandardOutput = true,
 				UseShellExecute = false,
 				CreateNoWindow = true
