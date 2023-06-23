@@ -38,8 +38,7 @@ jobs:
         shell: pwsh
         run: |
           if ( -Not ( $env:RELEASE_TAG -match '^v3\.[0-9]+\.[0-9]+(-preview)*' ) ){
-            echo "Tag name format incorrect"
-            exit(1)
+            Throw "Tag name format incorrect"
           }
           if ($env:PRERELEASE -eq 'true') {
               $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
@@ -82,11 +81,16 @@ jobs:
         working-directory: src/D2L.Bmx
         run: |
           $version = "$env:RELEASE_TAG"
-          if ( -not $version -or $version -eq '' ){
+          if ( -not $version ){
             $version = "v3.0.0"
           }
           $versionWithoutv = "$version".TrimStart("v")
-          dotnet publish /p:Version="$versionWithoutv" /p:InformationalVersion="$version" /p:IncludeSourceRevisionInInformationalVersion=false -r $env:PLATFORM-x64 -o build
+          dotnet publish `
+            /p:Version="$versionWithoutv" `
+            /p:InformationalVersion="$version" `
+            /p:IncludeSourceRevisionInInformationalVersion=false `
+            -r $env:PLATFORM-x64 `
+            -o build
 
       - name: check size
         shell: pwsh
