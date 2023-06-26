@@ -25,10 +25,30 @@ internal class PrintHandler(
 		} else if( string.Equals( output, "json", StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
+			string? procName = null;
 			if( OperatingSystem.IsWindows() ) {
-				PrintPowershell( awsCreds );
-			} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
-				PrintBash( awsCreds );
+				procName = WindowsParentProcess.GetParentProcessName().ToLower();
+			} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+				procName = UnixParentProcess.GetParentProcessName().ToLower();
+			}
+
+			switch( procName ) {
+				case "pwsh":
+				case "powershell":
+					PrintPowershell( awsCreds );
+					break;
+				case "zsh":
+				case "bash":
+				case "sh":
+					PrintBash( awsCreds );
+					break;
+				default:
+					if( OperatingSystem.IsWindows() ) {
+						PrintPowershell( awsCreds );
+					} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
+						PrintBash( awsCreds );
+					}
+					break;
 			}
 		}
 	}
