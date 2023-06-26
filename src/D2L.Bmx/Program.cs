@@ -59,17 +59,17 @@ var nonInteractiveOption = new Option<bool>(
 	description: "Run non-interactively without showing any prompts." );
 
 // bmx print
-var printOutputOption = new Option<string>(
-	name: "--output",
+var formatOption = new Option<string>(
+	name: "--format",
 	description: "the output format [bash|powershell|json]" );
-printOutputOption.AddValidator( result => {
-	string? output = result.GetValueForOption( printOutputOption );
-	var supportedOutputs = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
+formatOption.AddValidator( result => {
+	string? format = result.GetValueForOption( formatOption );
+	var supportedFormats = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
 		"bash", "powershell", "json"
 	};
 
-	if( !string.IsNullOrEmpty( output ) && !supportedOutputs.Contains( output ) ) {
-		result.ErrorMessage = "Unsupported output option. Please select from Bash or PowerShell";
+	if( !string.IsNullOrEmpty( format ) && !supportedFormats.Contains( format ) ) {
+		result.ErrorMessage = "Unsupported output format option. Please select from Bash or PowerShell";
 	}
 } );
 
@@ -77,7 +77,7 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 	accountOption,
 	durationOption,
 	orgOption,
-	printOutputOption,
+	formatOption,
 	roleOption,
 	userOption,
 	nonInteractiveOption,
@@ -104,14 +104,14 @@ printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-		output: context.ParseResult.GetValueForOption( printOutputOption )
+		output: context.ParseResult.GetValueForOption( formatOption )
 	);
 } ) );
 
 rootCommand.Add( printCommand );
 
 // bmx write
-var writeOutputOption = new Option<string>(
+var outputOption = new Option<string>(
 	name: "--output",
 	description: "write to the specified file path instead of ~/.aws/credentials" );
 var profileOption = new Option<string>(
@@ -122,7 +122,7 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 	accountOption,
 	durationOption,
 	orgOption,
-	writeOutputOption,
+	outputOption,
 	profileOption,
 	roleOption,
 	userOption,
@@ -153,7 +153,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-		output: context.ParseResult.GetValueForOption( writeOutputOption ),
+		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption )
 	);
 } ) );
