@@ -11,11 +11,9 @@ internal class UnixParentProcess {
 
 	private static int GetParentProcessId( int pid ) {
 		var proccessStartInfo = new ProcessStartInfo {
-			FileName = "/bin/ps",
+			FileName = "ps",
 			ArgumentList = { "-p", $"{pid}", "-o", "ppid=" },
 			RedirectStandardOutput = true,
-			UseShellExecute = false,
-			CreateNoWindow = true,
 		};
 
 		using( var proc = Process.Start( proccessStartInfo ) ) {
