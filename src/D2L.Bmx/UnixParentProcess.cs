@@ -2,6 +2,11 @@ using System.Diagnostics;
 
 namespace D2L.Bmx;
 
+/**
+This file may eventually be replaced if the following dotnet runtime api proposals are implemented:
+- https://github.com/dotnet/runtime/issues/21941
+- https://github.com/dotnet/runtime/issues/24423
+*/
 internal class UnixParentProcess {
 
 	public static string GetParentProcessName() {

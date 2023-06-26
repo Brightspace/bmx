@@ -2,7 +2,14 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace D2L.Bmx;
+/**
+This file may eventually be replaced if the following dotnet runtime api proposals are implemented:
+- https://github.com/dotnet/runtime/issues/21941
+- https://github.com/dotnet/runtime/issues/24423
 
+Uses the same approach of calling NtQueryInformationProcess as in the PowerShell library
+https://github.com/PowerShell/PowerShell/blob/26f621952910e33840efb0c539fbef1e2a467a0d/src/System.Management.Automation/engine/ProcessCodeMethods.cs
+*/
 internal partial class WindowsParentProcess {
 
 	[LibraryImport( "ntdll.dll", EntryPoint = "NtQueryInformationProcess" )]
