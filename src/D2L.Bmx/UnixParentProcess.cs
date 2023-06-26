@@ -5,7 +5,7 @@ namespace D2L.Bmx;
 internal class UnixParentProcess {
 
 	public static string GetParentProcessName() {
-		int parentPid = GetParentProcessId( GetParentProcessId( Process.GetCurrentProcess().Id ) );
+		int parentPid = GetParentProcessId( Process.GetCurrentProcess().Id );
 		return Process.GetProcessById( parentPid ).ProcessName;
 	}
 
