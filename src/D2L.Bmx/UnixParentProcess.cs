@@ -10,7 +10,7 @@ This file may eventually be replaced if the following dotnet runtime api proposa
 internal class UnixParentProcess {
 
 	public static string GetParentProcessName() {
-		int parentPid = GetParentProcessId( Process.GetCurrentProcess().Id );
+		int parentPid = GetParentProcessId( Environment.ProcessId );
 		return Process.GetProcessById( parentPid ).ProcessName;
 	}
 
