@@ -16,15 +16,16 @@ internal class UnixParentProcess {
 			RedirectStandardOutput = true,
 		};
 
-		using( var proc = Process.Start( proccessStartInfo ) ) {
-			if( proc is not null ) {
-				string output = proc.StandardOutput.ReadToEnd();
-				proc.WaitForExit();
-				if( int.TryParse( output.Trim(), out int parentPid ) ) {
-					return parentPid;
-				}
-			}
+		using var proc = Process.Start( proccessStartInfo );
+		if( proc is null ) {
 			return -1;
 		}
+
+		string output = proc.StandardOutput.ReadToEnd();
+		proc.WaitForExit();
+		if( int.TryParse( output.Trim(), out int parentPid ) ) {
+			return parentPid;
+		}
+		return -1;
 	}
 }
