@@ -8,17 +8,11 @@ internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsoleProm
 		bool nonInteractive
 	) {
 
-		if( string.IsNullOrEmpty( org ) ) {
-			if( nonInteractive ) {
-				throw new BmxException( "Org value was not provided" );
-			}
+		if( string.IsNullOrEmpty( org ) && !nonInteractive ) {
 			org = consolePrompter.PromptOrg();
 		}
 
-		if( string.IsNullOrEmpty( user ) ) {
-			if( nonInteractive ) {
-				throw new BmxException( "User value was not provided" );
-			}
+		if( string.IsNullOrEmpty( user ) && !nonInteractive ) {
 			user = consolePrompter.PromptUser();
 		}
 
