@@ -5,8 +5,8 @@ namespace D2L.Bmx;
 
 internal partial class WindowsParentProcess {
 
-	[DllImport( "ntdll.dll", EntryPoint = "NtQueryInformationProcess" )]
-	internal static extern int NtQueryInformationProcess(
+	[LibraryImport( "ntdll.dll", EntryPoint = "NtQueryInformationProcess" )]
+	internal static partial int NtQueryInformationProcess(
 		IntPtr processHandle,
 		int processInformationClass,
 		ref PROCESS_BASIC_INFORMATION processInformation,
