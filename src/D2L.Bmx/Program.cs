@@ -17,6 +17,9 @@ var orgOption = new Option<string>(
 var userOption = new Option<string>(
 	name: "--user",
 	description: "the user to authenticate with" );
+var nonInteractiveOption = new Option<bool>(
+	name: "--non-interactive",
+	description: "Run non-interactively without showing any prompts." );
 var durationOption = new Option<int?>(
 	name: "--duration",
 	description: "duration of session in minutes" );
@@ -31,6 +34,7 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 	orgOption,
 	userOption,
 	durationOption,
+	nonInteractiveOption,
 };
 
 configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
@@ -40,7 +44,8 @@ configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandli
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		duration: context.ParseResult.GetValueForOption( durationOption )
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption )
 	);
 	return Task.CompletedTask;
 } ) );
@@ -54,9 +59,6 @@ var accountOption = new Option<string>(
 var roleOption = new Option<string>(
 	name: "--role",
 	description: "the desired role to assume" );
-var nonInteractiveOption = new Option<bool>(
-	name: "--non-interactive",
-	description: "Run non-interactively without showing any prompts." );
 
 // bmx print
 var formatOption = new Option<string>(

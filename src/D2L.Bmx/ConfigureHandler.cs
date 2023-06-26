@@ -4,19 +4,26 @@ internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsoleProm
 	public void Handle(
 		string? org,
 		string? user,
-		int? duration
+		int? duration,
+		bool nonInteractive
 	) {
 
 		if( string.IsNullOrEmpty( org ) ) {
+			if( nonInteractive ) {
+				throw new BmxException( "Org value was not provided" );
+			}
 			org = consolePrompter.PromptOrg();
 		}
 
 		if( string.IsNullOrEmpty( user ) ) {
+			if( nonInteractive ) {
+				throw new BmxException( "User value was not provided" );
+			}
 			user = consolePrompter.PromptUser();
 		}
 
 		if( duration is null ) {
-			duration = consolePrompter.PromptDuration();
+			duration = nonInteractive ? 60 : consolePrompter.PromptDuration();
 		}
 
 		BmxConfig config = new(
