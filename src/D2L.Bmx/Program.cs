@@ -173,6 +173,7 @@ static async Task RunWithErrorHandlingAsync( InvocationContext context, Func<Tas
 		if( e is BmxException ) {
 			Console.Error.WriteLine( e.Message );
 		} else {
+			Console.WriteLine( e.ToString() );
 			Console.Error.WriteLine( "BMX exited with unexpected internal error" );
 		}
 		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {

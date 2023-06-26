@@ -5,36 +5,43 @@ namespace D2L.Bmx;
 internal class UnixParentProcess {
 
 	public static string GetParentProcessName() {
-		string parentPid = GetParentProcessId( GetParentProcessId() );
-		var proc = new Process {
-			StartInfo = new ProcessStartInfo {
-				FileName = "/bin/bash",
-				Arguments = $"-c \"ps -p {parentPid} -o comm=\"",
-				RedirectStandardOutput = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			}
+		int parentPid = GetParentProcessId( GetParentProcessId( Process.GetCurrentProcess().Id ) );
+		var proccessStartInfo = new ProcessStartInfo {
+			FileName = "/bin/ps",
+			ArgumentList = { "-p", $"{parentPid}", "-o", "comm=" },
+			RedirectStandardOutput = true,
+			UseShellExecute = false,
+			CreateNoWindow = true
 		};
 
-		proc.Start();
-		string parentProcName = proc.StandardOutput.ReadToEnd().Trim().Replace( "-", "" );
-		proc.WaitForExit();
-		return parentProcName;
+		using( var proc = Process.Start( proccessStartInfo ) ) {
+			if( proc is not null ) {
+				string output = proc.StandardOutput.ReadToEnd().Replace( "-", "" );
+				proc.WaitForExit();
+				return output;
+			}
+			return "bash";
+		}
 	}
-	private static string GetParentProcessId( string? pid = null ) {
-		var proc = new Process {
-			StartInfo = new ProcessStartInfo {
-				FileName = "/bin/bash",
-				Arguments = string.IsNullOrEmpty( pid ) ? "-c \"ps -p $$ -o ppid=\"" : $"-c \"ps -p {pid} -o ppid=\"",
-				RedirectStandardOutput = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			}
+
+	private static int GetParentProcessId( int pid ) {
+		var proccessStartInfo = new ProcessStartInfo {
+			FileName = "/bin/ps",
+			ArgumentList = { "-p", $"{pid}", "-o", "ppid=" },
+			RedirectStandardOutput = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
 		};
 
-		proc.Start();
-		string parentPid = proc.StandardOutput.ReadToEnd().Trim();
-		proc.WaitForExit();
-		return parentPid;
+		using( var proc = Process.Start( proccessStartInfo ) ) {
+			if( proc is not null ) {
+				string output = proc.StandardOutput.ReadToEnd();
+				proc.WaitForExit();
+				if( int.TryParse( output.Trim(), out int parentPid ) ) {
+					return parentPid;
+				}
+			}
+			return -1;
+		}
 	}
 }

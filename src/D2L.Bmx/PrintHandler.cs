@@ -27,17 +27,19 @@ internal class PrintHandler(
 		} else {
 			string? procName = null;
 			if( OperatingSystem.IsWindows() ) {
-				procName = WindowsParentProcess.GetParentProcessName();
+				procName = WindowsParentProcess.GetParentProcessName().ToLower();
 			} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
-				procName = UnixParentProcess.GetParentProcessName();
+				procName = UnixParentProcess.GetParentProcessName().ToLower();
 			}
 
 			switch( procName ) {
 				case "pwsh":
+				case "powershell":
 					PrintPowershell( awsCreds );
 					break;
 				case "zsh":
 				case "bash":
+				case "sh":
 					PrintBash( awsCreds );
 					break;
 				default:

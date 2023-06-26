@@ -8,6 +8,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <RootNamespace>D2L.Bmx</RootNamespace>
     <LangVersion>preview</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

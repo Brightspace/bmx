@@ -3,50 +3,41 @@ using System.Runtime.InteropServices;
 
 namespace D2L.Bmx;
 
-internal class WindowsParentProcess {
+internal partial class WindowsParentProcess {
 
-	[DllImport( "kernel32.dll", SetLastError = true )]
-	private static extern IntPtr CreateToolhelp32Snapshot( uint dwFlags, uint th32ProcId );
+	[DllImport( "ntdll.dll", EntryPoint = "NtQueryInformationProcess" )]
+	internal static extern int NtQueryInformationProcess(
+		IntPtr processHandle,
+		int processInformationClass,
+		ref PROCESS_BASIC_INFORMATION processInformation,
+		int processInformationLength,
+		out int returnLength
+	);
 
-	[DllImport( "kernel32.dll" )]
-	private static extern bool Process32First( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
-
-	[DllImport( "kernel32.dll" )]
-	private static extern bool Process32Next( IntPtr hSnapshot, ref PROCESSENTRY32 lppe );
-
-	[StructLayout( LayoutKind.Sequential )]
-	private struct PROCESSENTRY32 {
-		public uint dwSize;
-		public uint cntUsage;
-		public uint th32ProcessId;
-		public IntPtr th32DefaultHeapID;
-		public uint th32ModuleId;
-		public uint cntThreads;
-		public uint th32ParentProcessID;
-		public int pcPriClassBase;
-		public uint dwFlags;
-		[MarshalAs( UnmanagedType.ByValTStr, SizeConst = 260 )]
-		public string szExeFile;
+	internal struct PROCESS_BASIC_INFORMATION {
+		public IntPtr ExitStatus;
+		public IntPtr PebBaseAddress;
+		public IntPtr AffinityMask;
+		public IntPtr BasePriority;
+		public UIntPtr UniqueProcessId;
+		public UIntPtr InheritedFromUniqueProcessId;
 	}
 
-	private const uint TH32CS_SNAPPROCESS = 2;
-
 	private static int GetParentProcessId() {
-		int bmxProcId = Process.GetCurrentProcess().Id;
-		IntPtr snapshot = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
-		var procInfo = new PROCESSENTRY32();
-		procInfo.dwSize = (uint)Marshal.SizeOf<PROCESSENTRY32>();
+		var proc = Process.GetCurrentProcess();
+		var pbi = new PROCESS_BASIC_INFORMATION();
+		int status = NtQueryInformationProcess(
+			proc.Handle,
+			0,
+			ref pbi,
+			Marshal.SizeOf<PROCESS_BASIC_INFORMATION>(),
+			out int infoLen
+		);
 
-		if( Process32First( snapshot, ref procInfo ) == false ) {
+		if( status != 0 ) {
 			return -1;
 		}
-
-		do {
-			if( bmxProcId == procInfo.th32ProcessId ) {
-				return (int)procInfo.th32ParentProcessID;
-			}
-		} while( Process32Next( snapshot, ref procInfo ) );
-		return -1;
+		return (int)pbi.InheritedFromUniqueProcessId;
 	}
 
 	public static string GetParentProcessName() {
