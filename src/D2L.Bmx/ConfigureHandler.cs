@@ -16,8 +16,8 @@ internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsoleProm
 			user = consolePrompter.PromptUser();
 		}
 
-		if( duration is null ) {
-			duration = nonInteractive ? 60 : consolePrompter.PromptDuration();
+		if( duration is null && !nonInteractive ) {
+			duration = consolePrompter.PromptDuration();
 		}
 
 		BmxConfig config = new(
