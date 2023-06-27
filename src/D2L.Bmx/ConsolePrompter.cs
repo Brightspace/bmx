@@ -200,7 +200,7 @@ internal class ConsolePrompter : IConsolePrompter {
 
 	private static string GetCurrentTerminalSettings() {
 		var startInfo = new ProcessStartInfo( "stty" );
-		startInfo.ArgumentList.Add( "--save" );
+		startInfo.ArgumentList.Add( "-g" );
 		startInfo.RedirectStandardOutput = true;
 		using var p = Process.Start( startInfo ) ?? throw new BmxException( "Terminal error" );
 		p.WaitForExit();
