@@ -4,18 +4,19 @@ internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsoleProm
 	public void Handle(
 		string? org,
 		string? user,
-		int? duration
+		int? duration,
+		bool nonInteractive
 	) {
 
-		if( string.IsNullOrEmpty( org ) ) {
+		if( string.IsNullOrEmpty( org ) && !nonInteractive ) {
 			org = consolePrompter.PromptOrg();
 		}
 
-		if( string.IsNullOrEmpty( user ) ) {
+		if( string.IsNullOrEmpty( user ) && !nonInteractive ) {
 			user = consolePrompter.PromptUser();
 		}
 
-		if( duration is null ) {
+		if( duration is null && !nonInteractive ) {
 			duration = consolePrompter.PromptDuration();
 		}
 
