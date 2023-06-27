@@ -12,7 +12,8 @@ internal class OktaAuthenticator(
 	public async Task<IOktaApi> AuthenticateAsync(
 		string? org,
 		string? user,
-		bool nonInteractive
+		bool nonInteractive,
+		bool ignoreCache = false
 	) {
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
@@ -36,7 +37,7 @@ internal class OktaAuthenticator(
 
 		oktaApi.SetOrganization( org );
 
-		if( await TryAuthenticateFromCacheAsync( org, user, oktaApi ) ) {
+		if( !ignoreCache && await TryAuthenticateFromCacheAsync( org, user, oktaApi ) ) {
 			return oktaApi;
 		}
 		if( nonInteractive ) {
@@ -97,6 +98,8 @@ internal class OktaAuthenticator(
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
 		var existingSessions = ReadOktaSessionCacheFile();
+		existingSessions = existingSessions.Where( session => session.UserId != userId && session.Org != org )
+			.ToList();
 		existingSessions.Add( session );
 
 		sessionStorage.SaveSessions( existingSessions );
