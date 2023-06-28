@@ -15,7 +15,7 @@ internal class PrintHandler(
 		bool nonInteractive,
 		string? output
 	) {
-		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive );
+		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive, ignoreCache: false );
 		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.Equals( output, "bash", StringComparison.OrdinalIgnoreCase ) ) {
