@@ -97,12 +97,12 @@ internal class OktaAuthenticator(
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
-		var existingSessions = ReadOktaSessionCacheFile();
-		existingSessions = existingSessions.Where( session => session.UserId != userId && session.Org != org )
+		var sessionsToCache = ReadOktaSessionCacheFile();
+		sessionsToCache = sessionsToCache.Where( session => session.UserId != userId && session.Org != org )
 			.ToList();
-		existingSessions.Add( session );
+		sessionsToCache.Add( session );
 
-		sessionStorage.SaveSessions( existingSessions );
+		sessionStorage.SaveSessions( sessionsToCache );
 	}
 
 	private string? GetCachedOktaSessionId( string userId, string org ) {
