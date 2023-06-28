@@ -13,7 +13,7 @@ internal class OktaAuthenticator(
 		string? org,
 		string? user,
 		bool nonInteractive,
-		bool ignoreCache = false
+		bool ignoreCache
 	) {
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
