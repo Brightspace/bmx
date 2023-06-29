@@ -1,11 +1,9 @@
-using IniParser;
 
 namespace D2L.Bmx;
 
 internal class ConfigureHandler(
 	IBmxConfigProvider configProvider,
-	IConsolePrompter consolePrompter,
-	FileIniDataParser parser
+	IConsolePrompter consolePrompter
 ) {
 	public void Handle(
 		string? org,
@@ -34,7 +32,7 @@ internal class ConfigureHandler(
 			Profile: null,
 			Duration: duration
 		);
-		configProvider.SaveConfiguration( config, parser );
+		configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
 	}
 }

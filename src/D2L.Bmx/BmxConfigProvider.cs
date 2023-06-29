@@ -8,10 +8,10 @@ namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
 	BmxConfig GetConfiguration();
-	void SaveConfiguration( BmxConfig config, FileIniDataParser parser );
+	void SaveConfiguration( BmxConfig config );
 }
 
-internal class BmxConfigProvider : IBmxConfigProvider {
+internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvider {
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
@@ -49,7 +49,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		);
 	}
 
-	public void SaveConfiguration( BmxConfig config, FileIniDataParser parser ) {
+	public void SaveConfiguration( BmxConfig config ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
