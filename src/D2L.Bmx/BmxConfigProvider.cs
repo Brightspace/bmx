@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using IniParser;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
@@ -7,7 +8,7 @@ namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
 	BmxConfig GetConfiguration();
-	void SaveConfiguration( BmxConfig config );
+	void SaveConfiguration( BmxConfig config, FileIniDataParser parser );
 }
 
 internal class BmxConfigProvider : IBmxConfigProvider {
@@ -48,7 +49,7 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		);
 	}
 
-	public void SaveConfiguration( BmxConfig config ) {
+	public void SaveConfiguration( BmxConfig config, FileIniDataParser parser ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
@@ -59,17 +60,18 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
-		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, op );
+		var data = parser.ReadFile( BmxPaths.CONFIG_FILE_NAME );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
-			writer.WriteLine( $"org={config.Org}" );
+			data.Global["org"] = config.Org;
 		}
 		if( !string.IsNullOrEmpty( config.User ) ) {
-			writer.WriteLine( $"user={config.User}" );
+			data.Global["user"] = config.User;
 		}
 		if( config.Duration.HasValue ) {
-			writer.WriteLine( $"duration={config.Duration}" );
+			data.Global["duration"] = $"{config.Duration}";
 		}
+		parser.WriteFile( BmxPaths.CONFIG_FILE_NAME, data );
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file

@@ -5,9 +5,9 @@ using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx;
 
 internal interface IConsolePrompter {
-	string PromptOrg();
+	string PromptOrg( bool allowEmptyInput );
 	string PromptProfile();
-	string PromptUser();
+	string PromptUser( bool allowEmptyInput );
 	string PromptPassword();
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
@@ -33,10 +33,11 @@ internal class ConsolePrompter : IConsolePrompter {
 			FileAccess.Read
 		) );
 
-	string IConsolePrompter.PromptOrg() {
-		Console.Error.Write( "The tenant name or full domain name of the Okta organization: " );
+	string IConsolePrompter.PromptOrg( bool allowEmptyInput ) {
+		Console.Error.Write(
+			$"The tenant name or full domain name of the Okta organization {( allowEmptyInput ? "(Optional): " : ": " )}" );
 		string? org = _stdinReader.ReadLine();
-		if( string.IsNullOrEmpty( org ) ) {
+		if( org is null || ( org.Equals( "" ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid org input" );
 		}
 
@@ -53,10 +54,10 @@ internal class ConsolePrompter : IConsolePrompter {
 		return profile;
 	}
 
-	string IConsolePrompter.PromptUser() {
-		Console.Error.Write( "Okta Username: " );
+	string IConsolePrompter.PromptUser( bool allowEmptyInput ) {
+		Console.Error.Write( $"Okta Username {( allowEmptyInput ? " (Optional): " : ": " )}" );
 		string? user = _stdinReader.ReadLine();
-		if( string.IsNullOrEmpty( user ) ) {
+		if( user is null || ( user.Equals( "" ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid user input" );
 		}
 
