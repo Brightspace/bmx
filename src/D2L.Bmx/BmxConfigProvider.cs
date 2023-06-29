@@ -54,13 +54,15 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
 		var op = new FileStreamOptions {
-			Mode = FileMode.Create,
-			Access = FileAccess.Write,
+			Mode = FileMode.OpenOrCreate,
+			Access = FileAccess.ReadWrite,
 		};
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
-		var data = parser.ReadFile( BmxPaths.CONFIG_FILE_NAME );
+		using var fs = new FileStream( BmxPaths.CONFIG_FILE_NAME, op );
+		using var reader = new StreamReader( fs );
+		var data = parser.ReadData( reader );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
 			data.Global["org"] = config.Org;
@@ -71,7 +73,12 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 		if( config.Duration.HasValue ) {
 			data.Global["duration"] = $"{config.Duration}";
 		}
-		parser.WriteFile( BmxPaths.CONFIG_FILE_NAME, data );
+
+		fs.Position = 0;
+		fs.SetLength( 0 );
+
+		using var writer = new StreamWriter( fs );
+		parser.WriteData( writer, data );
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file

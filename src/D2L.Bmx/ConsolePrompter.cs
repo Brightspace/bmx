@@ -37,7 +37,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		Console.Error.Write(
 			$"The tenant name or full domain name of the Okta organization {( allowEmptyInput ? "(Optional): " : ": " )}" );
 		string? org = _stdinReader.ReadLine();
-		if( org is null || ( org.Equals( "" ) && !allowEmptyInput ) ) {
+		if( org is null || ( string.IsNullOrWhiteSpace( org ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid org input" );
 		}
 
@@ -57,7 +57,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	string IConsolePrompter.PromptUser( bool allowEmptyInput ) {
 		Console.Error.Write( $"Okta Username {( allowEmptyInput ? " (Optional): " : ": " )}" );
 		string? user = _stdinReader.ReadLine();
-		if( user is null || ( user.Equals( "" ) && !allowEmptyInput ) ) {
+		if( user is null || ( string.IsNullOrWhiteSpace( user ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid user input" );
 		}
 
