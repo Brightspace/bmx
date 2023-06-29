@@ -39,7 +39,7 @@ var configureCommand = new Command( "configure", "Create a bmx config file to sa
 
 configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider(),
+		new BmxConfigProvider( new FileIniDataParser() ),
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -87,7 +87,7 @@ var printCommand = new Command( "print", "Returns the AWS credentials in text as
 
 printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -133,7 +133,7 @@ var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
 
 writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -169,7 +169,7 @@ var loginCommand = new Command( "login", "Login to Okta and create a session" ) 
 
 loginCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new LoginHandler(
 		new OktaAuthenticator(
 			new OktaApi(),

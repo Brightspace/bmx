@@ -19,7 +19,7 @@ internal class OktaAuthenticator(
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
 			} else if( !nonInteractive ) {
-				org = consolePrompter.PromptOrg();
+				org = consolePrompter.PromptOrg( allowEmptyInput: false );
 			} else {
 				throw new BmxException( "Org value was not provided" );
 			}
@@ -29,7 +29,7 @@ internal class OktaAuthenticator(
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
 			} else if( !nonInteractive ) {
-				user = consolePrompter.PromptUser();
+				user = consolePrompter.PromptUser( allowEmptyInput: false );
 			} else {
 				throw new BmxException( "User value was not provided" );
 			}

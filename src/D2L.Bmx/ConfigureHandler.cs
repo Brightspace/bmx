@@ -1,6 +1,10 @@
+
 namespace D2L.Bmx;
 
-internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsolePrompter consolePrompter ) {
+internal class ConfigureHandler(
+	IBmxConfigProvider configProvider,
+	IConsolePrompter consolePrompter
+) {
 	public void Handle(
 		string? org,
 		string? user,
@@ -9,11 +13,11 @@ internal class ConfigureHandler( IBmxConfigProvider configProvider, IConsoleProm
 	) {
 
 		if( string.IsNullOrEmpty( org ) && !nonInteractive ) {
-			org = consolePrompter.PromptOrg();
+			org = consolePrompter.PromptOrg( allowEmptyInput: true );
 		}
 
 		if( string.IsNullOrEmpty( user ) && !nonInteractive ) {
-			user = consolePrompter.PromptUser();
+			user = consolePrompter.PromptUser( allowEmptyInput: true );
 		}
 
 		if( duration is null && !nonInteractive ) {
