@@ -50,6 +50,10 @@ durationOption.AddValidator( result => {
 	}
 } );
 
+var nonInteractiveOption = new Option<bool>(
+	name: "--non-interactive",
+	description: ParameterDescriptions.NonInteractive );
+
 // bmx configure
 var configureCommand = new Command( "configure", "Create or update the global BMX config file" ) {
 	orgOption,
@@ -78,9 +82,6 @@ var accountOption = new Option<string>(
 var roleOption = new Option<string>(
 	name: "--role",
 	description: ParameterDescriptions.Role );
-var nonInteractiveOption = new Option<bool>(
-	name: "--non-interactive",
-	description: ParameterDescriptions.NonInteractive );
 
 // bmx print
 var formatOption = new Option<string>(
@@ -133,7 +134,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-		output: context.ParseResult.GetValueForOption( formatOption )
+		format: context.ParseResult.GetValueForOption( formatOption )
 	);
 } );
 
