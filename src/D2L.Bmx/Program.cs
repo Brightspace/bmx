@@ -27,7 +27,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaApi(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
-		new BmxConfigProvider().GetConfiguration()
+		new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration()
 	) );
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -193,29 +193,6 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 	loginCommand,
 	configureCommand,
 };
-
-var loginCommand = new Command( "login", "Login to Okta and create a session" ) {
-	orgOption,
-	userOption,
-};
-
-loginCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
-	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
-	var handler = new LoginHandler(
-		new OktaAuthenticator(
-			new OktaApi(),
-			new OktaSessionStorage(),
-			consolePrompter,
-			config
-			) );
-	return handler.HandleAsync(
-		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption )
-	);
-} ) );
-
-rootCommand.Add( loginCommand );
 
 // start bmx
 return await new CommandLineBuilder( rootCommand )
