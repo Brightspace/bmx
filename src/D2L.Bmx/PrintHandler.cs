@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using D2L.Bmx.Aws;
 
 namespace D2L.Bmx;
