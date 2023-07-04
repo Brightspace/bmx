@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using IniParser;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
@@ -10,7 +11,7 @@ internal interface IBmxConfigProvider {
 	void SaveConfiguration( BmxConfig config );
 }
 
-internal class BmxConfigProvider : IBmxConfigProvider {
+internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvider {
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
@@ -53,23 +54,31 @@ internal class BmxConfigProvider : IBmxConfigProvider {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
 		var op = new FileStreamOptions {
-			Mode = FileMode.Create,
-			Access = FileAccess.Write,
+			Mode = FileMode.OpenOrCreate,
+			Access = FileAccess.ReadWrite,
 		};
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
-		using var writer = new StreamWriter( BmxPaths.CONFIG_FILE_NAME, op );
+		using var fs = new FileStream( BmxPaths.CONFIG_FILE_NAME, op );
+		using var reader = new StreamReader( fs );
+		var data = parser.ReadData( reader );
 
 		if( !string.IsNullOrEmpty( config.Org ) ) {
-			writer.WriteLine( $"org={config.Org}" );
+			data.Global["org"] = config.Org;
 		}
 		if( !string.IsNullOrEmpty( config.User ) ) {
-			writer.WriteLine( $"user={config.User}" );
+			data.Global["user"] = config.User;
 		}
 		if( config.Duration.HasValue ) {
-			writer.WriteLine( $"duration={config.Duration}" );
+			data.Global["duration"] = $"{config.Duration}";
 		}
+
+		fs.Position = 0;
+		fs.SetLength( 0 );
+
+		using var writer = new StreamWriter( fs );
+		parser.WriteData( writer, data );
 	}
 
 	// Look from cwd up the directory chain all the way to root for a .bmx file

@@ -5,9 +5,9 @@ using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx;
 
 internal interface IConsolePrompter {
-	string PromptOrg();
+	string PromptOrg( bool allowEmptyInput );
 	string PromptProfile();
-	string PromptUser();
+	string PromptUser( bool allowEmptyInput );
 	string PromptPassword();
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
@@ -36,7 +36,7 @@ internal class ConsolePrompter : IConsolePrompter {
 	string IConsolePrompter.PromptOrg() {
 		Console.Error.Write( $"{ParameterDescriptions.Org}: " );
 		string? org = _stdinReader.ReadLine();
-		if( string.IsNullOrEmpty( org ) ) {
+		if( org is null || ( string.IsNullOrWhiteSpace( org ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid org input" );
 		}
 
@@ -54,9 +54,9 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptUser() {
-		Console.Error.Write( $"{ParameterDescriptions.User}: " );
+		Console.Error.Write( $"{ParameterDescriptions.User}{( allowEmptyInput ? " (Optional): " : ": " )}" );
 		string? user = _stdinReader.ReadLine();
-		if( string.IsNullOrEmpty( user ) ) {
+		if( user is null || ( string.IsNullOrWhiteSpace( user ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid user input" );
 		}
 
@@ -200,7 +200,7 @@ internal class ConsolePrompter : IConsolePrompter {
 
 	private static string GetCurrentTerminalSettings() {
 		var startInfo = new ProcessStartInfo( "stty" );
-		startInfo.ArgumentList.Add( "--save" );
+		startInfo.ArgumentList.Add( "-g" );
 		startInfo.RedirectStandardOutput = true;
 		using var p = Process.Start( startInfo ) ?? throw new BmxException( "Terminal error" );
 		p.WaitForExit();

@@ -1,12 +1,8 @@
 namespace D2L.Bmx;
 
-internal class LoginHandler {
-	private readonly OktaAuthenticator _oktaAuth;
-
-	public LoginHandler( OktaAuthenticator oktaAuth ) {
-		_oktaAuth = oktaAuth;
-	}
-
+internal class LoginHandler(
+	OktaAuthenticator oktaAuth
+) {
 	public async Task HandleAsync(
 		string? org,
 		string? user
@@ -16,6 +12,7 @@ internal class LoginHandler {
 				"BMX global config file not found. Okta sessions will not be saved. Please run `bmx configure` first."
 			);
 		}
-		_ = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive: false );
+		await oktaAuth.AuthenticateAsync( org, user, nonInteractive: false, ignoreCache: true );
+		Console.WriteLine( "Successfully logged in and Okta session has been cached." );
 	}
 }

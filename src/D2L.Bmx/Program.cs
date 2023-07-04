@@ -7,6 +7,7 @@ using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
+using IniParser;
 
 // common options
 var orgOption = new Option<string>(
@@ -54,16 +55,18 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 	orgOption,
 	userOption,
 	durationOption,
+	nonInteractiveOption,
 };
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider(),
+		new BmxConfigProvider( new FileIniDataParser() ),
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		duration: context.ParseResult.GetValueForOption( durationOption )
+		duration: context.ParseResult.GetValueForOption( durationOption ),
+		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption )
 	);
 	return Task.CompletedTask;
 } );
@@ -82,7 +85,6 @@ var nonInteractiveOption = new Option<bool>(
 // bmx print
 var formatOption = new Option<string>(
 	name: "--format",
-	getDefaultValue: () => OperatingSystem.IsWindows() ? PrintFormat.PowerShell : PrintFormat.Bash,
 	description: ParameterDescriptions.Format );
 /* Intentionally not using:
 	- an enum, because .NET will happily parse any integer as an enum (even when outside of defined values) and
@@ -96,7 +98,7 @@ formatOption.AddValidator( result => {
 		result.GetValueForOption( formatOption ) is string format
 		&& PrintFormat.All.Contains( format )
 	) ) {
-		result.ErrorMessage = $"Unsupported value for --format. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
+		result.ErrorMessage = $"Unsupported value for --output. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
 
@@ -112,7 +114,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -131,7 +133,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-		format: context.ParseResult.GetValueForOption( formatOption )
+		output: context.ParseResult.GetValueForOption( formatOption )
 	);
 } );
 
@@ -147,16 +149,16 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	accountOption,
 	roleOption,
 	durationOption,
-	profileOption,
-	outputOption,
 	orgOption,
+	outputOption,
+	profileOption,
 	userOption,
 	nonInteractiveOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider().GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -168,7 +170,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 			consolePrompter,
 			config ),
 		consolePrompter,
-		config
+		config,
+		new FileIniDataParser()
 	);
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -190,6 +193,29 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 	loginCommand,
 	configureCommand,
 };
+
+var loginCommand = new Command( "login", "Login to Okta and create a session" ) {
+	orgOption,
+	userOption,
+};
+
+loginCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+	var consolePrompter = new ConsolePrompter();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var handler = new LoginHandler(
+		new OktaAuthenticator(
+			new OktaApi(),
+			new OktaSessionStorage(),
+			consolePrompter,
+			config
+			) );
+	return handler.HandleAsync(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption )
+	);
+} ) );
+
+rootCommand.Add( loginCommand );
 
 // start bmx
 return await new CommandLineBuilder( rootCommand )

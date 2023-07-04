@@ -37,6 +37,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          if ( -Not ( $env:RELEASE_TAG -match '^v3\.[0-9]+\.[0-9]+(-preview)*' ) ){
+            Throw "Tag name format incorrect"
+          }
           if ($env:PRERELEASE -eq 'true') {
               $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG"
           } else {
@@ -69,12 +72,31 @@ jobs:
       - name: set up .NET
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: 8.0.x
+
       - name: publish
         shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
         working-directory: src/D2L.Bmx
         run: |
-          dotnet publish -r $env:PLATFORM-x64 -c Release -o build
+          $version = "$env:RELEASE_TAG"
+          if ( -not $version ){
+            $version = "v3.0.0"
+          }
+          $versionWithoutv = "$version".TrimStart("v")
+          dotnet publish `
+            /p:Version="$versionWithoutv" `
+            /p:InformationalVersion="$version" `
+            /p:IncludeSourceRevisionInInformationalVersion=false `
+            -r $env:PLATFORM-x64 `
+            -o build
+
+      - name: check size
+        shell: pwsh
+        working-directory: src/D2L.Bmx
+        run: Get-ChildItem build
+
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
@@ -111,12 +133,17 @@ jobs:
         uses: Brightspace/third-party-actions@actions/checkout
       - name: setup docker buildx
         uses: docker/setup-buildx-action@v2
+
       - name: publish
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
         run: |
           docker buildx build -f $env:DOCKERFILE -o build .
+
+      - name: check size
+        run: ls -l build
+
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
         shell: bash

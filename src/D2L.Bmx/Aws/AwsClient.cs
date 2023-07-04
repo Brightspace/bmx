@@ -7,19 +7,13 @@ internal interface IAwsClient {
 	Task<AwsCredentials> GetTokensAsync( string samlAssertion, AwsRole role, int durationInMinutes );
 }
 
-internal class AwsClient : IAwsClient {
-	private readonly IAmazonSecurityTokenService _stsClient;
-
-	public AwsClient( IAmazonSecurityTokenService stsClient ) {
-		_stsClient = stsClient;
-	}
-
+internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 	async Task<AwsCredentials> IAwsClient.GetTokensAsync(
 		string samlAssertion,
 		AwsRole role,
 		int durationInMinutes
 	) {
-		var authResp = await _stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest {
+		var authResp = await stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest {
 			PrincipalArn = role.PrincipalArn,
 			RoleArn = role.RoleArn,
 			SAMLAssertion = samlAssertion,

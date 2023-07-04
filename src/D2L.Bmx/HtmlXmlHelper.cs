@@ -1,17 +1,23 @@
-using System.Text.RegularExpressions;
+using System.Net;
 using System.Xml;
 using D2L.Bmx.Aws;
+using HtmlAgilityPack;
 
 namespace D2L.Bmx;
 
 internal static partial class HtmlXmlHelper {
 	public static string GetSamlResponseFromLoginPage( string html ) {
-		// TODO: use proper HTML parsing instead of regex
-		var inputXml = new XmlDocument();
-		inputXml.LoadXml( SamlResponseInputRegex().Match( html ).Value );
+		var htmlDoc = new HtmlDocument();
+		htmlDoc.LoadHtml( html );
 
-		return inputXml.SelectSingleNode( "//@value" )?.InnerText
-			?? throw new BmxException( "Error parsing AWS login page" );
+		if(
+			// `SelectSingleNode` can return null even though its signature doesn't say so
+			htmlDoc.DocumentNode.SelectSingleNode( "//input[@name='SAMLResponse']" ) is HtmlNode inputNode
+			&& inputNode.GetAttributeValue( "value", /* default */ null ) is string samlResponse
+		) {
+			return WebUtility.HtmlDecode( samlResponse );
+		}
+		throw new BmxException( "Error parsing AWS login page" );
 	}
 
 	public static AwsRole[] GetRolesFromSamlResponse( string samlResponse ) {
@@ -40,7 +46,4 @@ internal static partial class HtmlXmlHelper {
 				: throw new BmxException( "Failed to retrieve roles" ) )
 			.ToArray();
 	}
-
-	[GeneratedRegex( """<input name="SAMLResponse" type="hidden" value=".*?"/>""" )]
-	private static partial Regex SamlResponseInputRegex();
 }

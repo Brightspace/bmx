@@ -3,18 +3,10 @@ using D2L.Bmx.Aws;
 
 namespace D2L.Bmx;
 
-internal class PrintHandler {
-	private readonly OktaAuthenticator _oktaAuth;
-	private readonly AwsCredsCreator _awsCreds;
-
-	public PrintHandler(
-		OktaAuthenticator oktaAuth,
-		AwsCredsCreator awsCreds
-	) {
-		_oktaAuth = oktaAuth;
-		_awsCreds = awsCreds;
-	}
-
+internal class PrintHandler(
+	OktaAuthenticator oktaAuth,
+	AwsCredsCreator awsCredsCreator
+) {
 	public async Task HandleAsync(
 		string? org,
 		string? user,
@@ -24,8 +16,8 @@ internal class PrintHandler {
 		bool nonInteractive,
 		string? format
 	) {
-		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
-		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
+		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive, ignoreCache: false );
+		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.Equals( format, PrintFormat.Bash, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( awsCreds );
@@ -34,7 +26,31 @@ internal class PrintHandler {
 		} else if( string.Equals( format, PrintFormat.Json, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintJson( awsCreds );
 		} else {
-			throw new UnreachableException();
+			string? procName = null;
+			if( OperatingSystem.IsWindows() ) {
+				procName = WindowsParentProcess.GetParentProcessName().ToLower();
+			} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+				procName = UnixParentProcess.GetParentProcessName().ToLower();
+			}
+
+			switch( procName ) {
+				case "pwsh":
+				case "powershell":
+					PrintPowershell( awsCreds );
+					break;
+				case "zsh":
+				case "bash":
+				case "sh":
+					PrintBash( awsCreds );
+					break;
+				default:
+					if( OperatingSystem.IsWindows() ) {
+						PrintPowershell( awsCreds );
+					} else if( OperatingSystem.IsMacOS() || OperatingSystem.IsLinux() ) {
+						PrintBash( awsCreds );
+					}
+					break;
+			}
 		}
 	}
 

@@ -3,64 +3,53 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
 
-internal class OktaAuthenticator {
-	private readonly IOktaApi _oktaApi;
-	private readonly IOktaSessionStorage _sessionStorage;
-	private readonly IConsolePrompter _consolePrompter;
-	private readonly BmxConfig _config;
-
-	public OktaAuthenticator(
-		IOktaApi oktaApi,
-		IOktaSessionStorage sessionStorage,
-		IConsolePrompter consolePrompter,
-		BmxConfig config
-	) {
-		_oktaApi = oktaApi;
-		_sessionStorage = sessionStorage;
-		_consolePrompter = consolePrompter;
-		_config = config;
-	}
-
+internal class OktaAuthenticator(
+	IOktaApi oktaApi,
+	IOktaSessionStorage sessionStorage,
+	IConsolePrompter consolePrompter,
+	BmxConfig config
+) {
 	public async Task<IOktaApi> AuthenticateAsync(
 		string? org,
 		string? user,
-		bool nonInteractive
+		bool nonInteractive,
+		bool ignoreCache
 	) {
 		if( string.IsNullOrEmpty( org ) ) {
-			if( !string.IsNullOrEmpty( _config.Org ) ) {
-				org = _config.Org;
+			if( !string.IsNullOrEmpty( config.Org ) ) {
+				org = config.Org;
 			} else if( !nonInteractive ) {
-				org = _consolePrompter.PromptOrg();
+				org = consolePrompter.PromptOrg( allowEmptyInput: false );
 			} else {
 				throw new BmxException( "Org value was not provided" );
 			}
 		}
 
 		if( string.IsNullOrEmpty( user ) ) {
-			if( !string.IsNullOrEmpty( _config.User ) ) {
-				user = _config.User;
+			if( !string.IsNullOrEmpty( config.User ) ) {
+				user = config.User;
 			} else if( !nonInteractive ) {
-				user = _consolePrompter.PromptUser();
+				user = consolePrompter.PromptUser( allowEmptyInput: false );
 			} else {
 				throw new BmxException( "User value was not provided" );
 			}
 		}
 
-		_oktaApi.SetOrganization( org );
+		oktaApi.SetOrganization( org );
 
-		if( await TryAuthenticateFromCacheAsync( org, user, _oktaApi ) ) {
-			return _oktaApi;
+		if( !ignoreCache && await TryAuthenticateFromCacheAsync( org, user, oktaApi ) ) {
+			return oktaApi;
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
-		string password = _consolePrompter.PromptPassword();
+		string password = consolePrompter.PromptPassword();
 
-		var authnResponse = await _oktaApi.AuthenticateAsync( user, password );
+		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
 
 		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
-			OktaMfaFactor mfaFactor = _consolePrompter.SelectMfa( mfaInfo.Factors );
+			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
 
 			if( !IsMfaFactorTypeSupported( mfaFactor.FactorType ) ) {
 				throw new BmxException( "Selected MFA not supported by BMX" );
@@ -68,17 +57,17 @@ internal class OktaAuthenticator {
 
 			// TODO: Handle retry
 			if( mfaFactor.FactorType is "sms" or "call" or "email" ) {
-				await _oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
+				await oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
 			}
-			string mfaResponse = _consolePrompter.GetMfaResponse( mfaFactor.FactorType == "question" ? "Answer" : "PassCode" );
-			authnResponse = await _oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
+			string mfaResponse = consolePrompter.GetMfaResponse( mfaFactor.FactorType == "question" ? "Answer" : "PassCode" );
+			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
 		}
 
 		if( authnResponse is AuthenticateResponse.Success successInfo ) {
-			var sessionResp = await _oktaApi.CreateSessionAsync( successInfo.SessionToken );
+			var sessionResp = await oktaApi.CreateSessionAsync( successInfo.SessionToken );
 
 			// TODO: Consider making OktaAPI stateless as well (?)
-			_oktaApi.AddSession( sessionResp.Id );
+			oktaApi.AddSession( sessionResp.Id );
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			} else {
@@ -88,7 +77,7 @@ internal class OktaAuthenticator {
 				"Consider running `bmx configure` if you own this machine." );
 				Console.ResetColor();
 			}
-			return _oktaApi;
+			return oktaApi;
 		}
 
 		throw new BmxException( "Okta authentication failed" );
@@ -111,10 +100,12 @@ internal class OktaAuthenticator {
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
-		var existingSessions = ReadOktaSessionCacheFile();
-		existingSessions.Add( session );
+		var sessionsToCache = ReadOktaSessionCacheFile();
+		sessionsToCache = sessionsToCache.Where( session => session.UserId != userId && session.Org != org )
+			.ToList();
+		sessionsToCache.Add( session );
 
-		_sessionStorage.SaveSessions( existingSessions );
+		sessionStorage.SaveSessions( sessionsToCache );
 	}
 
 	private string? GetCachedOktaSessionId( string userId, string org ) {
@@ -128,7 +119,7 @@ internal class OktaAuthenticator {
 	}
 
 	private List<OktaSessionCache> ReadOktaSessionCacheFile() {
-		var sourceCache = _sessionStorage.GetSessions();
+		var sourceCache = sessionStorage.GetSessions();
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}

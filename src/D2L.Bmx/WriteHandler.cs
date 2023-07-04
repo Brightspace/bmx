@@ -1,25 +1,15 @@
 using Amazon.Runtime.CredentialManagement;
+using IniParser;
 
 namespace D2L.Bmx;
 
-internal class WriteHandler {
-	private readonly OktaAuthenticator _oktaAuth;
-	private readonly AwsCredsCreator _awsCreds;
-	private readonly IConsolePrompter _consolePrompter;
-	private readonly BmxConfig _config;
-
-	public WriteHandler(
-		OktaAuthenticator oktaAuth,
-		AwsCredsCreator awsCreds,
-		IConsolePrompter consolePrompter,
-		BmxConfig config
-	) {
-		_oktaAuth = oktaAuth;
-		_awsCreds = awsCreds;
-		_consolePrompter = consolePrompter;
-		_config = config;
-	}
-
+internal class WriteHandler(
+	OktaAuthenticator oktaAuth,
+	AwsCredsCreator awsCredsCreator,
+	IConsolePrompter consolePrompter,
+	BmxConfig config,
+	FileIniDataParser parser
+) {
 	public async Task HandleAsync(
 		string? org,
 		string? user,
@@ -30,14 +20,14 @@ internal class WriteHandler {
 		string? output,
 		string? profile
 	) {
-		var oktaApi = await _oktaAuth.AuthenticateAsync( org, user, nonInteractive );
-		var awsCreds = await _awsCreds.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
+		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive, ignoreCache: false );
+		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync( oktaApi, account, role, duration, nonInteractive );
 
 		if( string.IsNullOrEmpty( profile ) ) {
-			if( !string.IsNullOrEmpty( _config.Profile ) ) {
-				profile = _config.Profile;
+			if( !string.IsNullOrEmpty( config.Profile ) ) {
+				profile = config.Profile;
 			} else {
-				profile = _consolePrompter.PromptProfile();
+				profile = consolePrompter.PromptProfile();
 			}
 		}
 
@@ -45,12 +35,15 @@ internal class WriteHandler {
 			output = "./" + output;
 		}
 		var credentialsFile = new SharedCredentialsFile( output );
+		var data = parser.ReadFile( credentialsFile.FilePath );
 
-		var profileOptions = new CredentialProfileOptions {
-			Token = awsCreds.SessionToken,
-			AccessKey = awsCreds.AccessKeyId,
-			SecretKey = awsCreds.SecretAccessKey,
-		};
-		credentialsFile.RegisterProfile( new CredentialProfile( profile, profileOptions ) );
+		if( !data.Sections.ContainsSection( profile ) ) {
+			data.Sections.AddSection( profile );
+		}
+		data[profile]["aws_access_key_id"] = awsCreds.AccessKeyId;
+		data[profile]["aws_secret_access_key"] = awsCreds.SecretAccessKey;
+		data[profile]["aws_session_token"] = awsCreds.SessionToken;
+
+		parser.WriteFile( credentialsFile.FilePath, data );
 	}
 }
