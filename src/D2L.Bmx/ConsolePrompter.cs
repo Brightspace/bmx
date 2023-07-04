@@ -33,8 +33,8 @@ internal class ConsolePrompter : IConsolePrompter {
 			FileAccess.Read
 		) );
 
-	string IConsolePrompter.PromptOrg() {
-		Console.Error.Write( $"{ParameterDescriptions.Org}: " );
+	string IConsolePrompter.PromptOrg( bool allowEmptyInput ) {
+		Console.Error.Write( $"{ParameterDescriptions.Org}{( allowEmptyInput ? "(Optional): " : ": " )}" );
 		string? org = _stdinReader.ReadLine();
 		if( org is null || ( string.IsNullOrWhiteSpace( org ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid org input" );
@@ -53,7 +53,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		return profile;
 	}
 
-	string IConsolePrompter.PromptUser() {
+	string IConsolePrompter.PromptUser( bool allowEmptyInput ) {
 		Console.Error.Write( $"{ParameterDescriptions.User}{( allowEmptyInput ? " (Optional): " : ": " )}" );
 		string? user = _stdinReader.ReadLine();
 		if( user is null || ( string.IsNullOrWhiteSpace( user ) && !allowEmptyInput ) ) {
