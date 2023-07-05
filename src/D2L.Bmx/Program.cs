@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using Amazon.Runtime;
@@ -8,36 +9,60 @@ using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 using IniParser;
 
-var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" );
-
 // common options
 var orgOption = new Option<string>(
 	name: "--org",
-	description: "the tenant name or full domain name of the Okta organization" );
+	description: ParameterDescriptions.Org );
 var userOption = new Option<string>(
 	name: "--user",
-	description: "the user to authenticate with" );
-var nonInteractiveOption = new Option<bool>(
-	name: "--non-interactive",
-	description: "Run non-interactively without showing any prompts." );
+	description: ParameterDescriptions.User );
+
+// bmx login
+var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
+	orgOption,
+	userOption,
+};
+loginCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new LoginHandler( new OktaAuthenticator(
+		new OktaApi(),
+		new OktaSessionStorage(),
+		new ConsolePrompter(),
+		new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration()
+	) );
+	return handler.HandleAsync(
+		org: context.ParseResult.GetValueForOption( orgOption ),
+		user: context.ParseResult.GetValueForOption( userOption )
+	);
+} );
+
+// configure & print & write common options
 var durationOption = new Option<int?>(
 	name: "--duration",
-	description: "duration of session in minutes" );
+	description: ParameterDescriptions.Duration );
+
 durationOption.AddValidator( result => {
-	if( result.GetValueForOption( durationOption ) < 15 ) {
-		result.ErrorMessage = "duration must be at least 15";
+	if( !(
+		result.Tokens is [Token token, ..]
+		&& int.TryParse( token.Value, out int duration )
+		&& duration >= 15 && duration <= 720
+	) ) {
+		result.ErrorMessage = "Duration must be an integer between 15 and 720";
 	}
 } );
 
+var nonInteractiveOption = new Option<bool>(
+	name: "--non-interactive",
+	description: ParameterDescriptions.NonInteractive );
+
 // bmx configure
-var configureCommand = new Command( "configure", "Create a bmx config file to save Okta sessions" ) {
+var configureCommand = new Command( "configure", "Create or update the global BMX config file" ) {
 	orgOption,
 	userOption,
 	durationOption,
 	nonInteractiveOption,
 };
 
-configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
 		new BmxConfigProvider( new FileIniDataParser() ),
 		new ConsolePrompter() );
@@ -48,44 +73,47 @@ configureCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandli
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption )
 	);
 	return Task.CompletedTask;
-} ) );
-
-rootCommand.Add( configureCommand );
+} );
 
 // print & write common options
 var accountOption = new Option<string>(
 	name: "--account",
-	description: "the account name to auth against" );
+	description: ParameterDescriptions.Account );
 var roleOption = new Option<string>(
 	name: "--role",
-	description: "the desired role to assume" );
+	description: ParameterDescriptions.Role );
 
 // bmx print
 var formatOption = new Option<string>(
 	name: "--format",
-	description: "the output format [bash|powershell|json]" );
+	description: ParameterDescriptions.Format );
+/* Intentionally not using:
+	- an enum, because .NET will happily parse any integer as an enum (even when outside of defined values) and
+	System.CommandLine shows internal enum type name to users when there's a parsing error;
+	- `FromAmong`, because it doesn't support case insensitive matching. This may change in future versions of
+	System.CommandLine.
+*/
+formatOption.AddCompletions( _ => PrintFormat.All );
 formatOption.AddValidator( result => {
-	string? format = result.GetValueForOption( formatOption );
-	var supportedFormats = new HashSet<string>( StringComparer.OrdinalIgnoreCase ) {
-		"bash", "powershell", "json"
-	};
-
-	if( !string.IsNullOrEmpty( format ) && !supportedFormats.Contains( format ) ) {
-		result.ErrorMessage = "Unsupported output format option. Please select from Bash or PowerShell";
+	if( !(
+		result.GetValueForOption( formatOption ) is string format
+		&& PrintFormat.All.Contains( format )
+	) ) {
+		result.ErrorMessage = $"Unsupported value for --output. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
 
-var printCommand = new Command( "print", "Returns the AWS credentials in text as environment variables / json" ) {
+var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
-	durationOption,
-	orgOption,
-	formatOption,
 	roleOption,
+	durationOption,
+	formatOption,
+	orgOption,
 	userOption,
 	nonInteractiveOption,
 };
 
-printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new PrintHandler(
@@ -106,32 +134,30 @@ printCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		role: context.ParseResult.GetValueForOption( roleOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
-		output: context.ParseResult.GetValueForOption( formatOption )
+		format: context.ParseResult.GetValueForOption( formatOption )
 	);
-} ) );
-
-rootCommand.Add( printCommand );
+} );
 
 // bmx write
 var outputOption = new Option<string>(
 	name: "--output",
-	description: "write to the specified file path instead of ~/.aws/credentials" );
+	description: ParameterDescriptions.Output );
 var profileOption = new Option<string>(
 	name: "--profile",
-	description: "aws profile name" );
+	description: ParameterDescriptions.Profile );
 
-var writeCommand = new Command( "write", "Write to AWS credentials file" ) {
+var writeCommand = new Command( "write", "Write AWS credentials to the credentials file" ) {
 	accountOption,
-	durationOption,
-	orgOption,
-	outputOption,
-	profileOption,
 	roleOption,
+	profileOption,
+	durationOption,
+	outputOption,
+	orgOption,
 	userOption,
 	nonInteractiveOption,
 };
 
-writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
+writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
@@ -158,52 +184,32 @@ writeCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAs
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption )
 	);
-} ) );
+} );
 
-rootCommand.Add( writeCommand );
-
-var loginCommand = new Command( "login", "Login to Okta and create a session" ) {
-	orgOption,
-	userOption,
+// root command
+var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" ) {
+	// put more frequently used commands first, as the order here affects help text
+	printCommand,
+	writeCommand,
+	loginCommand,
+	configureCommand,
 };
 
-loginCommand.SetHandler( ( InvocationContext context ) => RunWithErrorHandlingAsync( context, () => {
-	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
-	var handler = new LoginHandler(
-		new OktaAuthenticator(
-			new OktaApi(),
-			new OktaSessionStorage(),
-			consolePrompter,
-			config
-			) );
-	return handler.HandleAsync(
-		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption )
-	);
-} ) );
-
-rootCommand.Add( loginCommand );
-
 // start bmx
-return await rootCommand.InvokeAsync( args );
-
-// helper functions
-static async Task RunWithErrorHandlingAsync( InvocationContext context, Func<Task> handle ) {
-	try {
-		await handle();
-	} catch( Exception e ) {
+return await new CommandLineBuilder( rootCommand )
+	.UseDefaults()
+	.UseExceptionHandler( ( exception, context ) => {
 		Console.ResetColor();
 		Console.ForegroundColor = ConsoleColor.Red;
-		if( e is BmxException ) {
-			Console.Error.WriteLine( e.Message );
+		if( exception is BmxException ) {
+			Console.Error.WriteLine( exception.Message );
 		} else {
 			Console.Error.WriteLine( "BMX exited with unexpected internal error" );
 		}
 		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {
-			Console.Error.WriteLine( e );
+			Console.Error.WriteLine( exception );
 		}
 		Console.ResetColor();
-		context.ExitCode = 1;
-	}
-}
+	} )
+	.Build()
+	.InvokeAsync( args );

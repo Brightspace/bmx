@@ -9,7 +9,8 @@ internal class LoginHandler(
 	) {
 		if( !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 			throw new BmxException(
-				"No Config file found! Okta sessions are not cached without a config file. Please run bmx configure first." );
+				"BMX global config file not found. Okta sessions will not be saved. Please run `bmx configure` first."
+			);
 		}
 		await oktaAuth.AuthenticateAsync( org, user, nonInteractive: false, ignoreCache: true );
 		Console.WriteLine( "Successfully logged in and Okta session has been cached." );

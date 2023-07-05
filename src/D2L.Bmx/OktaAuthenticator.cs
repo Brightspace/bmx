@@ -41,7 +41,7 @@ internal class OktaAuthenticator(
 			return oktaApi;
 		}
 		if( nonInteractive ) {
-			throw new BmxException( "Authentication failed. No cached session" );
+			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
 		string password = consolePrompter.PromptPassword();
@@ -52,7 +52,7 @@ internal class OktaAuthenticator(
 			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
 
 			if( !IsMfaFactorTypeSupported( mfaFactor.FactorType ) ) {
-				throw new BmxException( "Selected MFA not supported by BMX." );
+				throw new BmxException( "Selected MFA not supported by BMX" );
 			}
 
 			// TODO: Handle retry
@@ -71,13 +71,16 @@ internal class OktaAuthenticator(
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			} else {
+				Console.ResetColor();
+				Console.ForegroundColor = ConsoleColor.Yellow;
 				Console.Error.WriteLine( "No config file found. Your Okta session will not be cached. " +
 				"Consider running `bmx configure` if you own this machine." );
+				Console.ResetColor();
 			}
 			return oktaApi;
 		}
 
-		throw new BmxException( "Authentication Failed" );
+		throw new BmxException( "Okta authentication failed" );
 	}
 
 	private async Task<bool> TryAuthenticateFromCacheAsync(
