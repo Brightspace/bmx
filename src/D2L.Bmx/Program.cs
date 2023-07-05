@@ -149,8 +149,8 @@ var profileOption = new Option<string>(
 var writeCommand = new Command( "write", "Write AWS credentials to the credentials file" ) {
 	accountOption,
 	roleOption,
-	profileOption,
 	durationOption,
+	profileOption,
 	outputOption,
 	orgOption,
 	userOption,
