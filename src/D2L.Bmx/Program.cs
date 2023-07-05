@@ -147,13 +147,13 @@ var profileOption = new Option<string>(
 	description: ParameterDescriptions.Profile );
 
 var writeCommand = new Command( "write", "Write AWS credentials to the credentials file" ) {
+	accountOption,
+	roleOption,
 	profileOption,
 	durationOption,
 	outputOption,
 	orgOption,
 	userOption,
-	accountOption,
-	roleOption,
 	nonInteractiveOption,
 };
 
