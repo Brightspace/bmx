@@ -35,7 +35,8 @@ You can use your created profile by configuring any supporting AWS client. For e
 ```Powershell
 aws sts get-caller-identity --profile my-profile
 ```
-### notes
+
+#### Notes
 
 Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
 
