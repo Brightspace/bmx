@@ -34,7 +34,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		) );
 
 	string IConsolePrompter.PromptOrg( bool allowEmptyInput ) {
-		Console.Error.Write( $"{ParameterDescriptions.Org}{( allowEmptyInput ? "(Optional): " : ": " )}" );
+		Console.Error.Write( $"{ParameterDescriptions.Org}{( allowEmptyInput ? " (Optional): " : ": " )}" );
 		string? org = _stdinReader.ReadLine();
 		if( org is null || ( string.IsNullOrWhiteSpace( org ) && !allowEmptyInput ) ) {
 			throw new BmxException( "Invalid org input" );
