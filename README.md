@@ -16,7 +16,7 @@ bmx configure --org your-okta-organization --user your-okta-username
 ```
 ### print
 
-To setup AWS credentials as environment variables in PowerShell, run:
+To set up AWS credentials as environment variables in PowerShell, run:
 ```PowerShell
 bmx print --account account-name --role role-name | iex
 ```
