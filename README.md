@@ -1,6 +1,6 @@
 # BMX
 
-BMX provides API access to your AWS accounts using existing Okta credentials. Instead of long-term IAM access keys, BMX creates short-term AWS STS tokens using your Okta identity.
+BMX provides API access to your AWS accounts using existing Okta credentials. Instead of long-term IAM user access keys, BMX creates short-term AWS STS tokens using your Okta identity.
 
 ## Installation
 
