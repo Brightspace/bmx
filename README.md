@@ -44,7 +44,7 @@ Note: The flags provided are optional. Use `bmx write -h` to view all available 
 
 # Project-Level Configuration Files
 
-BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for user with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
+BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for use with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
 
 Here's an example of a `.bmx` file:
 ```
