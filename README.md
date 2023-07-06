@@ -12,28 +12,28 @@ Download the appropriate binary from the [releases](https://github.com/Brightspa
 
 Set up the global BMX configuration file with the following command:
 ```PowerShell
-bmx configure --org your-okta-organization --user your-okta-username
+bmx configure --org your_okta_organization --user your_okta_username
 ```
 ### print
 
 To set up AWS credentials as environment variables in PowerShell, run:
 ```PowerShell
-bmx print --account account-name --role role-name | iex
+bmx print --account account_name --role role_name | iex
 ```
 Or in Bash/sh/Zsh, run:
 ```Bash
-$(bmx print --account account-name --role role-name)
+$(bmx print --account account_name --role role_name)
 ```
 
 ### write
 
 Create a new AWS credentials profile with the following command:
 ```Powershell
-bmx write --account account-name --role role-name --profile my-profile
+bmx write --account account_name --role role_name --profile my_profile
 ```
 You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
-aws sts get-caller-identity --profile my-profile
+aws sts get-caller-identity --profile my_profile
 ```
 
 #### Notes
