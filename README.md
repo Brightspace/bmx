@@ -43,7 +43,7 @@ The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-n
 
 # Project-Level Configuration Files
 
-BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for use with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
+BMX supports project-specific `.bmx` configuration files, which allow you to define default values for most CLI flags. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
 
 Here's an example of a `.bmx` file:
 ```
