@@ -16,11 +16,11 @@ bmx configure --org your-okta-organization --user your-okta-username
 ```
 ### print
 
-To setup AWS credentials in PowerShell, use:
+To setup AWS credentials as environment variables in PowerShell, run:
 ```PowerShell
 bmx print --account account-name --role role-name | iex
 ```
-To setup AWS credentials in Bash, use:
+Or in Bash/sh/Zsh, run:
 ```Bash
 $(bmx print --account account-name --role role-name)
 ```
@@ -31,7 +31,7 @@ Create a new AWS credentials profile with the following command:
 ```Powershell
 bmx write --account account-name --role role-name --profile my-profile
 ```
-You can use your created profile by providing the `profile` flag in your AWS CLI commands, for example:
+You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
 aws sts get-caller-identity --profile my-profile
 ```
@@ -43,7 +43,7 @@ The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-n
 
 ## Project-Level Configuration Files
 
-BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for use with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
+BMX supports project-specific `.bmx` configuration files, which allow you to define default values for most CLI flags. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
 
 Here's an example of a `.bmx` file:
 ```
