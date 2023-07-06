@@ -4,7 +4,7 @@ BMX provides API access to your AWS accounts using existing Okta credentials. In
 
 ## Installation
 
-Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page.
+Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page. For D2Lers, visit [bmx.d2l.dev](https://bmx.d2l.dev)
 
 ## Commands
 
