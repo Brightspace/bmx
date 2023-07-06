@@ -14,9 +14,6 @@ Set up the global BMX configuration file with the following command:
 ```PowerShell
 bmx configure --org your-okta-organization --user your-okta-username
 ```
-BMX will default to use the provided values. Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
-
-Note: The flags provided are optional. Use `bmx configure -h` to view all available options.
 ## print
 
 To setup AWS credentials in PowerShell, use:
@@ -27,7 +24,6 @@ To setup AWS credentials in Bash, use:
 ```Bash
 $(bmx print --account account-name --role role-name)
 ```
-Note: The flags provided are optional. Use `bmx print -h` to view all available options.
 
 ## write
 
@@ -39,8 +35,11 @@ You can use your created profile by providing the `profile` flag in your AWS CLI
 ```Powershell
 aws sts get-caller-identity --profile my-profile
 ```
-Note: The flags provided are optional. Use `bmx write -h` to view all available options.
+## notes
 
+Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
+
+The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
 
 # Project-Level Configuration Files
 
