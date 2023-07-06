@@ -20,7 +20,7 @@ To setup AWS credentials as environment variables in PowerShell, run:
 ```PowerShell
 bmx print --account account-name --role role-name | iex
 ```
-To setup AWS credentials in Bash, use:
+Or in Bash/sh/Zsh, run:
 ```Bash
 $(bmx print --account account-name --role role-name)
 ```
