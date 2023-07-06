@@ -31,7 +31,7 @@ Create a new AWS credentials profile with the following command:
 ```Powershell
 bmx write --account account-name --role role-name --profile my-profile
 ```
-You can use your created profile by providing the `profile` flag in your AWS CLI commands, for example:
+You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
 aws sts get-caller-identity --profile my-profile
 ```
