@@ -4,30 +4,51 @@ BMX provides API access to your AWS accounts using existing Okta credentials. In
 
 # Installation
 
-Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page. Place the executable in a convenient location within your file system.
+Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page.
 
 # Commands
 
 ## configure
 
-The `bmx configure` command creates or updates the global BMX configuration file, located at `~/.bmx/config`. This file can store your Okta organization, username, and your AWS default session duration. Okta account sessions are saved when a configuration file is present. For security reasons, it's recommended to avoid running `bmx configure` or creating a global configuration file on a machine used by multiple users.
+Set up the global BMX configuration file with the following command:
+```PowerShell
+bmx configure --org your-okta-organization --user your-okta-username
+```
+BMX will default to use the provided values. Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
 
+Note: The flags provided are optional. Use `bmx configure -h` to view all available options.
 ## print
 
-The `bmx print` command returns your AWS credentials in format compatible with most command-line interfaces (CLIs). Common use cases include `bmx print | iex` for PowerShell and `$(bmx print)` for Bash/Terminal.
+To setup AWS credentials in PowerShell, use:
+```PowerShell
+bmx print --account account-name --role role-name | iex
+```
+To setup AWS credentials in Bash, use:
+```Bash
+$(bmx print --account account-name --role role-name)
+```
+Note: The flags provided are optional. Use `bmx print -h` to view all available options.
 
 ## write
 
-The `bmx write` command saves your AWS credentials to the `~/.aws/credentials` file, or to another file of your choice.
+Create a new AWS credentials profile with the following command:
+```Powershell
+bmx write --account account-name --role role-name --profile my-profile
+```
+You can use your created profile by providing the `profile` flag in your AWS CLI commands, for example:
+```Powershell
+aws sts get-caller-identity --profile my-profile
+```
+Note: The flags provided are optional. Use `bmx write -h` to view all available options.
+
 
 # Project-Level Configuration Files
 
-BMX allows you to create project-specific `.bmx` configuration files, enabling you to pre-select AWS account and role names for use with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it locates a configuration file. This feature provides an efficient way to manage your AWS account settings on a per-project basis.
+BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for user with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
 
-# Contributing
-
-Please see our [Contributing Guidelines](https://github.com/Brightspace/bmx/blob/main/CONTRIBUTING.md) for more details.
-
-# License
-
-This project is licensed under the [Apache License 2.0](https://github.com/Brightspace/bmx/blob/main/LICENSE).
+Here's an example of a `.bmx` file:
+```
+account=account-name
+role=role-name
+duration=15
+```
