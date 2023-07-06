@@ -2,19 +2,19 @@
 
 BMX provides API access to your AWS accounts using existing Okta credentials. Instead of long-term IAM access keys, BMX creates short-term AWS STS tokens using your Okta identity.
 
-# Installation
+## Installation
 
 Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page.
 
-# Commands
+## Commands
 
-## configure
+### configure
 
 Set up the global BMX configuration file with the following command:
 ```PowerShell
 bmx configure --org your-okta-organization --user your-okta-username
 ```
-## print
+### print
 
 To setup AWS credentials in PowerShell, use:
 ```PowerShell
@@ -25,7 +25,7 @@ To setup AWS credentials in Bash, use:
 $(bmx print --account account-name --role role-name)
 ```
 
-## write
+### write
 
 Create a new AWS credentials profile with the following command:
 ```Powershell
@@ -35,13 +35,13 @@ You can use your created profile by providing the `profile` flag in your AWS CLI
 ```Powershell
 aws sts get-caller-identity --profile my-profile
 ```
-## notes
+### notes
 
 Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
 
 The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
 
-# Project-Level Configuration Files
+## Project-Level Configuration Files
 
 BMX supports project-specific `.bmx` configuration files, which allow you to pre-select AWS account and name roles for use with the `bmx print` command. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
 
