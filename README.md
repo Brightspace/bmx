@@ -1,6 +1,54 @@
 # BMX
 
-BMX grants you API access to your AWS accounts, based on Okta credentials that you already own.
-It uses your Okta identity to create short-term AWS STS tokens, as an alternative to long-term IAM access keys.
+BMX provides API access to your AWS accounts using existing Okta credentials. Instead of long-term IAM user access keys, BMX creates short-term AWS STS tokens using your Okta identity.
 
-This is a work in progress dotnet 7 branch
+## Installation
+
+Download the appropriate binary from the [releases](https://github.com/Brightspace/bmx/releases) page. For D2Lers, visit [bmx.d2l.dev](https://bmx.d2l.dev) for installation.
+
+## Commands
+
+### configure
+
+Set up the global BMX configuration file with the following command:
+```PowerShell
+bmx configure --org your_okta_organization --user your_okta_username
+```
+### print
+
+To set up AWS credentials as environment variables in PowerShell, run:
+```PowerShell
+bmx print --account account_name --role role_name | iex
+```
+Or in Bash/sh/Zsh, run:
+```Bash
+$(bmx print --account account_name --role role_name)
+```
+
+### write
+
+Create a new AWS credentials profile with the following command:
+```Powershell
+bmx write --account account_name --role role_name --profile my_profile
+```
+You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
+```Powershell
+aws sts get-caller-identity --profile my_profile
+```
+
+#### Notes
+
+Okta account sessions are automatically cached when a global configuration file is present. As such, it is not recommended to run `bmx configure` or create a global configuration file on a machine with multiple users.
+
+The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
+
+## Project-Level Configuration Files
+
+BMX supports project-specific `.bmx` configuration files, which allow you to define default values for most BMX flags. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
+
+Here's an example of a `.bmx` file:
+```
+account=account-name
+role=role-name
+duration=15
+```
