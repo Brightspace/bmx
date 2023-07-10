@@ -1,3 +1,4 @@
+using System.Text;
 using Amazon.Runtime.CredentialManagement;
 using IniParser;
 
@@ -44,6 +45,6 @@ internal class WriteHandler(
 		data[profile]["aws_secret_access_key"] = awsCreds.SecretAccessKey;
 		data[profile]["aws_session_token"] = awsCreds.SessionToken;
 
-		parser.WriteFile( credentialsFile.FilePath, data );
+		parser.WriteFile( credentialsFile.FilePath, data, new UTF8Encoding( false ) );
 	}
 }
