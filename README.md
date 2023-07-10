@@ -38,7 +38,7 @@ aws sts get-caller-identity --profile my_profile
 
 #### Notes
 
-Okta account sessions are also saved when a configuration file is present. As such, it is not recommended to run `bmx configure` or create a configuration file on a machine with multiple users.
+Okta account sessions are automatically cached when a global configuration file is present. As such, it is not recommended to run `bmx configure` or create a global configuration file on a machine with multiple users.
 
 The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
 
