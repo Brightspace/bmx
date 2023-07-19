@@ -3,12 +3,16 @@ name: publish
 on:
   push:
     paths:
+      - "Directory.Build.props"
+      - "Dockerfile*"
       - "src/**"
       - ".github/workflows/publish.yml"
     branches:
       - main
   pull_request:
     paths:
+      - "Directory.Build.props"
+      - "Dockerfile*"
       - "src/**"
       - ".github/workflows/publish.yml"
   workflow_dispatch:
