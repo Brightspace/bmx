@@ -151,8 +151,8 @@ jobs:
           $versionWithoutv = "$version".TrimStart("v")
           docker buildx build `
             -f $env:DOCKERFILE `
-            --build-arg version=$version `
-            --build-arg information_version=$versionWithoutv `
+            --build-arg version=$versionWithoutv `
+            --build-arg information_version=$version `
             -o build .
 
       - name: check size
