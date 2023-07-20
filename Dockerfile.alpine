@@ -31,6 +31,7 @@ COPY . .
 RUN dotnet publish src/D2L.Bmx \
     -p:Version=$version \
     -p:InformationVersion=$information_version \
+    -p:IncludeSourceRevisionInInformationalVersion=false \
     --no-restore \
     -r linux-musl-x64 \
     -o app
