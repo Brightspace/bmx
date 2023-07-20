@@ -1,5 +1,8 @@
 FROM amd64/alpine:3.15 AS build
 
+ARG version
+ARG information_version
+
 RUN apk update \
     && apk add clang build-base bash zlib-dev
 
@@ -25,7 +28,12 @@ COPY src/D2L.Bmx/D2L.Bmx.csproj src/D2L.Bmx/D2L.Bmx.csproj
 RUN dotnet restore src/D2L.Bmx -r linux-musl-x64
 
 COPY . .
-RUN dotnet publish src/D2L.Bmx --no-restore -r linux-musl-x64 -o app
+RUN dotnet publish src/D2L.Bmx \
+    -p:Version=$version \
+    -p:InformationVersion=$information_version \
+    --no-restore \
+    -r linux-musl-x64 \
+    -o app
 
 FROM scratch as export
 COPY --from=build /source/app /

@@ -105,7 +105,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
+          RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
@@ -113,11 +113,11 @@ jobs:
         run: |
           if ($env:PLATFORM -eq 'win') {
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win.zip"
-            gh release upload "$env:RELEASE_TAG" "bmx-win.zip"
+            gh release upload "$env:RELEASE_ID" "bmx-win.zip"
           } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
             tar -czvf "bmx-osx.tar.gz" "bmx"
-            gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
+            gh release upload "$env:RELEASE_ID" "bmx-osx.tar.gz"
           }
 
   build_docker:
@@ -142,8 +142,18 @@ jobs:
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
+          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
         run: |
-          docker buildx build -f $env:DOCKERFILE -o build .
+          $version = "$env:RELEASE_TAG"
+          if ( -not $version ){
+            $version = "v3.0.0"
+          }
+          $versionWithoutv = "$version".TrimStart("v")
+          docker buildx build \
+            -f $env:DOCKERFILE \
+            --build-arg version=$version \
+            --build-arg information_version=$versionWithoutv
+            -o build .
 
       - name: check size
         run: ls -l build
@@ -152,23 +162,23 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         shell: bash
         env:
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
+          RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
         run: |
           chmod +x "bmx"
           tar -czvf "bmx-$PLATFORM.tar.gz" "bmx"
-          gh release upload "$RELEASE_TAG" "bmx-$PLATFORM.tar.gz"
+          gh release upload "$RELEASE_ID" "bmx-$PLATFORM.tar.gz"
 
   publish_release:
     needs: [create_release, build, build_docker]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      RELEASE_TAG: ${{ needs.create_release.outputs.release_id }}
+      RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: finalize release
         run: |
-          gh release edit "$RELEASE_TAG" --draft=false --repo Brightspace/bmx
+          gh release edit "$RELEASE_ID" --draft=false --repo Brightspace/bmx
