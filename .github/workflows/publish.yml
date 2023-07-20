@@ -112,12 +112,12 @@ jobs:
         working-directory: src/D2L.Bmx/build
         run: |
           if ($env:PLATFORM -eq 'win') {
-            Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win.zip"
-            gh release upload "$env:RELEASE_TAG" "bmx-win.zip"
+            Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win-x64.zip"
+            gh release upload "$env:RELEASE_TAG" "bmx-win-x64.zip"
           } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
-            tar -czvf "bmx-osx.tar.gz" "bmx"
-            gh release upload "$env:RELEASE_TAG" "bmx-osx.tar.gz"
+            tar -czvf "bmx-osx-x64.tar.gz" "bmx"
+            gh release upload "$env:RELEASE_TAG" "bmx-osx-x64.tar.gz"
           }
 
   build_docker:
@@ -158,8 +158,8 @@ jobs:
         working-directory: build
         run: |
           chmod +x "bmx"
-          tar -czvf "bmx-$PLATFORM.tar.gz" "bmx"
-          gh release upload "$RELEASE_TAG" "bmx-$PLATFORM.tar.gz"
+          tar -czvf "bmx-$PLATFORM-x64.tar.gz" "bmx"
+          gh release upload "$RELEASE_TAG" "bmx-$PLATFORM-x64.tar.gz"
 
   publish_release:
     needs: [create_release, build, build_docker]
