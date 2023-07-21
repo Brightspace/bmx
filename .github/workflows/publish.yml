@@ -113,10 +113,10 @@ jobs:
         run: |
           if ($env:PLATFORM -eq 'win') {
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win-x64.zip"
-            gh release upload "$env:RELEASE_ID" "bmx-win.zip"
+            gh release upload "$env:RELEASE_ID" "bmx-win-x64.zip"
           } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
-            tar -czvf "bmx-osx.tar.gz" "bmx"
+            tar -czvf "bmx-osx-x64.tar.gz" "bmx"
             gh release upload "$env:RELEASE_ID" "bmx-osx-x64.tar.gz"
           }
 
