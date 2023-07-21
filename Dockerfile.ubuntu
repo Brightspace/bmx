@@ -1,7 +1,7 @@
 FROM ubuntu:16.04 AS build
 
-ARG version
-ARG information_version
+ARG version="3.0.0"
+ARG information_version="v3.0.0"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget ca-certificates clang zlib1g-dev
@@ -29,8 +29,8 @@ RUN dotnet restore src/D2L.Bmx -r linux-x64
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx \
-    -p:Version=$version \
-    -p:InformationVersion=$information_version \
+    -p:Version="$version" \
+    -p:InformationVersion="$information_version" \
     -p:IncludeSourceRevisionInInformationalVersion=false \
     --no-restore \
     -r linux-x64 \
