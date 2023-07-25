@@ -54,11 +54,11 @@ internal class PrintHandler(
 	}
 
 	private static void PrintBash( AwsCredentials credentials ) {
-		Console.WriteLine( $"""
-			export AWS_SESSION_TOKEN={credentials.SessionToken}
-			export AWS_ACCESS_KEY_ID={credentials.AccessKeyId}
-			export AWS_SECRET_ACCESS_KEY={credentials.SecretAccessKey}
-			""" );
+		// Raw string literals and `Console.WriteLine` use "\r\n" as the newline string on Windows,
+		// which won't work in Bash (e.g. Git Bash, Cygwin, MSYS2), so we must specify all newlines explicitly ourselves.
+		Console.Write( $"export AWS_SESSION_TOKEN={credentials.SessionToken}\n" );
+		Console.Write( $"export AWS_ACCESS_KEY_ID={credentials.AccessKeyId}\n" );
+		Console.Write( $"export AWS_SECRET_ACCESS_KEY={credentials.SecretAccessKey}\n" );
 	}
 
 	private static void PrintPowershell( AwsCredentials credentials ) {
