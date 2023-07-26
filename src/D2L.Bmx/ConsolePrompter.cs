@@ -141,6 +141,15 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {
+		if( accounts.Length == 0 ) {
+			throw new BmxException( "No AWS account available" );
+		}
+
+		if( accounts.Length == 1 ) {
+			Console.Error.WriteLine( $"AWS account: {accounts[0]}" );
+			return accounts[0];
+		}
+
 		Console.Error.WriteLine( "Available accounts:" );
 		for( int i = 0; i < accounts.Length; i++ ) {
 			Console.Error.WriteLine( $"[{i + 1}] {accounts[i]}" );
@@ -154,6 +163,15 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptRole( string[] roles ) {
+		if( roles.Length == 0 ) {
+			throw new BmxException( "No role available" );
+		}
+
+		if( roles.Length == 1 ) {
+			Console.Error.WriteLine( $"Role: {roles[0]}" );
+			return roles[0];
+		}
+
 		Console.Error.WriteLine( "Available roles:" );
 		for( int i = 0; i < roles.Length; i++ ) {
 			Console.Error.WriteLine( $"[{i + 1}] {roles[i]}" );
