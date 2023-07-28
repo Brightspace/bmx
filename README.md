@@ -70,6 +70,7 @@ duration=15
 * All flags are optional by default, and BMX will prompt for user input if required info isn't provided as command line flags.
 * New flag `--non-interactive` that suppresses all interactive prompts. If required info isn't already provided as command line flags, BMX will exit with an error.
 * Password input prompt displays entered characters as asterisks.
+* When MFA is required and only one method is available, that method is automatically selected.
 * Support for Mintty (hence Git Bash, Cygwin, and MSYS2).
 * JSON output format `bmx print --output json`.
 
