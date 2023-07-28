@@ -35,7 +35,6 @@ internal class WriteHandler(
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
 			output = "./" + output;
 		}
-
 		var credentialsFile = new SharedCredentialsFile( output );
 		string? credentialsFolderPath = Path.GetDirectoryName( credentialsFile.FilePath );
 		if( !string.IsNullOrEmpty( credentialsFolderPath ) && !Directory.Exists( credentialsFolderPath ) ) {
