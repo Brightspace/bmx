@@ -46,7 +46,6 @@ internal class WriteHandler(
 		}
 
 		var data = parser.ReadFile( credentialsFile.FilePath );
-
 		if( !data.Sections.ContainsSection( profile ) ) {
 			data.Sections.AddSection( profile );
 		}
