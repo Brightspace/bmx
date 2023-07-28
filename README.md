@@ -52,3 +52,25 @@ account=account-name
 role=role-name
 duration=15
 ```
+
+
+## Upgrading from BMX 2 to BMX 3
+
+### Breaking changes
+
+* The `--output` flag for `bmx print` is renamed to `--format`. The `--output` flag for `bmx write` remains unchanged.
+* `bmx version` is removed and replaced with `bmx --version`.
+* `default_duration` in config file is renamed to `duration`.
+* `allow_project_config` is removed from the global config file. Local `.bmx` config files are always enabled now.
+
+### New features
+
+* New command `bmx configure` for setting global configs.
+* New command `bmx login` to create a cached Okta session without getting AWS credentials.
+* All flags are optional by default, and BMX will prompt for user input if required info isn't provided as command line flags.
+* New flag `--non-interactive` that suppresses all interactive prompts. If required info isn't already provided as command line flags, BMX will exit with an error.
+* Password input prompt displays entered characters as asterisks.
+* Support for Mintty (hence Git Bash, Cygwin, and MSYS2).
+* JSON output format `bmx print --output json`.
+
+See [release](https://github.com/Brightspace/bmx/releases) for the full list of changes.
