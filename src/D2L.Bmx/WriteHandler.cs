@@ -35,7 +35,16 @@ internal class WriteHandler(
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
 			output = "./" + output;
 		}
+
 		var credentialsFile = new SharedCredentialsFile( output );
+		string? credentialsFolderPath = Path.GetDirectoryName( credentialsFile.FilePath );
+		if( !string.IsNullOrEmpty( credentialsFolderPath ) && !Directory.Exists( credentialsFolderPath ) ) {
+			Directory.CreateDirectory( credentialsFolderPath );
+		}
+		if( !File.Exists( credentialsFile.FilePath ) ) {
+			using( File.Create( credentialsFile.FilePath ) ) { };
+		}
+
 		var data = parser.ReadFile( credentialsFile.FilePath );
 
 		if( !data.Sections.ContainsSection( profile ) ) {
