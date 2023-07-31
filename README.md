@@ -51,7 +51,7 @@ You probably want to set `org` and `user` in this file.
 The `bmx configure` command can help you set this up.
 
 BMX also supports local configuration files named `.bmx`, which override the values in the global configuration file,
-and only affect BMX commands executed in its current directory or subdirectories.
+and only affect BMX commands executed in the current directory or subdirectories.
 When executed, BMX will search upwards from the current working directory until it finds a file named `.bmx`.
 Here's an example of a typical `.bmx` file:
 
