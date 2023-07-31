@@ -12,7 +12,7 @@ Download the appropriate binary from the [releases](https://github.com/Brightspa
 
 Set up the global BMX configuration file with the following command:
 ```PowerShell
-bmx configure --org your_okta_organization --user your_okta_username
+bmx configure --org okta_organization --user okta_username
 ```
 ### print
 
@@ -29,28 +29,36 @@ $(bmx print --account account_name --role role_name)
 
 Create a new AWS credentials profile with the following command:
 ```Powershell
-bmx write --account account_name --role role_name --profile my_profile
+bmx write --account account_name --role role_name --profile aws_profile
 ```
 You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
-aws sts get-caller-identity --profile my_profile
+aws sts get-caller-identity --profile aws_profile
 ```
 
-#### Notes
+### Notes
 
 Okta account sessions are automatically cached when a global configuration file is present. As such, it is not recommended to run `bmx configure` or create a global configuration file on a machine with multiple users.
 
 The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
 
-## Project-Level Configuration Files
+## Configuration
 
-BMX supports project-specific `.bmx` configuration files, which allow you to define default values for most BMX flags. When executed, BMX will search upwards from the current working directory until it finds a configuration file.
+BMX supports configuration files where you can define default values for most BMX flags.
 
-Here's an example of a `.bmx` file:
-```
-account=account-name
-role=role-name
-duration=15
+There's a global configuration file at `~/.bmx/config` that applies to all BMX commands.
+You probably want to set `org` and `user` in this file.
+The `bmx configure` command can help you set this up.
+
+BMX also supports local configuration files named `.bmx`, which override the values in the global configuration file,
+and only affect BMX commands executed in its current directory or subdirectories.
+When executed, BMX will search upwards from the current working directory until it finds a file named `.bmx`.
+Here's an example of a typical `.bmx` file:
+
+```ini
+account = account_name
+role = role_name
+duration = 15
 ```
 
 
