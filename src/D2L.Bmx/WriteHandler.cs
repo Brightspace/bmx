@@ -35,10 +35,10 @@ internal class WriteHandler(
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
 			output = "./" + output;
 		}
-		var credentialsFile = new SharedCredentialsFile( output );
-		string credentialsFilePath = credentialsFile.FilePath;
-		string? credentialsFolderPath = Path.GetDirectoryName( credentialsFilePath );
-		if( !string.IsNullOrEmpty( credentialsFolderPath ) && !Directory.Exists( credentialsFolderPath ) ) {
+		string credentialsFilePath = new SharedCredentialsFile( output ).FilePath;
+		string credentialsFolderPath = Path.GetDirectoryName( credentialsFilePath )
+			?? throw new BmxException( "Invalid AWS credentials file path" );
+		if( !Directory.Exists( credentialsFolderPath ) ) {
 			Directory.CreateDirectory( credentialsFolderPath );
 		}
 		if( !File.Exists( credentialsFilePath ) ) {
