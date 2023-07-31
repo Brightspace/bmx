@@ -46,7 +46,7 @@ The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-n
 
 BMX supports configuration files where you can define default values for most BMX flags.
 
-There's a global configuration file at `~/.bmx/config` that applies to all BMX commands.
+A global configuration file at `~/.bmx/config`, if created, applies to all BMX commands.
 You probably want to set `org` and `user` in this file.
 The `bmx configure` command can help you set this up.
 
