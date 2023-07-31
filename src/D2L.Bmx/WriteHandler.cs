@@ -35,9 +35,17 @@ internal class WriteHandler(
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
 			output = "./" + output;
 		}
-		var credentialsFile = new SharedCredentialsFile( output );
-		var data = parser.ReadFile( credentialsFile.FilePath );
+		string credentialsFilePath = new SharedCredentialsFile( output ).FilePath;
+		string credentialsFolderPath = Path.GetDirectoryName( credentialsFilePath )
+			?? throw new BmxException( "Invalid AWS credentials file path" );
+		if( !Directory.Exists( credentialsFolderPath ) ) {
+			Directory.CreateDirectory( credentialsFolderPath );
+		}
+		if( !File.Exists( credentialsFilePath ) ) {
+			using( File.Create( credentialsFilePath ) ) { };
+		}
 
+		var data = parser.ReadFile( credentialsFilePath );
 		if( !data.Sections.ContainsSection( profile ) ) {
 			data.Sections.AddSection( profile );
 		}
@@ -45,6 +53,6 @@ internal class WriteHandler(
 		data[profile]["aws_secret_access_key"] = awsCreds.SecretAccessKey;
 		data[profile]["aws_session_token"] = awsCreds.SessionToken;
 
-		parser.WriteFile( credentialsFile.FilePath, data, new UTF8Encoding( false ) );
+		parser.WriteFile( credentialsFilePath, data, new UTF8Encoding( false ) );
 	}
 }
