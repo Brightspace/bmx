@@ -22,7 +22,7 @@ bmx print --account account_name --role role_name | iex
 ```
 Or in Bash/sh/Zsh, run:
 ```Bash
-$(bmx print --account account_name --role role_name)
+eval "$(bmx print --account account_name --role role_name)"
 ```
 
 ### write
