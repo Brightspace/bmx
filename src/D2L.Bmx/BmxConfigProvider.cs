@@ -1,8 +1,3 @@
-using System.Runtime.InteropServices;
-using IniParser;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders.Physical;
-
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
