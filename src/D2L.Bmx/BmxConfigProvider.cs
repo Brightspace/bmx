@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using IniParser;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.FileProviders.Physical;
 
@@ -15,36 +14,39 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
-
+		var op = new FileStreamOptions {
+			Mode = FileMode.Open,
+			Access = FileAccess.Read,
+		};
+		using var fs = new FileStream( configFileName, op );
+		using var reader = new StreamReader( fs );
+		var data = parser.ReadData( reader );
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
-		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
-
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
-			var fileProvider =
-				new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
-			configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
-				reloadOnChange: false );
+			//var fileProvider =
+			//	new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
+			data = parser.ReadFile( projectConfigInfo.Name );
+			//configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
+			//	reloadOnChange: false );
 		}
 
-		var config = configBuilder.Build();
-
 		int? duration = null;
-		if( !string.IsNullOrEmpty( config["duration"] ) ) {
-			if( !int.TryParse( config["duration"], out int configDuration ) || configDuration < 1 ) {
+		if( !string.IsNullOrEmpty( data.Global["duration"] ) ) {
+			if( !int.TryParse( data.Global["duration"], out int configDuration ) || configDuration < 1 ) {
 				throw new BmxException( "Invalid duration in config" );
 			}
 			duration = configDuration;
 		}
 
 		return new BmxConfig(
-			Org: config["org"],
-			User: config["user"],
-			Account: config["account"],
-			Role: config["role"],
-			Profile: config["profile"],
+			Org: data.Global["org"],
+			User: data.Global["user"],
+			Account: data.Global["account"],
+			Role: data.Global["role"],
+			Profile: data.Global["profile"],
 			Duration: duration
 		);
 	}
