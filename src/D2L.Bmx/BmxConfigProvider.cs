@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using IniParser;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
