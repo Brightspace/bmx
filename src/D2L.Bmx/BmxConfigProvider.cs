@@ -1,9 +1,6 @@
 using System.Runtime.InteropServices;
 using IniParser;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.FileProviders.Physical;
-
+using IniParser.Model;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
@@ -15,36 +12,41 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
-
+		var data = new IniData();
+		if( File.Exists( configFileName ) ) {
+			try {
+				var tempdata = parser.ReadFile( configFileName );
+				data.Merge( tempdata );
+			} catch( Exception ) {
+				Console.Error.Write( $"WARNING: Failed to load the global config file {configFileName}." );
+			}
+		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
-		var configBuilder = new ConfigurationBuilder().AddIniFile( configFileName, optional: true );
-
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
-			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
-			var fileProvider =
-				new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
-			configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
-				reloadOnChange: false );
+			try {
+				var tempdata = parser.ReadFile( projectConfigInfo.FullName );
+				data.Merge( tempdata );
+			} catch( Exception ) {
+				Console.Error.Write( $"WARNING: Failed to load the local config file {projectConfigInfo.FullName}." );
+			}
 		}
 
-		var config = configBuilder.Build();
-
 		int? duration = null;
-		if( !string.IsNullOrEmpty( config["duration"] ) ) {
-			if( !int.TryParse( config["duration"], out int configDuration ) || configDuration < 1 ) {
+		if( !string.IsNullOrEmpty( data.Global["duration"] ) ) {
+			if( !int.TryParse( data.Global["duration"], out int configDuration ) || configDuration < 1 ) {
 				throw new BmxException( "Invalid duration in config" );
 			}
 			duration = configDuration;
 		}
 
 		return new BmxConfig(
-			Org: config["org"],
-			User: config["user"],
-			Account: config["account"],
-			Role: config["role"],
-			Profile: config["profile"],
+			Org: data.Global["org"],
+			User: data.Global["user"],
+			Account: data.Global["account"],
+			Role: data.Global["role"],
+			Profile: data.Global["profile"],
 			Duration: duration
 		);
 	}
