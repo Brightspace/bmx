@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using IniParser;
 using IniParser.Model;
+using System;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
@@ -17,8 +18,8 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 			try {
 				var tempdata = parser.ReadFile( configFileName );
 				data.Merge( tempdata );
-			} catch( IniParser.Exceptions.ParsingException ) {
-				//No read permission?
+			} catch( Exception ) {
+				Console.Write( "Error occur while parsing config file." );
 			}
 		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
@@ -29,8 +30,8 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 			try {
 				var tempdata = parser.ReadFile( configFilePath );
 				data.Merge( tempdata );
-			} catch( IniParser.Exceptions.ParsingException ) {
-				//No read permission?
+			} catch( Exception ) {
+				Console.Write( "Error occur while parsing additional config file." );
 			}
 		}
 
