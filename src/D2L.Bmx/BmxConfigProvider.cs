@@ -12,7 +12,7 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
-		IniData data = new IniData();
+		var data = new IniData();
 		if( File.Exists( configFileName ) ) {
 			var tempdata = parser.ReadFile( configFileName );
 			data.Merge( tempdata );
