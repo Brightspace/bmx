@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using IniParser;
+using IniParser.Model;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
@@ -11,13 +12,11 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 	public BmxConfig GetConfiguration() {
 		// Main config is at ~/.bmx/config
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
-		var op = new FileStreamOptions {
-			Mode = FileMode.Open,
-			Access = FileAccess.Read,
-		};
-		using var fs = new FileStream( configFileName, op );
-		using var reader = new StreamReader( fs );
-		var data = parser.ReadData( reader );
+		IniData data = new IniData();
+		if( File.Exists( configFileName ) ) {
+			var tempdata = parser.ReadFile( configFileName );
+			data.Merge( tempdata );
+		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
@@ -25,7 +24,8 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
 			//var fileProvider =
 			//	new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
-			data = parser.ReadFile( projectConfigInfo.Name );
+			var tempdata = parser.ReadFile( projectConfigInfo.Name );
+			data.Merge( tempdata );
 			//configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
 			//	reloadOnChange: false );
 		}
