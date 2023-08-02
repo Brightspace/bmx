@@ -14,20 +14,24 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 		string configFileName = BmxPaths.CONFIG_FILE_NAME;
 		var data = new IniData();
 		if( File.Exists( configFileName ) ) {
-			var tempdata = parser.ReadFile( configFileName );
-			data.Merge( tempdata );
+			try {
+				var tempdata = parser.ReadFile( configFileName );
+				data.Merge( tempdata );
+			} catch( IniParser.Exceptions.ParsingException ) {
+				//No read permission?
+			}
 		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
-			// Default file provider ignores files prefixed with ".", we need to provide our own as a result
-			//var fileProvider =
-			//	new PhysicalFileProvider( projectConfigInfo.DirectoryName!, ExclusionFilters.None );
-			var tempdata = parser.ReadFile( projectConfigInfo.Name );
-			data.Merge( tempdata );
-			//configBuilder.AddIniFile( fileProvider, projectConfigInfo.Name, optional: false,
-			//	reloadOnChange: false );
+			var configFilePath = Path.Combine( projectConfigInfo.DirectoryName ?? "", projectConfigInfo.Name );
+			try {
+				var tempdata = parser.ReadFile( configFilePath );
+				data.Merge( tempdata );
+			} catch( IniParser.Exceptions.ParsingException ) {
+				//No read permission?
+			}
 		}
 
 		int? duration = null;
