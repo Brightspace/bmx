@@ -25,7 +25,7 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
-			var configFilePath = Path.Combine( projectConfigInfo.DirectoryName ?? "", projectConfigInfo.Name );
+			string configFilePath = Path.Combine( projectConfigInfo.DirectoryName ?? "", projectConfigInfo.Name );
 			try {
 				var tempdata = parser.ReadFile( configFilePath );
 				data.Merge( tempdata );
