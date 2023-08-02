@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using IniParser;
 using IniParser.Model;
-using System;
 namespace D2L.Bmx;
 
 internal interface IBmxConfigProvider {
