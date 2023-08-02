@@ -18,19 +18,18 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 				var tempdata = parser.ReadFile( configFileName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				Console.Write( "Error occur while parsing config file." );
+				Console.Error.Write( $"WARNING: Failed to load the global config file {configFileName}." );
 			}
 		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
 		FileInfo? projectConfigInfo = GetProjectConfigFileInfo();
 
 		if( projectConfigInfo is not null ) {
-			string configFilePath = Path.Combine( projectConfigInfo.DirectoryName ?? "", projectConfigInfo.Name );
 			try {
-				var tempdata = parser.ReadFile( configFilePath );
+				var tempdata = parser.ReadFile( projectConfigInfo.FullName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				Console.Write( "Error occur while parsing additional config file." );
+				Console.Error.Write( $"WARNING: Failed to load the local config file {projectConfigInfo.FullName}." );
 			}
 		}
 
