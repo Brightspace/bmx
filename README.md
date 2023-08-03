@@ -12,35 +12,35 @@ Download the appropriate binary from the [releases](https://github.com/Brightspa
 
 Set up the global BMX configuration file with the following command:
 ```PowerShell
-bmx configure --org okta_organization --user okta_username
+bmx configure --org <okta_organization> --user <okta_username>
 ```
 ### print
 
 To set up AWS credentials as environment variables in PowerShell, run:
 ```PowerShell
-bmx print --account aws_account_name --role aws_role_name | iex
+bmx print --account <aws_account_name> --role <aws_role_name> | iex
 ```
 Or in Bash/sh/Zsh, run:
 ```Bash
-eval "$(bmx print --account aws_account_name --role aws_role_name)"
+eval "$(bmx print --account <aws_account_name> --role <aws_role_name>)"
 ```
 
 ### write
 
 Create a new AWS credentials profile with the following command:
 ```Powershell
-bmx write --account aws_account_name --role aws_role_name --profile aws_profile
+bmx write --account <aws_account_name> --role <aws_role_name> --profile <aws_profile>
 ```
 You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
-aws sts get-caller-identity --profile aws_profile
+aws sts get-caller-identity --profile <aws_profile>
 ```
 
 ### Notes
 
 Okta user sessions are automatically cached when a global configuration file is present. As such, it is not recommended to run `bmx configure` or create a global configuration file on a machine with multiple users.
 
-The flags provided in the examples are optional. Use `bmx -h` or `bmx {command-name} -h` to view all available options.
+The flags provided in the examples are optional. Use `bmx -h` or `bmx <command-name> -h` to view all available options.
 
 ## Configuration
 
@@ -56,8 +56,8 @@ When executed, BMX will search upwards from the current working directory until 
 Here's an example of a typical `.bmx` file:
 
 ```ini
-account = aws_account_name
-role = aws_role_name
+account = <aws_account_name>
+role = <aws_role_name>
 duration = 15
 ```
 
