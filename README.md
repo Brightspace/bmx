@@ -29,7 +29,7 @@ eval "$(bmx print --account aws_account_name --role aws_role_name)"
 
 Create a new AWS credentials profile with the following command:
 ```Powershell
-bmx write -- aws__name --role aws_role_name --profile aws_profile
+bmx write --account aws_account_name --role aws_role_name --profile aws_profile
 ```
 You can use your created profile by configuring any supporting AWS client. For example, for the AWS CLI :
 ```Powershell
