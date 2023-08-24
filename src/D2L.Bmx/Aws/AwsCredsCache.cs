@@ -51,14 +51,14 @@ internal class AwsCredsCache( FileIniDataParser parser ) {
 		}
 		try {
 			if( data[role.RoleArn] is not null ) {
-
-				return new AwsCredentials(
-					SessionToken: data[role.RoleArn]["SessionToken"],
-					AccessKeyId: data[role.RoleArn]["AccessKeyId"],
-					SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
-					Expiration: DateTime.Parse( data[role.RoleArn]["Expiration"] )
-				);
-
+				if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) > DateTime.Now ) {
+					return new AwsCredentials(
+						SessionToken: data[role.RoleArn]["SessionToken"],
+						AccessKeyId: data[role.RoleArn]["AccessKeyId"],
+						SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
+						Expiration: DateTime.Parse( data[role.RoleArn]["Expiration"] )
+					);
+				}
 			}
 		} catch( Exception e ) {
 
