@@ -37,6 +37,7 @@ internal class AwsCredsCache( FileIniDataParser parser ) {
 		using var writer = new StreamWriter( fs );
 		parser.WriteData( writer, data );
 	}
+
 	public AwsCredentials? GetCache( AwsRole role ) {
 		// Main config is at ~/.bmx/config
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
