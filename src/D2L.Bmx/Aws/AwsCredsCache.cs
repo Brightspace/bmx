@@ -49,15 +49,19 @@ internal class AwsCredsCache( FileIniDataParser parser ) {
 				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {CacheFileName}." );
 			}
 		}
-		if( data[role.RoleArn] is not null ) {
-			if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) < DateTime.Now ) {
+		try {
+			if( data[role.RoleArn] is not null ) {
+
 				return new AwsCredentials(
 					SessionToken: data[role.RoleArn]["SessionToken"],
 					AccessKeyId: data[role.RoleArn]["AccessKeyId"],
 					SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
 					Expiration: DateTime.Parse( data[role.RoleArn]["Expiration"] )
 				);
+
 			}
+		} catch( Exception e ) {
+
 		}
 
 		return null;
