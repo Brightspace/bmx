@@ -16,7 +16,7 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		//Try get the result
 		AwsCredsCache cache = AwsCredsCache();
 		AwsCredentials? savedCreds = cache.GetCache( role );
-		if( savedCreds != null ) {
+		if( savedCreds is not null ) {
 			return savedCreds;
 		}
 		var authResp = await stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest {

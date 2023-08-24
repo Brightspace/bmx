@@ -1,4 +1,3 @@
-using IniParser;
 using IniParser.Model;
 namespace D2L.Bmx.Aws;
 
@@ -48,7 +47,7 @@ internal class AwsCredsCache() {
 				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {configFileName}." );
 			}
 		}
-		if( data[role.RoleArn] != null ) {
+		if( data[role.RoleArn] is not null ) {
 			if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) < DateTime.Now() ) {
 				return new AwsCredentials(
 					SessionToken: data[role.RoleArn]["SessionToken"],
