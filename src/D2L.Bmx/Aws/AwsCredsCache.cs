@@ -45,16 +45,18 @@ internal class AwsCredsCache() {
 				var tempdata = parser.ReadFile( CacheFileName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				Console.Error.Write( $"WARNING: Failed to load the global config file {configFileName}." );
+				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {configFileName}." );
 			}
 		}
 		if( data[role.RoleArn] != null ) {
-			return new AwsCredentials(
-				SessionToken: data[role.RoleArn]["SessionToken"],
-				AccessKeyId: data[role.RoleArn]["AccessKeyId"],
-				SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
-				Expiration: data[role.RoleArn]["Expiration"]
-			);
+			if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) < DateTime.Now() ) {
+				return new AwsCredentials(
+					SessionToken: data[role.RoleArn]["SessionToken"],
+					AccessKeyId: data[role.RoleArn]["AccessKeyId"],
+					SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
+					Expiration: data[role.RoleArn]["Expiration"]
+				);
+			}
 		}
 
 		return null;
