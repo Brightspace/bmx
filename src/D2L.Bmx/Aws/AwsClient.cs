@@ -1,6 +1,6 @@
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
-
+using IniParser;
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
@@ -14,7 +14,8 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		int durationInMinutes
 	) {
 		//Try get the result
-		AwsCredsCache cache = AwsCredsCache();
+		var parser = new FileIniDataParser();
+		var cache = new AwsCredsCache( parser );
 		AwsCredentials? savedCreds = cache.GetCache( role );
 		if( savedCreds is not null ) {
 			return savedCreds;

@@ -1,9 +1,11 @@
 using IniParser;
 using IniParser.Model;
+using Amazon.SecurityToken.Model;
+using System.Runtime.InteropServices;
 namespace D2L.Bmx.Aws;
 
-internal class AwsCredsCache() {
-	public void SaveToFile( AwsRole role, var authResp ) {
+internal class AwsCredsCache( FileIniDataParser parser ) {
+	public void SaveToFile( AwsRole role, Amazon.SecurityToken.Model.AssumeRoleWithSAMLResponse authResp ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
@@ -27,7 +29,7 @@ internal class AwsCredsCache() {
 			data[role.RoleArn]["SecretAccessKey"] = authResp.Credentials.SecretAccessKey;
 		}
 		if( !string.IsNullOrEmpty( authResp.Credentials.SessionToken ) ) {
-			data[role.RoleArn]["Expiration"] = authResp.Credentials.Expiration.ToUniversalTime();
+			data[role.RoleArn]["Expiration"] = authResp.Credentials.Expiration.ToUniversalTime().ToString();
 		}
 
 		fs.Position = 0;
@@ -36,7 +38,7 @@ internal class AwsCredsCache() {
 		using var writer = new StreamWriter( fs );
 		parser.WriteData( writer, data );
 	}
-	public AwsCredentials GetCache( AwsRole role ) {
+	public AwsCredentials? GetCache( AwsRole role ) {
 		// Main config is at ~/.bmx/config
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
 		var data = new IniData();
@@ -45,16 +47,16 @@ internal class AwsCredsCache() {
 				var tempdata = parser.ReadFile( CacheFileName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {configFileName}." );
+				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {CacheFileName}." );
 			}
 		}
 		if( data[role.RoleArn] is not null ) {
-			if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) < DateTime.Now() ) {
+			if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) < DateTime.Now ) {
 				return new AwsCredentials(
 					SessionToken: data[role.RoleArn]["SessionToken"],
 					AccessKeyId: data[role.RoleArn]["AccessKeyId"],
 					SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
-					Expiration: data[role.RoleArn]["Expiration"]
+					Expiration: DateTime.Parse( data[role.RoleArn]["Expiration"] )
 				);
 			}
 		}
