@@ -1,7 +1,6 @@
+using System.Runtime.InteropServices;
 using IniParser;
 using IniParser.Model;
-using Amazon.SecurityToken.Model;
-using System.Runtime.InteropServices;
 namespace D2L.Bmx.Aws;
 
 internal class AwsCredsCache( FileIniDataParser parser ) {
