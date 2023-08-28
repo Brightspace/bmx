@@ -61,7 +61,7 @@ internal class AwsCredsCache( FileIniDataParser parser ) {
 					);
 				}
 			}
-		} catch( Exception e ) {
+		} catch( Exception ) {
 
 		}
 

@@ -4,21 +4,26 @@ using IniParser;
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
-	Task<AwsCredentials> GetTokensAsync( string samlAssertion, AwsRole role, int durationInMinutes );
+	Task<AwsCredentials> GetTokensAsync( string samlAssertion, AwsRole role, int durationInMinutes, bool useCache );
 }
 
 internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 	async Task<AwsCredentials> IAwsClient.GetTokensAsync(
 		string samlAssertion,
 		AwsRole role,
-		int durationInMinutes
+		int durationInMinutes,
+		bool useCache
 	) {
 		//Try get the result
 		var parser = new FileIniDataParser();
 		var cache = new AwsCredsCache( parser );
-		AwsCredentials? savedCreds = cache.GetCache( role );
-		if( savedCreds is not null ) {
-			return savedCreds;
+		if( useCache ) {
+
+			AwsCredentials? savedCreds = cache.GetCache( role );
+
+			if( savedCreds is not null ) {
+				return savedCreds;
+			}
 		}
 		var authResp = await stsClient.AssumeRoleWithSAMLAsync( new AssumeRoleWithSAMLRequest {
 			PrincipalArn = role.PrincipalArn,
