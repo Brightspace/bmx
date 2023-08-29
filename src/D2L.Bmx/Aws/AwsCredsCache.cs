@@ -41,7 +41,8 @@ internal class AwsCredsCache() {
 		writer.Write( content );
 	}
 
-	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode(
+		"Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
@@ -56,6 +57,9 @@ internal class AwsCredsCache() {
 			return new();
 		}
 	}
+
+	[RequiresDynamicCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
+	[RequiresUnreferencedCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
 	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
 		// Main config is at ~/.bmx/config
 		List<AwsCacheModel> allEntries = GetAllCache();
