@@ -4,7 +4,13 @@ using IniParser;
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
-	Task<AwsCredentials> GetTokensAsync( string samlAssertion, AwsRole role, int durationInMinutes, bool useCache );
+	Task<AwsCredentials> GetTokensAsync( string samlAssertion,
+	AwsRole role,
+	int durationInMinutes,
+	int? useCache,
+	string Org,
+	string User
+	 );
 }
 
 internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
@@ -12,14 +18,15 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		string samlAssertion,
 		AwsRole role,
 		int durationInMinutes,
-		bool useCache
-	) {
-		//Try get the result
-		var parser = new FileIniDataParser();
-		var cache = new AwsCredsCache( parser );
-		if( useCache ) {
+		int? useCache,
+		string Org,
+		string User
 
-			AwsCredentials? savedCreds = cache.GetCache( role );
+	) {
+		var cache = new AwsCredsCache();
+		if( useCache is not null ) {
+
+			AwsCredentials? savedCreds = cache.GetCachedSession( Org, User, role, useCache ?? 0 );
 
 			if( savedCreds is not null ) {
 				return savedCreds;
@@ -33,12 +40,13 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		} );
 		// What about duration?
 		//cache the result
-		cache.SaveToFile( role, authResp );
-		return new AwsCredentials(
+		var credentails = new AwsCredentials(
 			SessionToken: authResp.Credentials.SessionToken,
 			AccessKeyId: authResp.Credentials.AccessKeyId,
 			SecretAccessKey: authResp.Credentials.SecretAccessKey,
 			Expiration: authResp.Credentials.Expiration.ToUniversalTime()
 		);
+		cache.SaveToFile( Org, User, role, credentails );
+		return credentails;
 	}
 }

@@ -1,70 +1,64 @@
 using System.Runtime.InteropServices;
 using IniParser;
 using IniParser.Model;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 namespace D2L.Bmx.Aws;
 
-internal class AwsCredsCache( FileIniDataParser parser ) {
-	public void SaveToFile( AwsRole role, Amazon.SecurityToken.Model.AssumeRoleWithSAMLResponse authResp ) {
+internal class AwsCredsCache() {
+	private static readonly JsonSerializerOptions _options =
+		new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+	public void SaveToFile( string Org, string User, AwsRole role, AwsCredentials credentials ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.BMX_DIR );
+			return;
 		}
+		if( Org == "" || User == "" ) { //It's not set in config file
+			return;
+		}
+		var newEntry = new AwsCacheModel(
+			Org,
+			User,
+			role.RoleArn,
+			credentials );
+		List<AwsCacheModel> allEntries = GetAllCache();
+		allEntries.RemoveAll( o => o.Credentials.Expiration < DateTime.Now );
+		allEntries.Add( newEntry );
+		var jsonString = JsonSerializer.Serialize( allEntries );
+
+		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
+	}
+	private static void WriteTextToFile( string path, string content ) {
 		var op = new FileStreamOptions {
-			Mode = FileMode.OpenOrCreate,
-			Access = FileAccess.ReadWrite,
+			Mode = FileMode.Create,
+			Access = FileAccess.Write,
 		};
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
-		using var fs = new FileStream( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, op );
-		using var reader = new StreamReader( fs );
-		var data = parser.ReadData( reader );
-		if( !string.IsNullOrEmpty( authResp.Credentials.SessionToken ) ) {
-			data[role.RoleArn]["SessionToken"] = authResp.Credentials.SessionToken;
-		}
-		if( !string.IsNullOrEmpty( authResp.Credentials.AccessKeyId ) ) {
-			data[role.RoleArn]["AccessKeyId"] = authResp.Credentials.AccessKeyId;
-		}
-		if( !string.IsNullOrEmpty( authResp.Credentials.SecretAccessKey ) ) {
-			data[role.RoleArn]["SecretAccessKey"] = authResp.Credentials.SecretAccessKey;
-		}
-		if( !string.IsNullOrEmpty( authResp.Credentials.SessionToken ) ) {
-			data[role.RoleArn]["Expiration"] = authResp.Credentials.Expiration.ToUniversalTime().ToString();
-		}
-
-		fs.Position = 0;
-		fs.SetLength( 0 );
-
-		using var writer = new StreamWriter( fs );
-		parser.WriteData( writer, data );
+		using var writer = new StreamWriter( path, op );
+		writer.Write( content );
 	}
-
-	public AwsCredentials? GetCache( AwsRole role ) {
-		// Main config is at ~/.bmx/config
+	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
-		var data = new IniData();
-		if( File.Exists( CacheFileName ) ) {
-			try {
-				var tempdata = parser.ReadFile( CacheFileName );
-				data.Merge( tempdata );
-			} catch( Exception ) {
-				Console.Error.Write( $"WARNING: Failed to load the saved Creds file {CacheFileName}." );
-			}
+		if( !File.Exists( CacheFileName ) ) {
+			return new();
 		}
 		try {
-			if( data[role.RoleArn] is not null ) {
-				if( DateTime.Parse( data[role.RoleArn]["Expiration"] ) > DateTime.Now ) {
-					return new AwsCredentials(
-						SessionToken: data[role.RoleArn]["SessionToken"],
-						AccessKeyId: data[role.RoleArn]["AccessKeyId"],
-						SecretAccessKey: data[role.RoleArn]["SecretAccessKey"],
-						Expiration: DateTime.Parse( data[role.RoleArn]["Expiration"] )
-					);
-				}
-			}
-		} catch( Exception ) {
-
+			string sessionsJson = File.ReadAllText( BmxPaths.AWS_CREDS_CACHE_FILE_NAME );
+			return JsonSerializer.Deserialize<List<AwsCacheModel>>( sessionsJson )
+				?? new();
+		} catch( JsonException ) {
+			return new();
 		}
-
+	}
+	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
+		// Main config is at ~/.bmx/config
+		List<AwsCacheModel> allEntries = GetAllCache();
+		AwsCacheModel? matchedEntry = allEntries.Find( o => o.User == User && o.Org == Org && o.RoleArn == role.RoleArn
+		&& o.Credentials.Expiration > DateTime.Now.AddMinutes( Cache ) );
+		if( matchedEntry is not null ) {
+			return matchedEntry.Credentials;
+		}
 		return null;
 	}
 }

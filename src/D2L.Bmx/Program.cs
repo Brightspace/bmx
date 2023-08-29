@@ -102,7 +102,7 @@ formatOption.AddValidator( result => {
 		result.ErrorMessage = $"Unsupported value for --output. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
-var cacheOption = new Option<bool>(
+var cacheOption = new Option<int?>(
 	name: "--use-cache",
 	description: ParameterDescriptions.NonInteractive );
 

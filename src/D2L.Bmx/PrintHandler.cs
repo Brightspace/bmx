@@ -14,7 +14,7 @@ internal class PrintHandler(
 		int? duration,
 		bool nonInteractive,
 		string? format,
-		bool useCache
+		int? useCache
 	) {
 		var oktaApi = await oktaAuth.AuthenticateAsync(
 			 org, user, nonInteractive, ignoreCache: false
