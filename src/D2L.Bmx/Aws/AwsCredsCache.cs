@@ -23,7 +23,7 @@ internal class AwsCredsCache() {
 		List<AwsCacheModel> allEntries = GetAllCache();
 		allEntries.RemoveAll( o => o.Credentials.Expiration < DateTime.Now );
 		allEntries.Add( newEntry );
-		string jsonString = JsonSerializer.Serialize( allEntries );
+		string jsonString = JsonSerializer.Serialize( allEntries, SourceGenerationContext.Default.ListAwsCacheModel );
 
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
@@ -46,7 +46,7 @@ internal class AwsCredsCache() {
 		}
 		try {
 			string sessionsJson = File.ReadAllText( BmxPaths.AWS_CREDS_CACHE_FILE_NAME );
-			return JsonSerializer.Deserialize<List<AwsCacheModel>>( sessionsJson )
+			return JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListAwsCacheModel )
 				?? new();
 		} catch( JsonException ) {
 			return new();
