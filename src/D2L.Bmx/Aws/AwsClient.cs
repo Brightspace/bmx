@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 namespace D2L.Bmx.Aws;
