@@ -57,6 +57,9 @@ internal class AwsCredsCache() {
 			return new();
 		}
 	}
+
+	[RequiresUnreferencedCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
+	[RequiresDynamicCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
 	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
 		// Main config is at ~/.bmx/config
 		List<AwsCacheModel> allEntries = GetAllCache();
