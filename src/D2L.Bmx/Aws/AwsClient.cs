@@ -42,7 +42,7 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		} );
 		// What about duration?
 		//cache the result
-		var credentails = new AwsCredentials(
+		var credentials = new AwsCredentials(
 			SessionToken: authResp.Credentials.SessionToken,
 			AccessKeyId: authResp.Credentials.AccessKeyId,
 			SecretAccessKey: authResp.Credentials.SecretAccessKey,
