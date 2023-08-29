@@ -1,6 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using IniParser;
-using IniParser.Model;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 namespace D2L.Bmx.Aws;
@@ -8,6 +7,9 @@ namespace D2L.Bmx.Aws;
 internal class AwsCredsCache() {
 	private static readonly JsonSerializerOptions _options =
 		new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public void SaveToFile( string Org, string User, AwsRole role, AwsCredentials credentials ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			return;
@@ -23,7 +25,7 @@ internal class AwsCredsCache() {
 		List<AwsCacheModel> allEntries = GetAllCache();
 		allEntries.RemoveAll( o => o.Credentials.Expiration < DateTime.Now );
 		allEntries.Add( newEntry );
-		var jsonString = JsonSerializer.Serialize( allEntries );
+		string jsonString = JsonSerializer.Serialize( allEntries );
 
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
@@ -38,6 +40,9 @@ internal class AwsCredsCache() {
 		using var writer = new StreamWriter( path, op );
 		writer.Write( content );
 	}
+
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
 		if( !File.Exists( CacheFileName ) ) {

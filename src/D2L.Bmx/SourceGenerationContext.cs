@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
-using D2L.Bmx.Okta.Models;
 using D2L.Bmx.Aws;
+using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx;
 
 [JsonSourceGenerationOptions( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
