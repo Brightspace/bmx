@@ -41,7 +41,8 @@ internal class AwsCredsCache() {
 		writer.Write( content );
 	}
 
-	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode
+	( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
