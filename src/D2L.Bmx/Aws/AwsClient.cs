@@ -48,7 +48,7 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 			SecretAccessKey: authResp.Credentials.SecretAccessKey,
 			Expiration: authResp.Credentials.Expiration.ToUniversalTime()
 		);
-		cache.SaveToFile( Org, User, role, credentails );
-		return credentails;
+		cache.SaveToFile( Org, User, role, credentials );
+		return credentials;
 	}
 }
