@@ -8,6 +8,8 @@ internal class AwsCredsCache() {
 	private static readonly JsonSerializerOptions _options =
 		new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public void SaveToFile( string Org, string User, AwsRole role, AwsCredentials credentials ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			return;
@@ -39,6 +41,8 @@ internal class AwsCredsCache() {
 		writer.Write( content );
 	}
 
+	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
+	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
 		if( !File.Exists( CacheFileName ) ) {
