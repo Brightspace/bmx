@@ -8,8 +8,6 @@ internal class AwsCredsCache() {
 	private static readonly JsonSerializerOptions _options =
 		new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-	[RequiresUnreferencedCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
-	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Serialize<TValue>(TValue, JsonSerializerOptions)" )]
 	public void SaveToFile( string Org, string User, AwsRole role, AwsCredentials credentials ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			return;
@@ -41,9 +39,6 @@ internal class AwsCredsCache() {
 		writer.Write( content );
 	}
 
-	[RequiresUnreferencedCode
-	( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
-	[RequiresDynamicCode( "Calls System.Text.Json.JsonSerializer.Deserialize<TValue>(String, JsonSerializerOptions)" )]
 	public List<AwsCacheModel> GetAllCache() {
 		string CacheFileName = BmxPaths.AWS_CREDS_CACHE_FILE_NAME;
 		if( !File.Exists( CacheFileName ) ) {
@@ -58,8 +53,6 @@ internal class AwsCredsCache() {
 		}
 	}
 
-	[RequiresUnreferencedCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
-	[RequiresDynamicCode( "Calls D2L.Bmx.Aws.AwsCredsCache.GetAllCache()" )]
 	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
 		// Main config is at ~/.bmx/config
 		List<AwsCacheModel> allEntries = GetAllCache();

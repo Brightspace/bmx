@@ -15,8 +15,7 @@ internal interface IAwsClient {
 }
 
 internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
-	[RequiresUnreferencedCode( "Calls D2L.Bmx.Aws.AwsCredsCache.SaveToFile(String, String, AwsRole, AwsCredentials)" )]
-	[RequiresDynamicCode( "Calls D2L.Bmx.Aws.AwsCredsCache.SaveToFile(String, String, AwsRole, AwsCredentials)" )]
+
 	async Task<AwsCredentials> IAwsClient.GetTokensAsync(
 		string samlAssertion,
 		AwsRole role,
