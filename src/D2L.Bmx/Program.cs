@@ -104,7 +104,7 @@ formatOption.AddValidator( result => {
 } );
 var cacheOption = new Option<int?>(
 	name: "--use-cache",
-	description: ParameterDescriptions.NonInteractive );
+	description: ParameterDescriptions.UseCache );
 
 var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
