@@ -17,8 +17,8 @@ internal class PrintHandler(
 		int? useCache
 	) {
 		var oktaApi = await oktaAuth.AuthenticateAsync(
-			 org, user, nonInteractive, ignoreCache: false
-			 );
+			org, user, nonInteractive, ignoreCache: false
+			);
 		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync(
 			oktaApi, account, role, duration, nonInteractive, useCache
 			);

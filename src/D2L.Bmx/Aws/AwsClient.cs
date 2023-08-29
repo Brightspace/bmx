@@ -4,13 +4,14 @@ using Amazon.SecurityToken.Model;
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsClient {
-	Task<AwsCredentials> GetTokensAsync( string samlAssertion,
-	AwsRole role,
-	int durationInMinutes,
-	int? useCache,
-	string Org,
-	string User
-	 );
+	Task<AwsCredentials> GetTokensAsync(
+		string samlAssertion,
+		AwsRole role,
+		int durationInMinutes,
+		int? useCache,
+		string Org,
+		string User
+	);
 }
 
 internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
