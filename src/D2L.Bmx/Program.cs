@@ -201,10 +201,15 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 // start bmx
 return await new CommandLineBuilder( rootCommand )
 	.UseDefaults()
-	.AddMiddleware( async ( context, next ) => {
+	.AddMiddleware( async (
+		context,
+		next
+	) => {
 		await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
 		await next( context );
-	} )
+	},
+		System.CommandLine.Invocation.MiddlewareOrder.ExceptionHandler + 1
+	)
 	.UseExceptionHandler( ( exception, context ) => {
 		Console.ResetColor();
 		Console.ForegroundColor = ConsoleColor.Red;
