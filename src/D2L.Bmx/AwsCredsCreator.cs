@@ -15,7 +15,7 @@ internal class AwsCredsCreator(
 		string? role,
 		int? duration,
 		bool nonInteractive,
-		int? useCache
+		int? useCacheTimeLimit
 	) {
 		//cache this one?
 		OktaApp[] awsApps = await oktaApi.GetAwsAccountAppsAsync();
@@ -68,8 +68,8 @@ internal class AwsCredsCreator(
 			samlResponse,
 			selectedRoleData,
 			duration.Value,
-			useCache,
-			config.Org ?? "",
-			config.User ?? "" );
+			useCacheTimeLimit,
+			config.Org,
+			config.User );
 	}
 }

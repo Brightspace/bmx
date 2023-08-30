@@ -14,13 +14,13 @@ internal class PrintHandler(
 		int? duration,
 		bool nonInteractive,
 		string? format,
-		int? useCache
+		int? useCacheTimeLimit
 	) {
 		var oktaApi = await oktaAuth.AuthenticateAsync(
 			org, user, nonInteractive, ignoreCache: false
 			);
 		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync(
-			oktaApi, account, role, duration, nonInteractive, useCache
+			oktaApi, account, role, duration, nonInteractive, useCacheTimeLimit
 			);
 
 		if( string.Equals( format, PrintFormat.Bash, StringComparison.OrdinalIgnoreCase ) ) {

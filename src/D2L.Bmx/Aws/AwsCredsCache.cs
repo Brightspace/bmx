@@ -7,11 +7,11 @@ internal class AwsCredsCache() {
 	private static readonly JsonSerializerOptions _options =
 		new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-	public void SaveToFile( string Org, string User, AwsRole role, AwsCredentials credentials ) {
+	public void SaveToFile( string? Org, string? User, AwsRole role, AwsCredentials credentials ) {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			return;
 		}
-		if( Org == "" || User == "" ) { //It's not set in config file
+		if( string.IsNullOrEmpty( Org ) || string.IsNullOrEmpty( User ) ) { //It's not set in config file
 			return;
 		}
 		var newEntry = new AwsCacheModel(
@@ -52,7 +52,10 @@ internal class AwsCredsCache() {
 		}
 	}
 
-	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
+	public AwsCredentials? GetCachedSession( string? Org, string? User, AwsRole role, int Cache ) {
+		if( string.IsNullOrEmpty( Org ) || string.IsNullOrEmpty( User ) ) { //It's not set in config file
+			return null;
+		}
 		List<AwsCacheModel> allEntries = GetAllCache();
 		AwsCacheModel? matchedEntry = allEntries.Find( o => o.User == User && o.Org == Org && o.RoleArn == role.RoleArn
 		&& o.Credentials.Expiration > DateTime.Now.AddMinutes( Cache ) );

@@ -104,7 +104,7 @@ formatOption.AddValidator( result => {
 } );
 var cacheOption = new Option<int?>(
 	name: "--use-cache",
-	description: ParameterDescriptions.UseCache );
+	description: ParameterDescriptions.UseCacheTimeLimit );
 
 var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
@@ -139,7 +139,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
-		useCache: context.ParseResult.GetValueForOption( cacheOption )
+		useCacheTimeLimit: context.ParseResult.GetValueForOption( cacheOption )
 	);
 } );
 
@@ -189,7 +189,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
-		useCache: context.ParseResult.GetValueForOption( cacheOption )
+		useCacheTimeLimit: context.ParseResult.GetValueForOption( cacheOption )
 	);
 } );
 

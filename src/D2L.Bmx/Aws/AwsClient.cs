@@ -7,9 +7,9 @@ internal interface IAwsClient {
 		string samlAssertion,
 		AwsRole role,
 		int durationInMinutes,
-		int? useCache,
-		string Org,
-		string User
+		int? useCacheTimeLimit,
+		string? Org,
+		string? User
 	);
 }
 
@@ -19,15 +19,15 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		string samlAssertion,
 		AwsRole role,
 		int durationInMinutes,
-		int? useCache,
-		string Org,
-		string User
+		int? useCacheTimeLimit,
+		string? Org,
+		string? User
 
 	) {
 		var cache = new AwsCredsCache();
-		if( useCache is not null ) {
+		if( useCacheTimeLimit is not null ) {
 
-			AwsCredentials? savedCreds = cache.GetCachedSession( Org, User, role, useCache ?? 0 );
+			AwsCredentials? savedCreds = cache.GetCachedSession( Org, User, role, useCacheTimeLimit ?? 0 );
 
 			if( savedCreds is not null ) {
 				return savedCreds;
