@@ -32,7 +32,6 @@ namespace D2L.Bmx {
 				}
 			} catch( Exception ex ) {
 				// Give up and don't bother telling the user we couldn't check for updates
-				Console.Error.WriteLine( ex.ToString() );
 			}
 		}
 
