@@ -50,10 +50,9 @@ internal class UpdateChecker {
 	}
 
 	private static async Task<string> GetLatestReleaseVersionAsync() {
-		using var httpClient = new HttpClient {
-			BaseAddress = new Uri( "https://api.github.com" ),
-			Timeout = TimeSpan.FromSeconds( 5 )
-		};
+		using var httpClient = new HttpClient();
+		httpClient.BaseAddress = new Uri( "https://api.github.com" );
+		httpClient.Timeout = TimeSpan.FromSeconds( 5 );
 		httpClient.DefaultRequestHeaders.Add( "User-Agent", "BMX" );
 		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
 		response.EnsureSuccessStatusCode();
