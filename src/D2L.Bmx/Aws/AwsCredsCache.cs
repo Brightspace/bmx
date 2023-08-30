@@ -53,7 +53,6 @@ internal class AwsCredsCache() {
 	}
 
 	public AwsCredentials? GetCachedSession( string Org, string User, AwsRole role, int Cache ) {
-		// Main config is at ~/.bmx/config
 		List<AwsCacheModel> allEntries = GetAllCache();
 		AwsCacheModel? matchedEntry = allEntries.Find( o => o.User == User && o.Org == Org && o.RoleArn == role.RoleArn
 		&& o.Credentials.Expiration > DateTime.Now.AddMinutes( Cache ) );
