@@ -15,7 +15,7 @@ internal class UpdateChecker {
 				latestVersion = new Version( await GetLatestReleaseVersionAsync() );
 			}
 
-			string updateLocation = ( string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase ) )
+			string updateLocation = string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase )
 				? "https://bmx.d2l.dev"
 				: "https://github.com/Brightspace/bmx/releases/latest";
 
