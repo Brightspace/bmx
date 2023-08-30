@@ -3,14 +3,14 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace D2L.Bmx; 
+namespace D2L.Bmx;
 internal class UpdateChecker {
 
 	public static async Task CheckForUpdatesAsync( BmxConfig config ) {
 		try {
 			string? savedLatestVersion = GetSavedLatestVersion();
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
-			var latestVersion = new Version( savedVersion ?? "0.0.0" );
+			var latestVersion = new Version( savedLatestVersion ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( savedLatestVersion ) ) {
 				latestVersion = new Version( await GetLatestReleaseVersionAsync() );
 			}
