@@ -15,10 +15,10 @@ namespace D2L.Bmx {
 
 		public static async Task CheckForUpdatesAsync( BmxConfig config ) {
 			try {
-				var savedVersion = GetSavedLatestVersion();
+				var savedLatestVersion = GetSavedLatestVersion();
 				var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 				var latestVersion = new Version( savedVersion ?? "0.0.0" );
-				if( ShouldFetchLatestVersion( savedVersion ) ) {
+				if( ShouldFetchLatestVersion( savedLatestVersion ) ) {
 					latestVersion = new Version( await GetLatestReleaseVersionAsync() );
 				}
 
