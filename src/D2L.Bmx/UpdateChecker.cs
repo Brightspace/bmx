@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace D2L.Bmx;
-internal class UpdateChecker {
+internal static class UpdateChecker {
 
 	public static async Task CheckForUpdatesAsync( BmxConfig config ) {
 		try {
