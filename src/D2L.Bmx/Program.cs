@@ -103,7 +103,7 @@ formatOption.AddValidator( result => {
 	}
 } );
 var cacheOption = new Option<int?>(
-	name: "--use-cache",
+	name: "--use-cache-time-limit",
 	description: ParameterDescriptions.UseCacheTimeLimit );
 
 var printCommand = new Command( "print", "Print AWS credentials" ) {
