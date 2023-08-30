@@ -63,7 +63,6 @@ internal class UpdateChecker {
 			responseStream,
 			SourceGenerationContext.Default.GithubRelease
 		);
-		string content = await response.Content.ReadAsStringAsync();
 		string version = releaseData?.TagName?.Replace( "v", "" ) ?? string.Empty;
 		SaveLatestVersion( version );
 		return version;
