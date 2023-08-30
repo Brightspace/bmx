@@ -7,7 +7,6 @@ using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
-using D2L.Bmx.Okta.Models;
 using IniParser;
 
 
