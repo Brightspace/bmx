@@ -23,7 +23,7 @@ internal class UpdateChecker {
 				DisplayUpdateMessage( $"A new BMX release is available: v{latestVersion} (current: v{localVersion})\n" +
 					$"Upgrade now at {updateLocation}" );
 			}
-		} catch( Exception ex ) {
+		} catch( Exception ) {
 			// Give up and don't bother telling the user we couldn't check for updates
 		}
 	}
