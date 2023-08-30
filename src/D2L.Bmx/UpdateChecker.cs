@@ -58,7 +58,7 @@ internal class UpdateChecker {
 		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
 		response.EnsureSuccessStatusCode();
 
-		using var responseStream = await response.Content.ReadAsStreamAsync();
+		await using var responseStream = await response.Content.ReadAsStreamAsync();
 		var releaseData = await JsonSerializer.DeserializeAsync(
 			responseStream,
 			SourceGenerationContext.Default.GithubRelease
