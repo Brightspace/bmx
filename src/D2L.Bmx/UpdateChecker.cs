@@ -79,7 +79,7 @@ internal static class UpdateChecker {
 			VersionName = version,
 			TimeLastChecked = DateTimeOffset.UtcNow
 		};
-		var content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
+		string content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
 		var op = new FileStreamOptions {
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,
@@ -97,7 +97,7 @@ internal static class UpdateChecker {
 			return null;
 		}
 
-		var content = File.ReadAllText( BmxPaths.UPDATE_CHECK_FILE_NAME );
+		string content = File.ReadAllText( BmxPaths.UPDATE_CHECK_FILE_NAME );
 		try {
 			return JsonSerializer.Deserialize( content, SourceGenerationContext.Default.UpdateCheckCache );
 		} catch( JsonException ) {
