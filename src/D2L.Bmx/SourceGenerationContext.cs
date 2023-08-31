@@ -14,5 +14,6 @@ namespace D2L.Bmx;
 [JsonSerializable( typeof( OktaMeResponse ) )]
 [JsonSerializable( typeof( List<OktaSessionCache> ) )]
 [JsonSerializable( typeof( GithubRelease ) )]
+[JsonSerializable( typeof( UpdateCheckCache ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }

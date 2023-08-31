@@ -8,10 +8,11 @@ internal static class UpdateChecker {
 
 	public static async Task CheckForUpdatesAsync( BmxConfig config ) {
 		try {
-			string? savedLatestVersion = GetSavedLatestVersion();
+			var cachedVersion = GetUpdateCheckCache();
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
-			var latestVersion = new Version( savedLatestVersion ?? "0.0.0" );
-			if( ShouldFetchLatestVersion( savedLatestVersion ) ) {
+			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
+			if( ShouldFetchLatestVersion( cachedVersion ) ) {
+				Console.Error.WriteLine( "Getting new version from github" );
 				latestVersion = new Version( await GetLatestReleaseVersionAsync() );
 			}
 
@@ -68,12 +69,17 @@ internal static class UpdateChecker {
 	}
 
 	private static void SaveLatestVersion( string version ) {
-		if( string.IsNullOrWhiteSpace( version ) ) {
-			return;
-		}
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
+		if( string.IsNullOrWhiteSpace( version ) ) {
+			return;
+		}
+		var cache = new UpdateCheckCache {
+			VersionName = version,
+			TimeLastChecked = DateTimeOffset.UtcNow
+		};
+		var content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
 		var op = new FileStreamOptions {
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,
@@ -83,36 +89,39 @@ internal static class UpdateChecker {
 		}
 		using var fs = new FileStream( BmxPaths.UPDATE_CHECK_FILE_NAME, op );
 		using var writer = new StreamWriter( fs );
-		writer.WriteLine( version );
+		writer.Write( content );
 	}
 
-	private static DateTimeOffset? GetTimeLastChecked() {
+	private static UpdateCheckCache? GetUpdateCheckCache() {
 		if( !File.Exists( BmxPaths.UPDATE_CHECK_FILE_NAME ) ) {
 			return null;
 		}
-		return File.GetLastWriteTimeUtc( BmxPaths.UPDATE_CHECK_FILE_NAME );
+
+		var content = File.ReadAllText( BmxPaths.UPDATE_CHECK_FILE_NAME );
+		try {
+			return JsonSerializer.Deserialize( content, SourceGenerationContext.Default.UpdateCheckCache );
+		} catch( JsonException ) {
+			return null;
+		}
 	}
 
-	private static bool ShouldFetchLatestVersion( string? savedVersion ) {
-		if( string.IsNullOrWhiteSpace( savedVersion ) ) {
-			return true;
-		}
-		var savedTimestamp = GetTimeLastChecked();
-		if( !savedTimestamp.HasValue || ( DateTimeOffset.UtcNow - savedTimestamp.Value ) > TimeSpan.FromDays( 1 ) ) {
+	private static bool ShouldFetchLatestVersion( UpdateCheckCache? cache ) {
+		if( cache is null || string.IsNullOrWhiteSpace( cache.VersionName )
+			|| ( DateTimeOffset.UtcNow - cache.TimeLastChecked ) > TimeSpan.FromDays( 1 )
+			|| ( cache.TimeLastChecked > DateTimeOffset.UtcNow )
+		 ) {
 			return true;
 		}
 		return false;
-	}
-
-	private static string? GetSavedLatestVersion() {
-		if( !File.Exists( BmxPaths.UPDATE_CHECK_FILE_NAME ) ) {
-			return null;
-		}
-		return File.ReadAllText( BmxPaths.UPDATE_CHECK_FILE_NAME );
 	}
 }
 
 internal record GithubRelease {
 	[JsonPropertyName( "tag_name" )]
 	public string? TagName { get; set; }
+}
+
+internal record UpdateCheckCache {
+	public string? VersionName { get; set; }
+	public DateTimeOffset? TimeLastChecked { get; set; }
 }
