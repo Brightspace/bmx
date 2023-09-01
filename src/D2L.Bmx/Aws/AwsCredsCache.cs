@@ -52,13 +52,13 @@ internal class AwsCredsCache() {
 		}
 	}
 
-	public AwsCredentials? GetCachedSession( string? Org, string? User, AwsRole role, int Cache ) {
+	public AwsCredentials? GetCachedSession( string? Org, string? User, AwsRole role, bool Cache ) {
 		if( string.IsNullOrEmpty( Org ) || string.IsNullOrEmpty( User ) ) { //It's not set in config file
 			return null;
 		}
 		List<AwsCacheModel> allEntries = GetAllCache();
 		AwsCacheModel? matchedEntry = allEntries.Find( o => o.User == User && o.Org == Org && o.RoleArn == role.RoleArn
-		&& o.Credentials.Expiration > DateTime.Now.AddMinutes( Cache ) );
+		&& o.Credentials.Expiration > DateTime.Now.AddMinutes( 5 ) );
 		if( matchedEntry is not null ) {
 			return matchedEntry.Credentials;
 		}

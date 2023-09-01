@@ -102,9 +102,9 @@ formatOption.AddValidator( result => {
 		result.ErrorMessage = $"Unsupported value for --output. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
-var cacheOption = new Option<int?>(
-	name: "--use-cache-time-limit",
-	description: ParameterDescriptions.UseCacheTimeLimit );
+var cacheOption = new Option<bool>(
+	name: "--cache",
+	description: ParameterDescriptions.CacheAWS );
 
 var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
@@ -139,7 +139,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
-		useCacheTimeLimit: context.ParseResult.GetValueForOption( cacheOption )
+		Cache: context.ParseResult.GetValueForOption( cacheOption )
 	);
 } );
 
@@ -189,7 +189,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
-		useCacheTimeLimit: context.ParseResult.GetValueForOption( cacheOption )
+		Cache: context.ParseResult.GetValueForOption( cacheOption )
 	);
 } );
 

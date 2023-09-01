@@ -20,11 +20,11 @@ internal class WriteHandler(
 		bool nonInteractive,
 		string? output,
 		string? profile,
-		int? useCacheTimeLimit
+		bool Cache
 	) {
 		var oktaApi = await oktaAuth.AuthenticateAsync( org, user, nonInteractive, ignoreCache: false );
 		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync(
-			oktaApi, account, role, duration, nonInteractive, useCacheTimeLimit
+			oktaApi, account, role, duration, nonInteractive, Cache
 		);
 
 		if( string.IsNullOrEmpty( profile ) ) {

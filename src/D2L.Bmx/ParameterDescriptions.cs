@@ -12,6 +12,5 @@ internal static class ParameterDescriptions {
 	public const string Format = "Output format of AWS credentials";
 	public const string NonInteractive = "Run non-interactively without showing any prompts";
 
-	public const string UseCacheTimeLimit = "Enables Cache for AWS tokens and specify the minimum time (in minutes) " +
-	"needed to remain in the cached entries to be used";
+	public const string CacheAWS = "Enables Cache for AWS tokens";
 }
