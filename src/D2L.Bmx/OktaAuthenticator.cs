@@ -15,6 +15,7 @@ internal class OktaAuthenticator(
 		bool nonInteractive,
 		bool ignoreCache
 	) {
+		//TODO: this function should return an object with org, user and oakta Api
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
