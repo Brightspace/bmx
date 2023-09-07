@@ -12,7 +12,6 @@ internal static class UpdateChecker {
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				Console.Error.WriteLine( "Getting new version from github" );
 				latestVersion = new Version( await GetLatestReleaseVersionAsync() );
 			}
 
