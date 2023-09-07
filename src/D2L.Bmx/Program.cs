@@ -102,9 +102,9 @@ formatOption.AddValidator( result => {
 		result.ErrorMessage = $"Unsupported value for --output. Must be one of:\n{string.Join( '\n', PrintFormat.All )}";
 	}
 } );
-var cacheOption = new Option<bool>(
+var cacheAwsCredentialsOption = new Option<bool>(
 	name: "--cache",
-	description: ParameterDescriptions.CacheAWS );
+	description: ParameterDescriptions.CacheAwsCredentials );
 
 var printCommand = new Command( "print", "Print AWS credentials" ) {
 	accountOption,
@@ -114,7 +114,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 	orgOption,
 	userOption,
 	nonInteractiveOption,
-	cacheOption,
+	cacheAwsCredentialsOption,
 };
 
 printCommand.SetHandler( ( InvocationContext context ) => {
@@ -139,7 +139,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
-		Cache: context.ParseResult.GetValueForOption( cacheOption )
+		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption )
 	);
 } );
 
@@ -160,7 +160,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	orgOption,
 	userOption,
 	nonInteractiveOption,
-	cacheOption,
+	cacheAwsCredentialsOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
@@ -189,7 +189,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
-		Cache: context.ParseResult.GetValueForOption( cacheOption )
+		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption )
 	);
 } );
 
