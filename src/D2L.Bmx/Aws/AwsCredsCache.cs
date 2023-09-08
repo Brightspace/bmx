@@ -35,18 +35,34 @@ internal class AwsCredsCache : IAwsCredentialCache {
 
 	void IAwsCredentialCache.SetCredentials( string org, string user, AwsRole role, AwsCredentials credentials ) {
 		List<AwsCacheModel> allEntries = GetAllCache();
-		allEntries.RemoveAll( o =>
-			o.Credentials.Expiration < DateTime.Now
-			|| o.User != user
-			|| o.Org != org
-		);
+
 		allEntries.Add( new AwsCacheModel(
 			Org: org,
 			User: user,
 			RoleArn: role.RoleArn,
 			Credentials: credentials
 		) );
-		string jsonString = JsonSerializer.Serialize( allEntries, SourceGenerationContext.Default.ListAwsCacheModel );
+
+		var ttlLongerThan = DateTime.UtcNow.AddMinutes( 10 );
+
+		var prunedEntries = allEntries
+			// Remove expired/expiring & entries not related to current user
+			.Where( o =>
+				o.Credentials.Expiration >= ttlLongerThan
+				&& o.User == user
+				&& o.Org == org
+			);
+
+		var freshestOnly = prunedEntries
+			// Prune older (closer to expiry) credentials for the same role
+			.GroupBy( o => o.RoleArn, ( roleArn, entries ) => new {
+				Key = roleArn,
+				Value = entries.OrderBy( o => o.Credentials.Expiration )
+			} )
+			.Select( o => o.Value.Last() );
+
+		string jsonString = JsonSerializer.Serialize( freshestOnly.ToList(),
+			SourceGenerationContext.Default.ListAwsCacheModel );
 
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
@@ -56,7 +72,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 
 		// Too stale, within a window (of 10 mins) if requested duration was <= 20 mins, 15 mins otherwise
 		// Avoids over-eagerly invalidating cache when requesting AWS credentials for short durations
-		var ttlLongerThan = DateTime.Now.AddMinutes( duration > 20 ? 15 : duration - 5 );
+		var ttlLongerThan = DateTime.UtcNow.AddMinutes( duration > 20 ? 15 : duration - 5 );
 		AwsCacheModel? matchedEntry = allEntries.Find(
 			o => o.Org == org
 			&& o.User == user
