@@ -51,9 +51,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 				o.Credentials.Expiration >= ttlLongerThan
 				&& o.User == user
 				&& o.Org == org
-			);
-
-		var freshestOnly = prunedEntries
+			)
 			// Prune older (closer to expiry) credentials for the same role
 			.GroupBy( o => o.RoleArn, ( roleArn, entries ) => new {
 				Key = roleArn,
@@ -61,7 +59,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 			} )
 			.Select( o => o.Value.Last() );
 
-		string jsonString = JsonSerializer.Serialize( freshestOnly.ToList(),
+		string jsonString = JsonSerializer.Serialize( prunedEntries.ToList(),
 			SourceGenerationContext.Default.ListAwsCacheModel );
 
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
