@@ -13,6 +13,8 @@ namespace D2L.Bmx;
 [JsonSerializable( typeof( OktaApp[] ) )]
 [JsonSerializable( typeof( OktaMeResponse ) )]
 [JsonSerializable( typeof( List<OktaSessionCache> ) )]
+[JsonSerializable( typeof( GithubRelease ) )]
+[JsonSerializable( typeof( UpdateCheckCache ) )]
 [JsonSerializable( typeof( List<AwsCacheModel> ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }

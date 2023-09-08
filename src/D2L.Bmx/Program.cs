@@ -9,6 +9,9 @@ using D2L.Bmx.Aws;
 using D2L.Bmx.Okta;
 using IniParser;
 
+
+var configProvider = new BmxConfigProvider( new FileIniDataParser() );
+
 // common options
 var orgOption = new Option<string>(
 	name: "--org",
@@ -27,7 +30,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaApi(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
-		new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration()
+		configProvider.GetConfiguration()
 	) );
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -64,7 +67,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider( new FileIniDataParser() ),
+		configProvider,
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -119,7 +122,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var config = configProvider.GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -166,7 +169,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var config = configProvider.GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -207,6 +210,15 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 // start bmx
 return await new CommandLineBuilder( rootCommand )
 	.UseDefaults()
+	.AddMiddleware( async (
+		context,
+		next
+	) => {
+		await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
+		await next( context );
+	},
+		System.CommandLine.Invocation.MiddlewareOrder.ExceptionHandler + 1
+	)
 	.UseExceptionHandler( ( exception, context ) => {
 		Console.ResetColor();
 		Console.ForegroundColor = ConsoleColor.Red;
