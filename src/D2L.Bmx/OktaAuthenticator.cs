@@ -3,19 +3,24 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
 
+internal record AuthenticatedOktaApi(
+	string Org,
+	string User,
+	IOktaApi Api
+);
+
 internal class OktaAuthenticator(
 	IOktaApi oktaApi,
 	IOktaSessionStorage sessionStorage,
 	IConsolePrompter consolePrompter,
 	BmxConfig config
 ) {
-	public async Task<IOktaApi> AuthenticateAsync(
+	public async Task<AuthenticatedOktaApi> AuthenticateAsync(
 		string? org,
 		string? user,
 		bool nonInteractive,
 		bool ignoreCache
 	) {
-		//TODO: this function should return an object with org, user and oakta Api
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
@@ -39,7 +44,7 @@ internal class OktaAuthenticator(
 		oktaApi.SetOrganization( org );
 
 		if( !ignoreCache && await TryAuthenticateFromCacheAsync( org, user, oktaApi ) ) {
-			return oktaApi;
+			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
@@ -78,7 +83,7 @@ internal class OktaAuthenticator(
 				"Consider running `bmx configure` if you own this machine." );
 				Console.ResetColor();
 			}
-			return oktaApi;
+			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
 
 		throw new BmxException( "Okta authentication failed" );

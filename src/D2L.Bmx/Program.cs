@@ -129,6 +129,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
+			new AwsCredsCache(),
 			config )
 	);
 	return handler.HandleAsync(
@@ -175,6 +176,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
+			new AwsCredsCache(),
 			config ),
 		consolePrompter,
 		config,

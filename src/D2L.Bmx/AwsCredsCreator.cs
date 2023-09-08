@@ -1,5 +1,4 @@
 using D2L.Bmx.Aws;
-using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
@@ -7,10 +6,11 @@ namespace D2L.Bmx;
 internal class AwsCredsCreator(
 	IAwsClient awsClient,
 	IConsolePrompter consolePrompter,
+	IAwsCredentialCache awsCredentialCache,
 	BmxConfig config
 ) {
 	public async Task<AwsCredentials> CreateAwsCredsAsync(
-		IOktaApi oktaApi,
+		AuthenticatedOktaApi oktaApi,
 		string? account,
 		string? role,
 		int? duration,
@@ -18,7 +18,7 @@ internal class AwsCredsCreator(
 		bool cache
 	) {
 		//cache this one?
-		OktaApp[] awsApps = await oktaApi.GetAwsAccountAppsAsync();
+		OktaApp[] awsApps = await oktaApi.Api.GetAwsAccountAppsAsync();
 
 		if( string.IsNullOrEmpty( account ) ) {
 			if( !string.IsNullOrEmpty( config.Account ) ) {
@@ -36,7 +36,7 @@ internal class AwsCredsCreator(
 			app => app.Label.Equals( account, StringComparison.OrdinalIgnoreCase )
 		) ?? throw new BmxException( $"Account {account} could not be found" );
 
-		string loginHtml = await oktaApi.GetPageAsync( selectedAwsApp.LinkUrl );
+		string loginHtml = await oktaApi.Api.GetPageAsync( selectedAwsApp.LinkUrl );
 		string samlResponse = HtmlXmlHelper.GetSamlResponseFromLoginPage( loginHtml );
 		AwsRole[] rolesData = HtmlXmlHelper.GetRolesFromSamlResponse( samlResponse );
 
@@ -64,12 +64,32 @@ internal class AwsCredsCreator(
 			}
 		}
 
-		return await awsClient.GetTokensAsync(
+		if( cache &&
+			awsCredentialCache.GetCredentials(
+					org: oktaApi.Org,
+					user: oktaApi.User,
+					role: selectedRoleData,
+					duration: duration.Value
+			) is { } cachedCredentials
+		) {
+			return cachedCredentials;
+		}
+
+		var credentials = await awsClient.GetTokensAsync(
 			samlResponse,
 			selectedRoleData,
-			duration.Value,
-			cache,
-			config.Org,
-			config.User );
+			duration.Value
+		);
+
+		if( cache ) {
+			awsCredentialCache.SetCredentials(
+				org: oktaApi.Org,
+				user: oktaApi.User,
+				role: selectedRoleData,
+				credentials: credentials
+			);
+		}
+
+		return credentials;
 	}
 }
