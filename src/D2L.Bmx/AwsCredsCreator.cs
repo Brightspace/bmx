@@ -17,6 +17,12 @@ internal class AwsCredsCreator(
 		bool nonInteractive,
 		bool cache
 	) {
+		if( cache && !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
+			throw new BmxException(
+				"BMX global config file not found. Will not cache credentials on shared use machines."
+			);
+		}
+
 		//cache this one?
 		OktaApp[] awsApps = await oktaApi.Api.GetAwsAccountAppsAsync();
 
