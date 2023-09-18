@@ -23,13 +23,49 @@ internal class AwsCredsCreator(
 			);
 		}
 
+		if( string.IsNullOrEmpty( account ) ) {
+			if( !string.IsNullOrEmpty( config.Account ) ) {
+				account = config.Account;
+			}
+		}
+
+		if( string.IsNullOrEmpty( role ) ) {
+			if( !string.IsNullOrEmpty( config.Role ) ) {
+				role = config.Role;
+			}
+		}
+
+		if( duration is null or 0 ) {
+			if( config.Duration is not ( null or 0 ) ) {
+				duration = config.Duration;
+			} else {
+				duration = 60;
+			}
+		}
+
+		if( cache ) {
+			if( string.IsNullOrEmpty( account ) || string.IsNullOrEmpty( role ) ) {
+				throw new BmxException( "Account & Role must be provided when using cached AWS credentials" );
+			}
+
+			var cachedCredentials = awsCredentialCache.GetCredentials(
+				org: oktaApi.Org,
+				user: oktaApi.User,
+				accountName: account,
+				roleName: role,
+				duration: duration.Value
+			);
+
+			if( cachedCredentials is not null ) {
+				return cachedCredentials;
+			}
+		}
+
 		//cache this one?
 		OktaApp[] awsApps = await oktaApi.Api.GetAwsAccountAppsAsync();
 
 		if( string.IsNullOrEmpty( account ) ) {
-			if( !string.IsNullOrEmpty( config.Account ) ) {
-				account = config.Account;
-			} else if( !nonInteractive ) {
+			if( !nonInteractive ) {
 				string[] accounts = awsApps.Select( app => app.Label ).ToArray();
 				account = consolePrompter.PromptAccount( accounts );
 			} else {
@@ -47,9 +83,7 @@ internal class AwsCredsCreator(
 		AwsRole[] rolesData = HtmlXmlHelper.GetRolesFromSamlResponse( samlResponse );
 
 		if( string.IsNullOrEmpty( role ) ) {
-			if( !string.IsNullOrEmpty( config.Role ) ) {
-				role = config.Role;
-			} else if( !nonInteractive ) {
+			if( !nonInteractive ) {
 				string[] roles = rolesData.Select( r => r.RoleName ).ToArray();
 				role = consolePrompter.PromptRole( roles );
 			} else {
@@ -62,25 +96,6 @@ internal class AwsCredsCreator(
 			r => r.RoleName.Equals( role, StringComparison.OrdinalIgnoreCase )
 		) ?? throw new BmxException( $"Role {role} could not be found" );
 
-		if( duration is null or 0 ) {
-			if( config.Duration is not ( null or 0 ) ) {
-				duration = config.Duration;
-			} else {
-				duration = 60;
-			}
-		}
-
-		if( cache &&
-			awsCredentialCache.GetCredentials(
-					org: oktaApi.Org,
-					user: oktaApi.User,
-					role: selectedRoleData,
-					duration: duration.Value
-			) is { } cachedCredentials
-		) {
-			return cachedCredentials;
-		}
-
 		var credentials = await awsClient.GetTokensAsync(
 			samlResponse,
 			selectedRoleData,
@@ -91,6 +106,7 @@ internal class AwsCredsCreator(
 			awsCredentialCache.SetCredentials(
 				org: oktaApi.Org,
 				user: oktaApi.User,
+				accountName: selectedAwsApp.Label,
 				role: selectedRoleData,
 				credentials: credentials
 			);
