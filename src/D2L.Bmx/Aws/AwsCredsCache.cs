@@ -51,12 +51,12 @@ internal class AwsCredsCache : IAwsCredentialCache {
 			Credentials: credentials
 		) );
 
-		var ttlLongerThan = DateTime.UtcNow.AddMinutes( 10 );
+		var minimumExpiryTime = DateTime.UtcNow.AddMinutes( 10 );
 
 		var prunedEntries = allEntries
 			// Remove expired/expiring & entries not related to current user
 			.Where( o =>
-				o.Credentials.Expiration >= ttlLongerThan
+				o.Credentials.Expiration >= minimumExpiryTime
 				&& o.User == user
 				&& o.Org == org
 			)

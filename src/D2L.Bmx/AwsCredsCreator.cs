@@ -19,7 +19,7 @@ internal class AwsCredsCreator(
 	) {
 		if( cache && !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 			throw new BmxException(
-				"BMX global config file not found. Will not cache credentials on shared use machines."
+				"BMX global config file not found. Will not cache credentials on shared use machines. If you own this machine, run bmx configure."
 			);
 		}
 
