@@ -107,7 +107,7 @@ internal class AwsCredsCreator(
 				org: oktaApi.Org,
 				user: oktaApi.User,
 				accountName: selectedAwsApp.Label,
-				role: selectedRoleData,
+				roleName: selectedRoleData.RoleName,
 				credentials: credentials
 			);
 		}

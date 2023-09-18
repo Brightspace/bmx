@@ -3,6 +3,6 @@ internal record AwsCacheModel(
 	string Org,
 	string User,
 	string AccountName,
-	string RoleArn,
+	string RoleName,
 	AwsCredentials Credentials
 );

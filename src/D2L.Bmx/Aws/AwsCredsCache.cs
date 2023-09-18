@@ -5,7 +5,7 @@ namespace D2L.Bmx.Aws;
 
 internal interface IAwsCredentialCache {
 	public AwsCredentials? GetCredentials( string org, string user, string accountName, string roleName, int duration );
-	public void SetCredentials( string org, string user, string accountName, AwsRole role, AwsCredentials credentials );
+	public void SetCredentials( string org, string user, string accountName, string roleName, AwsCredentials credentials );
 }
 
 internal class AwsCredsCache : IAwsCredentialCache {
@@ -38,7 +38,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		string org,
 		string user,
 		string accountName,
-		AwsRole role,
+		string roleName,
 		AwsCredentials credentials
 	) {
 		List<AwsCacheModel> allEntries = GetAllCache();
@@ -47,7 +47,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 			Org: org,
 			User: user,
 			AccountName: accountName,
-			RoleArn: role.RoleArn,
+			RoleName: roleName,
 			Credentials: credentials
 		) );
 
@@ -61,7 +61,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 				&& o.Org == org
 			)
 			// Prune older (closer to expiry) credentials for the same role
-			.GroupBy( o => o.RoleArn, ( _, entries ) =>
+			.GroupBy( o => $"{o.AccountName}.${o.RoleName}", ( _, entries ) =>
 				entries.OrderBy( o => o.Credentials.Expiration )
 			)
 			.Select( o => o.Last() );
@@ -87,8 +87,8 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		var matchedEntry = allEntries.Find(
 			o => o.Org == org
 			&& o.User == user
-			&& o.AccountName == accountName
-			&& o.RoleArn.Split( "/" ).Last().Equals( roleName, StringComparison.OrdinalIgnoreCase )
+			&& o.AccountName.Equals( accountName, StringComparison.OrdinalIgnoreCase )
+			&& o.RoleName.Equals( roleName, StringComparison.OrdinalIgnoreCase )
 			&& o.Credentials.Expiration >= ttlLongerThan
 		);
 
