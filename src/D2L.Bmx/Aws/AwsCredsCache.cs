@@ -1,10 +1,11 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
+
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsCredentialCache {
-	public AwsCredentials? GetCredentials( string org, string user, AwsRole role, int duration );
-	public void SetCredentials( string org, string user, AwsRole role, AwsCredentials credentials );
+	public AwsCredentials? GetCredentials( string org, string user, string accountName, string roleName, int duration );
+	public void SetCredentials( string org, string user, string accountName, AwsRole role, AwsCredentials credentials );
 }
 
 internal class AwsCredsCache : IAwsCredentialCache {
@@ -33,12 +34,19 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		}
 	}
 
-	void IAwsCredentialCache.SetCredentials( string org, string user, AwsRole role, AwsCredentials credentials ) {
+	void IAwsCredentialCache.SetCredentials(
+		string org,
+		string user,
+		string accountName,
+		AwsRole role,
+		AwsCredentials credentials
+	) {
 		List<AwsCacheModel> allEntries = GetAllCache();
 
 		allEntries.Add( new AwsCacheModel(
 			Org: org,
 			User: user,
+			AccountName: accountName,
 			RoleArn: role.RoleArn,
 			Credentials: credentials
 		) );
@@ -53,11 +61,10 @@ internal class AwsCredsCache : IAwsCredentialCache {
 				&& o.Org == org
 			)
 			// Prune older (closer to expiry) credentials for the same role
-			.GroupBy( o => o.RoleArn, ( roleArn, entries ) => new {
-				Key = roleArn,
-				Value = entries.OrderBy( o => o.Credentials.Expiration )
-			} )
-			.Select( o => o.Value.Last() );
+			.GroupBy( o => o.RoleArn, ( _, entries ) =>
+				entries.OrderBy( o => o.Credentials.Expiration )
+			)
+			.Select( o => o.Last() );
 
 		string jsonString = JsonSerializer.Serialize( prunedEntries.ToList(),
 			SourceGenerationContext.Default.ListAwsCacheModel );
@@ -65,16 +72,23 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
 
-	AwsCredentials? IAwsCredentialCache.GetCredentials( string org, string user, AwsRole role, int duration ) {
+	AwsCredentials? IAwsCredentialCache.GetCredentials(
+		string org,
+		string user,
+		string accountName,
+		string roleName,
+		int duration
+	) {
 		List<AwsCacheModel> allEntries = GetAllCache();
 
 		// Too stale, within a window (of 10 mins) if requested duration was <= 20 mins, 15 mins otherwise
 		// Avoids over-eagerly invalidating cache when requesting AWS credentials for short durations
 		var ttlLongerThan = DateTime.UtcNow.AddMinutes( duration > 20 ? 15 : duration - 5 );
-		AwsCacheModel? matchedEntry = allEntries.Find(
+		var matchedEntry = allEntries.Find(
 			o => o.Org == org
 			&& o.User == user
-			&& o.RoleArn == role.RoleArn
+			&& o.AccountName == accountName
+			&& o.RoleArn.Split( "/" ).Last().Equals( roleName, StringComparison.OrdinalIgnoreCase )
 			&& o.Credentials.Expiration >= ttlLongerThan
 		);
 
