@@ -83,13 +83,13 @@ internal class AwsCredsCache : IAwsCredentialCache {
 
 		// Too stale, within a window (of 10 mins) if requested duration was <= 20 mins, 15 mins otherwise
 		// Avoids over-eagerly invalidating cache when requesting AWS credentials for short durations
-		var ttlLongerThan = DateTime.UtcNow.AddMinutes( duration > 20 ? 15 : duration - 5 );
+		var minimumExpiryTime = DateTime.UtcNow.AddMinutes( duration > 20 ? 15 : duration - 5 );
 		var matchedEntry = allEntries.Find(
 			o => o.Org == org
 			&& o.User == user
 			&& o.AccountName.Equals( accountName, StringComparison.OrdinalIgnoreCase )
 			&& o.RoleName.Equals( roleName, StringComparison.OrdinalIgnoreCase )
-			&& o.Credentials.Expiration >= ttlLongerThan
+			&& o.Credentials.Expiration >= minimumExpiryTime
 		);
 
 		return matchedEntry?.Credentials;
