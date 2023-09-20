@@ -6,4 +6,5 @@ internal static class BmxPaths {
 	public static readonly string SESSIONS_FILE_NAME = Path.Join( BMX_DIR, "sessions" );
 	public static readonly string CONFIG_FILE_NAME = Path.Join( BMX_DIR, "config" );
 	public static readonly string UPDATE_CHECK_FILE_NAME = Path.Join( BMX_DIR, "update_check" );
+	public static readonly string AWS_CREDS_CACHE_FILE_NAME = Path.Join( BMX_DIR, "awsCredsCache" );
 }

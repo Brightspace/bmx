@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using D2L.Bmx.Aws;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
@@ -15,5 +16,6 @@ namespace D2L.Bmx;
 [JsonSerializable( typeof( List<OktaSessionCache> ) )]
 [JsonSerializable( typeof( GithubRelease ) )]
 [JsonSerializable( typeof( UpdateCheckCache ) )]
+[JsonSerializable( typeof( List<AwsCacheModel> ) )]
 internal partial class SourceGenerationContext : JsonSerializerContext {
 }
