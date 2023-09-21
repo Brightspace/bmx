@@ -1,25 +1,17 @@
-FROM ubuntu:16.04 AS build
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 AS build
 
 ARG version="3.0.0"
 ARG information_version="v3.0.0"
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget ca-certificates clang zlib1g-dev
+RUN yum update -y && yum install -y clang openssl-devel wget tar gzip libicu
 
 RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
 RUN wget https://dot.net/v1/dotnet-install.sh \
     && chmod +x ./dotnet-install.sh \
-    # temporarily pinning the version due to regression in .NET 8 Preview 6
-    # https://github.com/dotnet/sdk/issues/34091
-    && ./dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet --version 8.0.100-preview.5.23303.2
+    && ./dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet
 
 WORKDIR /source
-
-# We have InvariantGlobalization=true in csproj so BMX will never need ICU libs at runtime.
-# However, the .NET SDK itself still needs to be told to use invariant globalization at its runtime,
-# otherwise any dotnet command will fail in this container without ICU libs.
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true
 
 # Configs change less frequently than code.
 # Make configs & dependencies a separate layer to improve caching & build time on code change.
