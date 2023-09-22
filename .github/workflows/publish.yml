@@ -126,7 +126,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - file: Dockerfile.ubuntu
+          - file: Dockerfile.al2
             platform: linux
           - file: Dockerfile.alpine
             platform: linux.alpine
