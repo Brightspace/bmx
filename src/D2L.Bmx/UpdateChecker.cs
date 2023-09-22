@@ -52,7 +52,7 @@ internal static class UpdateChecker {
 	private static async Task<string> GetLatestReleaseVersionAsync() {
 		using var httpClient = new HttpClient();
 		httpClient.BaseAddress = new Uri( "https://api.github.com" );
-		httpClient.Timeout = TimeSpan.FromSeconds( 5 );
+		httpClient.Timeout = TimeSpan.FromSeconds( 2 );
 		httpClient.DefaultRequestHeaders.Add( "User-Agent", "BMX" );
 		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
 		response.EnsureSuccessStatusCode();
@@ -62,7 +62,7 @@ internal static class UpdateChecker {
 			responseStream,
 			SourceGenerationContext.Default.GithubRelease
 		);
-		string version = releaseData?.TagName?.Replace( "v", "" ) ?? string.Empty;
+		string version = releaseData?.TagName?.Trim( 'v' ) ?? string.Empty;
 		SaveLatestVersion( version );
 		return version;
 	}
