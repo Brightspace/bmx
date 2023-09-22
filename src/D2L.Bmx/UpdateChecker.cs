@@ -62,7 +62,7 @@ internal static class UpdateChecker {
 			responseStream,
 			SourceGenerationContext.Default.GithubRelease
 		);
-		string version = releaseData?.TagName?.Trim( 'v' ) ?? string.Empty;
+		string version = releaseData?.TagName?.TrimStart( 'v' ) ?? string.Empty;
 		SaveLatestVersion( version );
 		return version;
 	}
