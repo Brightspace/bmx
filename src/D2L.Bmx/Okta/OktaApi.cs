@@ -76,10 +76,10 @@ internal class OktaApi : IOktaApi {
 			}
 			throw new BmxException( "Okta API Authentication Response was not Success or MFA Required" );
 		} catch( Exception ex ) {
-			if ( ex is BmxException ) {
+			if( ex is BmxException ) {
 				throw new BmxException( "Okta authentication failed. Check if org, user and password is correct", ex );
 			}
-			throw new BmxException( "Error authenticating to Okta" , ex);
+			throw new BmxException( "Error authenticating to Okta", ex );
 		}
 	}
 

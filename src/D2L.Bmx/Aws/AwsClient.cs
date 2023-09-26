@@ -28,8 +28,8 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 				SecretAccessKey: authResp.Credentials.SecretAccessKey,
 				Expiration: authResp.Credentials.Expiration.ToUniversalTime()
 			);
-		} catch ( Exception ex ) {
-			if (ex.Message == "The requested DurationSeconds exceeds the MaxSessionDuration set for this role.") {
+		} catch( Exception ex ) {
+			if( ex.Message == "The requested DurationSeconds exceeds the MaxSessionDuration set for this role." ) {
 				throw new BmxException( "Duration exceeds the MaxSessionDuration for this role. Lower it in config/parameter", ex );
 			}
 			throw new BmxException( "Error AWS failed to grab credentials", ex );
