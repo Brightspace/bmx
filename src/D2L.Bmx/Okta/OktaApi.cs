@@ -74,7 +74,7 @@ internal class OktaApi : IOktaApi {
 					authnResponse.Embedded.Factors
 				);
 			}
-			throw new BmxException( "Okta Authentication Response was not Success or MFA Required" );
+			throw new BmxException( "Okta API Authentication Response was not Success or MFA Required" );
 		} catch( Exception ex ) {
 			throw new BmxException( "Error authenticating to Okta" , ex);
 		}
@@ -121,25 +121,32 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
-		var resp = await _httpClient.PostAsJsonAsync(
-			"sessions",
-			new CreateSessionRequest( sessionToken ),
-			SourceGenerationContext.Default.CreateSessionRequest );
+		try {
+			var resp = await _httpClient.PostAsJsonAsync(
+				"sessions",
+				new CreateSessionRequest( sessionToken ),
+				SourceGenerationContext.Default.CreateSessionRequest );
 
-		var session = await JsonSerializer.DeserializeAsync(
-			await resp.Content.ReadAsStreamAsync(),
-			SourceGenerationContext.Default.OktaSession );
-
-		return session ?? throw new BmxException( "Error creating Okta session" );
+			var session = await JsonSerializer.DeserializeAsync(
+				await resp.Content.ReadAsStreamAsync(),
+				SourceGenerationContext.Default.OktaSession );
+			return session ?? throw new BmxException( "Creating Octa Session returned null" );
+		} catch( Exception ex ) {
+			throw new BmxException( "Error creating Okta session", ex );
+		}
 	}
 
 	async Task<OktaApp[]> IOktaApi.GetAwsAccountAppsAsync() {
-		var apps = await _httpClient.GetFromJsonAsync(
-			"users/me/appLinks",
-			SourceGenerationContext.Default.OktaAppArray );
+		try {
+			var apps = await _httpClient.GetFromJsonAsync(
+				"users/me/appLinks",
+				SourceGenerationContext.Default.OktaAppArray );
 
-		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
-			?? throw new BmxException( "Error retrieving AWS accounts from Okta" );
+			return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
+				?? throw new BmxException( "Retrieving AWS accounts from Okta returned null" );
+		} catch( Exception ex ) {
+			throw new BmxException( "Error retrieving AWS accounts from Okta", ex );
+		}
 	}
 
 	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
