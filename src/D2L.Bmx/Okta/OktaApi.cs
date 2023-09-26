@@ -49,41 +49,47 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<AuthenticateResponse> IOktaApi.AuthenticateAsync( string username, string password ) {
-		var resp = await _httpClient.PostAsJsonAsync(
-			"authn",
-			new AuthenticateRequest( username, password ),
-			SourceGenerationContext.Default.AuthenticateRequest );
-		var authnResponse = await JsonSerializer.DeserializeAsync(
-			await resp.Content.ReadAsStreamAsync(),
-			SourceGenerationContext.Default.AuthenticateResponseRaw );
+		try {
+			var resp = await _httpClient.PostAsJsonAsync(
+				"authn",
+				new AuthenticateRequest( username, password ),
+				SourceGenerationContext.Default.AuthenticateRequest );
+			var authnResponse = await JsonSerializer.DeserializeAsync(
+				await resp.Content.ReadAsStreamAsync(),
+				SourceGenerationContext.Default.AuthenticateResponseRaw );
 
-		if( authnResponse is {
-			SessionToken: not null,
-			Status: AuthenticationStatus.SUCCESS
-		} ) {
-			return new AuthenticateResponse.Success( authnResponse.SessionToken );
+			if( authnResponse is {
+				SessionToken: not null,
+				Status: AuthenticationStatus.SUCCESS
+			} ) {
+				return new AuthenticateResponse.Success( authnResponse.SessionToken );
+			}
+			if( authnResponse is {
+				StateToken: not null,
+				Embedded.Factors: not null,
+				Status: AuthenticationStatus.MFA_REQUIRED
+			} ) {
+				return new AuthenticateResponse.MfaRequired(
+					authnResponse.StateToken,
+					authnResponse.Embedded.Factors
+				);
+			}
+			throw new BmxException( "Okta Authentication Response was not Success or MFA Required" );
+		} catch( Exception ex ) {
+			throw new BmxException( "Error authenticating to Okta" , ex);
 		}
-		if( authnResponse is {
-			StateToken: not null,
-			Embedded.Factors: not null,
-			Status: AuthenticationStatus.MFA_REQUIRED
-		} ) {
-			return new AuthenticateResponse.MfaRequired(
-				authnResponse.StateToken,
-				authnResponse.Embedded.Factors
-			);
-		}
-		throw new BmxException( "Error authenticating to Okta" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
-		var response = await _httpClient.PostAsJsonAsync(
+		try {
+			var response = await _httpClient.PostAsJsonAsync(
 			$"authn/factors/{factorId}/verify",
 			new IssueMfaChallengeRequest( stateToken ),
 			SourceGenerationContext.Default.IssueMfaChallengeRequest );
 
-		if( !response.IsSuccessStatusCode ) {
-			throw new BmxException( "Error sending MFA challenge" );
+			response.EnsureSuccessStatusCode();
+		} catch( Exception ex ) {
+			throw new BmxException( "Error sending MFA challenge", ex );
 		}
 	}
 
@@ -92,22 +98,26 @@ internal class OktaApi : IOktaApi {
 		string factorId,
 		string challengeResponse
 	) {
-		var request = new VerifyMfaChallengeResponseRequest(
-			StateToken: stateToken,
-			PassCode: challengeResponse );
+		try {
+			var request = new VerifyMfaChallengeResponseRequest(
+				StateToken: stateToken,
+				PassCode: challengeResponse );
 
-		var resp = await _httpClient.PostAsJsonAsync(
-			$"authn/factors/{factorId}/verify",
-			request,
-			SourceGenerationContext.Default.VerifyMfaChallengeResponseRequest );
+			var resp = await _httpClient.PostAsJsonAsync(
+				$"authn/factors/{factorId}/verify",
+				request,
+				SourceGenerationContext.Default.VerifyMfaChallengeResponseRequest );
 
-		var authnResponse = await JsonSerializer.DeserializeAsync(
-			await resp.Content.ReadAsStreamAsync(),
-			SourceGenerationContext.Default.AuthenticateResponseRaw );
-		if( authnResponse?.SessionToken is not null ) {
-			return new AuthenticateResponse.Success( authnResponse.SessionToken );
+			var authnResponse = await JsonSerializer.DeserializeAsync(
+				await resp.Content.ReadAsStreamAsync(),
+				SourceGenerationContext.Default.AuthenticateResponseRaw );
+			if( authnResponse?.SessionToken is not null ) {
+				return new AuthenticateResponse.Success( authnResponse.SessionToken );
+			}
+			throw new BmxException( "Okta MFA challenge response session token null" );
+		} catch( Exception ex ) {
+			throw new BmxException( "Error verifying Okta MFA challenge response", ex );
 		}
-		throw new BmxException( "Error verifying Okta MFA challenge response" );
 	}
 
 	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
