@@ -133,7 +133,7 @@ internal class OktaApi : IOktaApi {
 			var session = await JsonSerializer.DeserializeAsync(
 				await resp.Content.ReadAsStreamAsync(),
 				SourceGenerationContext.Default.OktaSession );
-			return session ?? throw new BmxException( "Creating Octa Session returned null" );
+			return session ?? throw new BmxException( "Creating Okta Session returned null" );
 		} catch( Exception ex ) {
 			throw new BmxException( "Error creating Okta session", ex );
 		}
