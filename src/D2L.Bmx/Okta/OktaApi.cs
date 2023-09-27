@@ -130,6 +130,8 @@ internal class OktaApi : IOktaApi {
 				new CreateSessionRequest( sessionToken ),
 				SourceGenerationContext.Default.CreateSessionRequest );
 
+			resp.EnsureSuccessStatusCode();
+
 			var session = await JsonSerializer.DeserializeAsync(
 				await resp.Content.ReadAsStreamAsync(),
 				SourceGenerationContext.Default.OktaSession );
