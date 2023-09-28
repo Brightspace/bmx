@@ -55,7 +55,7 @@ internal class OktaApi : IOktaApi {
 				"authn",
 				new AuthenticateRequest( username, password ),
 				SourceGenerationContext.Default.AuthenticateRequest );
-		} catch ( Exception ex ) {
+		} catch( Exception ex ) {
 			throw new BmxException( "Okta authentication request failed. Try checking for a stable connection.", ex );
 		}
 		var authnResponse = await JsonSerializer.DeserializeAsync(
@@ -118,7 +118,7 @@ internal class OktaApi : IOktaApi {
 			return new AuthenticateResponse.Success( authnResponse.SessionToken );
 		}
 		throw new BmxException( "Error verifying Okta MFA challenge response." );
-		
+
 	}
 
 	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
@@ -150,7 +150,7 @@ internal class OktaApi : IOktaApi {
 
 		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
-	
+
 	}
 
 	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
