@@ -49,38 +49,36 @@ internal class OktaApi : IOktaApi {
 	}
 
 	async Task<AuthenticateResponse> IOktaApi.AuthenticateAsync( string username, string password ) {
+		HttpResponseMessage resp;
 		try {
-			var resp = await _httpClient.PostAsJsonAsync(
+			resp = await _httpClient.PostAsJsonAsync(
 				"authn",
 				new AuthenticateRequest( username, password ),
 				SourceGenerationContext.Default.AuthenticateRequest );
-			var authnResponse = await JsonSerializer.DeserializeAsync(
-				await resp.Content.ReadAsStreamAsync(),
-				SourceGenerationContext.Default.AuthenticateResponseRaw );
-
-			if( authnResponse is {
-				SessionToken: not null,
-				Status: AuthenticationStatus.SUCCESS
-			} ) {
-				return new AuthenticateResponse.Success( authnResponse.SessionToken );
-			}
-			if( authnResponse is {
-				StateToken: not null,
-				Embedded.Factors: not null,
-				Status: AuthenticationStatus.MFA_REQUIRED
-			} ) {
-				return new AuthenticateResponse.MfaRequired(
-					authnResponse.StateToken,
-					authnResponse.Embedded.Factors
-				);
-			}
-			throw new BmxException( "Okta API Authentication Response was not Success or MFA Required" );
-		} catch( Exception ex ) {
-			if( ex is BmxException ) {
-				throw new BmxException( "Okta authentication failed. Check if org, user and password is correct", ex );
-			}
-			throw new BmxException( "Error authenticating to Okta", ex );
+		} catch ( Exception ex ) {
+			throw new BmxException( "Okta authentication request failed. Try checking for a stable connection.", ex );
 		}
+		var authnResponse = await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync(),
+			SourceGenerationContext.Default.AuthenticateResponseRaw );
+
+		if( authnResponse is {
+			SessionToken: not null,
+			Status: AuthenticationStatus.SUCCESS
+		} ) {
+			return new AuthenticateResponse.Success( authnResponse.SessionToken );
+		}
+		if( authnResponse is {
+			StateToken: not null,
+			Embedded.Factors: not null,
+			Status: AuthenticationStatus.MFA_REQUIRED
+		} ) {
+			return new AuthenticateResponse.MfaRequired(
+				authnResponse.StateToken,
+				authnResponse.Embedded.Factors
+			);
+		}
+		throw new BmxException( "Okta authentication failed. Check if org, user and password is correct" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
@@ -101,57 +99,58 @@ internal class OktaApi : IOktaApi {
 		string factorId,
 		string challengeResponse
 	) {
+		var request = new VerifyMfaChallengeResponseRequest(
+			StateToken: stateToken,
+			PassCode: challengeResponse );
+		HttpResponseMessage resp;
 		try {
-			var request = new VerifyMfaChallengeResponseRequest(
-				StateToken: stateToken,
-				PassCode: challengeResponse );
-
-			var resp = await _httpClient.PostAsJsonAsync(
+			resp = await _httpClient.PostAsJsonAsync(
 				$"authn/factors/{factorId}/verify",
 				request,
 				SourceGenerationContext.Default.VerifyMfaChallengeResponseRequest );
-
-			var authnResponse = await JsonSerializer.DeserializeAsync(
+		} catch( Exception ex ) {
+			throw new BmxException( "Error verifying Okta MFA challenge response. Try checking for a stable connection.", ex );
+		}
+		var authnResponse = await JsonSerializer.DeserializeAsync(
 				await resp.Content.ReadAsStreamAsync(),
 				SourceGenerationContext.Default.AuthenticateResponseRaw );
-			if( authnResponse?.SessionToken is not null ) {
-				return new AuthenticateResponse.Success( authnResponse.SessionToken );
-			}
-			throw new BmxException( "Okta MFA challenge response session token null" );
-		} catch( Exception ex ) {
-			throw new BmxException( "Error verifying Okta MFA challenge response", ex );
+		if( authnResponse?.SessionToken is not null ) {
+			return new AuthenticateResponse.Success( authnResponse.SessionToken );
 		}
+		throw new BmxException( "Error verifying Okta MFA challenge response." );
+		
 	}
 
 	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
+		HttpResponseMessage resp;
 		try {
-			var resp = await _httpClient.PostAsJsonAsync(
+			resp = await _httpClient.PostAsJsonAsync(
 				"sessions",
 				new CreateSessionRequest( sessionToken ),
 				SourceGenerationContext.Default.CreateSessionRequest );
-
 			resp.EnsureSuccessStatusCode();
-
-			var session = await JsonSerializer.DeserializeAsync(
-				await resp.Content.ReadAsStreamAsync(),
-				SourceGenerationContext.Default.OktaSession );
-			return session ?? throw new BmxException( "Creating Okta Session returned null" );
 		} catch( Exception ex ) {
-			throw new BmxException( "Error creating Okta session", ex );
+			throw new BmxException( "Error creating Okta session. Try checking for a stable connection.", ex );
 		}
+		var session = await JsonSerializer.DeserializeAsync(
+			await resp.Content.ReadAsStreamAsync(),
+			SourceGenerationContext.Default.OktaSession );
+		return session ?? throw new BmxException( "Error creating Okta session." );
 	}
 
 	async Task<OktaApp[]> IOktaApi.GetAwsAccountAppsAsync() {
+		OktaApp[]? apps;
 		try {
-			var apps = await _httpClient.GetFromJsonAsync(
+			apps = await _httpClient.GetFromJsonAsync(
 				"users/me/appLinks",
 				SourceGenerationContext.Default.OktaAppArray );
-
-			return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
-				?? throw new BmxException( "Retrieving AWS accounts from Okta returned null" );
 		} catch( Exception ex ) {
-			throw new BmxException( "Error retrieving AWS accounts from Okta", ex );
+			throw new BmxException( "Error retrieving AWS accounts from Okta. Try checking for a stable connection.", ex );
 		}
+
+		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
+				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
+	
 	}
 
 	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
