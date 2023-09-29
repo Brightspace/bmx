@@ -7,4 +7,5 @@ namespace D2L.Bmx;
 /// </remarks>
 internal class BmxException : Exception {
 	public BmxException( string message ) : base( message ) { }
+	public BmxException( string message, Exception ex ) : base( message, ex ) { }
 }
