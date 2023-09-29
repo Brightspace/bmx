@@ -31,7 +31,7 @@ internal class AwsClient( IAmazonSecurityTokenService stsClient ) : IAwsClient {
 		} catch( AmazonSecurityTokenServiceException ex ) when
 			( ex.Message == "The requested DurationSeconds exceeds the MaxSessionDuration set for this role." ) {
 			throw new BmxException( "Duration exceeds the MaxSessionDuration for this role. Lower it in config/parameter", ex );
-		} catch (Exception ex ) {
+		} catch( Exception ex ) {
 			throw new BmxException( "Error getting credentials from AWS", ex );
 		}
 	}
