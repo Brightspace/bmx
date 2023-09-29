@@ -164,7 +164,7 @@ internal class OktaApi : IOktaApi {
 				"users/me/appLinks",
 				SourceGenerationContext.Default.OktaAppArray );
 		} catch( Exception ex ) {
-			throw new BmxException( "Error retrieving AWS accounts from Okta.", ex );
+			throw new BmxException( "Request to retrieving AWS accounts from Okta.", ex );
 		}
 
 		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
