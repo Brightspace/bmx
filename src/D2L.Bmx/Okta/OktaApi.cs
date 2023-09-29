@@ -64,7 +64,7 @@ internal class OktaApi : IOktaApi {
 			authnResponse = await JsonSerializer.DeserializeAsync(
 				await resp.Content.ReadAsStreamAsync(),
 				SourceGenerationContext.Default.AuthenticateResponseRaw );
-		} catch (Exception ex) {
+		} catch( Exception ex ) {
 			throw new BmxException( "Okta authentication failed. Okta returned an invalid response", ex );
 		}
 
@@ -123,7 +123,7 @@ internal class OktaApi : IOktaApi {
 			authnResponse = await JsonSerializer.DeserializeAsync(
 					await resp.Content.ReadAsStreamAsync(),
 					SourceGenerationContext.Default.AuthenticateResponseRaw );
-		} catch ( Exception ex ) {
+		} catch( Exception ex ) {
 			throw new BmxException( "Error verifying MFA with Okta. Okta returned an invalid response", ex );
 		}
 
