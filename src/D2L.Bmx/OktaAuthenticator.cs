@@ -43,7 +43,7 @@ internal class OktaAuthenticator(
 
 		oktaApi.SetOrganization( org );
 
-		if( !ignoreCache && await TryAuthenticateFromCacheAsync( org, user, oktaApi ) ) {
+		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaApi ) ) {
 			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
 		if( nonInteractive ) {
@@ -89,7 +89,7 @@ internal class OktaAuthenticator(
 		throw new BmxException( "Okta authentication failed" );
 	}
 
-	private async Task<bool> TryAuthenticateFromCacheAsync(
+	private bool TryAuthenticateFromCache(
 		string org,
 		string user,
 		IOktaApi oktaApi
