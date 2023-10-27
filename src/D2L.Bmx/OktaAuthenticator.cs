@@ -100,8 +100,7 @@ internal class OktaAuthenticator(
 		}
 
 		oktaApi.AddSession( sessionId );
-		string? userId = await oktaApi.GetCurrentUserIdAsync( sessionId );
-		return !string.IsNullOrEmpty( userId );
+		return true;
 	}
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
