@@ -18,7 +18,6 @@ internal interface IOktaApi {
 	Task<OktaSession> CreateSessionAsync( string sessionToken );
 	Task<OktaApp[]> GetAwsAccountAppsAsync();
 	Task<string> GetPageAsync( string samlLoginUrl );
-	Task<string?> GetCurrentUserIdAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
