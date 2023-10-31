@@ -18,7 +18,6 @@ internal interface IOktaApi {
 	Task<OktaSession> CreateSessionAsync( string sessionToken );
 	Task<OktaApp[]> GetAwsAccountAppsAsync();
 	Task<string> GetPageAsync( string samlLoginUrl );
-	Task<string?> GetCurrentUserIdAsync( string sessionId );
 }
 
 internal class OktaApi : IOktaApi {
@@ -174,20 +173,5 @@ internal class OktaApi : IOktaApi {
 
 	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
 		return await _httpClient.GetStringAsync( samlLoginUrl );
-	}
-
-	async Task<string?> IOktaApi.GetCurrentUserIdAsync( string sessionId ) {
-		try {
-			using var meResponse = await _httpClient.GetAsync( "users/me" );
-			if( !meResponse.IsSuccessStatusCode ) {
-				return null;
-			}
-			var me = await meResponse.Content.ReadFromJsonAsync( SourceGenerationContext.Default.OktaMeResponse );
-			return me?.Id;
-		} catch( HttpRequestException ) {
-			return null;
-		} catch( JsonException ) {
-			return null;
-		}
 	}
 }
