@@ -52,9 +52,6 @@ internal class BmxConfigProvider( FileIniDataParser parser ) : IBmxConfigProvide
 	}
 
 	public void SaveConfiguration( BmxConfig config ) {
-		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.BMX_DIR );
-		}
 		var op = new FileStreamOptions {
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,

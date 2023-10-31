@@ -11,9 +11,6 @@ internal interface IOktaSessionStorage {
 
 internal class OktaSessionStorage : IOktaSessionStorage {
 	void IOktaSessionStorage.SaveSessions( List<OktaSessionCache> sessions ) {
-		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.BMX_DIR );
-		}
 
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
