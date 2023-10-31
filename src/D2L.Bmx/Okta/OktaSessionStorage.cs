@@ -14,12 +14,6 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
 			Directory.CreateDirectory( BmxPaths.BMX_DIR );
 		}
-		if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.CACHE_DIR );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "awsCredsCache" ) );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "sessions" ) );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "update_check" ) );
-		}
 
 		string jsonString = JsonSerializer.Serialize(
 			sessions,

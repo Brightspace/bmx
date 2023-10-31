@@ -69,13 +69,6 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		string jsonString = JsonSerializer.Serialize( prunedEntries.ToList(),
 			SourceGenerationContext.Default.ListAwsCacheModel );
 
-		if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.CACHE_DIR );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "awsCredsCache" ) );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "sessions" ) );
-			File.Delete( Path.Join( BmxPaths.BMX_DIR, "update_check" ) );
-		}
-
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
 
