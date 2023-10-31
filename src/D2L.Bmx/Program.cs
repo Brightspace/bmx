@@ -222,7 +222,7 @@ return await new CommandLineBuilder( rootCommand )
 				File.Delete( Path.Join( BmxPaths.BMX_DIR, "awsCredsCache" ) );
 				File.Delete( Path.Join( BmxPaths.BMX_DIR, "sessions" ) );
 				File.Delete( Path.Join( BmxPaths.BMX_DIR, "update_check" ) );
-			} catch ( Exception ex ) {
+			} catch( Exception ex ) {
 				Console.WriteLine( "Error cleaning up old files continuing..." );
 			}
 		}
