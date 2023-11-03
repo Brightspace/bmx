@@ -215,6 +215,17 @@ return await new CommandLineBuilder( rootCommand )
 		next
 	) => {
 		await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
+		//Creating new Cache directory and removing old files.
+		if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
+			try {
+				Directory.CreateDirectory( BmxPaths.CACHE_DIR );
+				File.Delete( Path.Join( BmxPaths.BMX_DIR, "awsCredsCache" ) );
+				File.Delete( Path.Join( BmxPaths.BMX_DIR, "sessions" ) );
+				File.Delete( Path.Join( BmxPaths.BMX_DIR, "update_check" ) );
+			} catch( Exception ex ) {
+				Console.Error.WriteLine( "Error cleaning up old files continuing..." );
+			}
+		}
 		await next( context );
 	},
 		System.CommandLine.Invocation.MiddlewareOrder.ExceptionHandler + 1
