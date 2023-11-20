@@ -4,8 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace D2L.Bmx;
-internal static class UpdateChecker {
 
+internal static class UpdateChecker {
 	public static async Task CheckForUpdatesAsync( BmxConfig config ) {
 		try {
 			var cachedVersion = GetUpdateCheckCache();
@@ -68,9 +68,6 @@ internal static class UpdateChecker {
 	}
 
 	private static void SaveLatestVersion( string version ) {
-		if( !Directory.Exists( BmxPaths.BMX_DIR ) ) {
-			Directory.CreateDirectory( BmxPaths.BMX_DIR );
-		}
 		if( string.IsNullOrWhiteSpace( version ) ) {
 			return;
 		}
