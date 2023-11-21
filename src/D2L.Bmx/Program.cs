@@ -210,25 +210,30 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 // start bmx
 return await new CommandLineBuilder( rootCommand )
 	.UseDefaults()
-	.AddMiddleware( async (
-		context,
-		next
-	) => {
-		await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
-		//Creating new Cache directory and removing old files.
-		if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
-			try {
-				Directory.CreateDirectory( BmxPaths.CACHE_DIR );
-				File.Delete( Path.Join( BmxPaths.BMX_DIR, "awsCredsCache" ) );
-				File.Delete( Path.Join( BmxPaths.BMX_DIR, "sessions" ) );
-				File.Delete( Path.Join( BmxPaths.BMX_DIR, "update_check" ) );
-			} catch( Exception ex ) {
-				Console.Error.WriteLine( "Error cleaning up old files continuing..." );
+	.AddMiddleware(
+		middleware: async ( context, next ) => {
+			// initialize BMX directories
+			if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
+				try {
+					// the cache directory is inside the config directory (~/.bmx), so this ensures both exist
+					Directory.CreateDirectory( BmxPaths.CACHE_DIR );
+					// move the old sessions file (v3.0-) into the new cache directory (v3.1+)
+					if( File.Exists( BmxPaths.SESSIONS_FILE_LEGACY_NAME ) ) {
+						File.Move( BmxPaths.SESSIONS_FILE_LEGACY_NAME, BmxPaths.SESSIONS_FILE_NAME );
+					}
+				} catch( Exception ex ) {
+					throw new BmxException( "Failed to initialize BMX directory (~/.bmx)", ex );
+				}
 			}
-		}
-		await next( context );
-	},
-		System.CommandLine.Invocation.MiddlewareOrder.ExceptionHandler + 1
+
+			await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
+
+			await next( context );
+		},
+		// The default order for new middleware is after the middleware for `--help` & `--version` and can get short-circuited.
+		// We want our middleware (especially update checks) to almost always run, even on `--help` & `--version`,
+		// so we specify a custom order just after the exception handler (which is way before `--help` & `--version`).
+		order: MiddlewareOrder.ExceptionHandler + 1
 	)
 	.UseExceptionHandler( ( exception, context ) => {
 		Console.ResetColor();
