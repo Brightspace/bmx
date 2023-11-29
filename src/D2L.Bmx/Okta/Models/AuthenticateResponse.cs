@@ -9,7 +9,7 @@ internal abstract record AuthenticateResponse {
 
 internal record AuthenticateResponseRaw(
 	DateTimeOffset ExpiresAt,
-	[property: JsonConverter( typeof( JsonStringEnumConverter ) )]
+	[property: JsonConverter( typeof( JsonStringEnumConverter<AuthenticationStatus> ) )]
 	AuthenticationStatus Status,
 	string? StateToken,
 	string? SessionToken,
