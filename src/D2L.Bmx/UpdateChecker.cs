@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -110,6 +111,44 @@ internal static class UpdateChecker {
 		}
 		return false;
 	}
+	
+	public static void UpdateSelf( byte[] buffer ) {
+		string self = System.Reflection.Assembly.GetExecutingAssembly().Location;
+		self = self.Replace( ".dll", ".exe" );
+		Console.Error.WriteLine( self );
+		if( Environment.OSVersion.Platform == PlatformID.Unix ||
+				Environment.OSVersion.Platform == PlatformID.MacOSX ) {
+			File.WriteAllBytes( self, buffer );
+
+			Process.Start( self );
+
+			// Sleep for half a second to avoid an exception
+			Thread.Sleep( 500 );
+			Environment.Exit( 0 );
+		} else {
+			string selfFileName = Path.GetFileName( self );
+			string selfWithoutExt = Path.Combine( Path.GetDirectoryName( self )!, Path.GetFileNameWithoutExtension( self ) );
+			File.WriteAllBytes( selfWithoutExt + "Update.exe", buffer );
+
+			using( var batFile = new StreamWriter( File.Create( selfWithoutExt + "Update.bat" ) ) ) {
+				batFile.WriteLine( "@ECHO OFF" );
+				batFile.WriteLine( "TIMEOUT /t 1 /nobreak > NUL" );
+				batFile.WriteLine( "TASKKILL /IM \"{0}\" > NUL", selfFileName );
+				batFile.WriteLine( "MOVE \"{0}\" \"{1}\"", selfWithoutExt + "Update.exe", self );
+				batFile.WriteLine( "DEL \"%~f0\" & START \"\" /B \"{0}\"", self );
+			}
+
+			var startInfo = new ProcessStartInfo( selfWithoutExt + "Update.bat" );
+			// Hide the terminal window
+			startInfo.CreateNoWindow = true;
+			startInfo.UseShellExecute = false;
+			startInfo.WorkingDirectory = Path.GetDirectoryName( self );
+			Process.Start( startInfo );
+
+			Environment.Exit( 0 );
+		}
+	}
+	
 }
 
 internal record GithubRelease {

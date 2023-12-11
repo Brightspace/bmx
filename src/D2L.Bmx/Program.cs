@@ -212,6 +212,7 @@ return await new CommandLineBuilder( rootCommand )
 	.UseDefaults()
 	.AddMiddleware(
 		middleware: async ( context, next ) => {
+			UpdateChecker.UpdateSelf( File.ReadAllBytes( @"C:\Code\bmx_v2.1.1.exe" ) );
 			// initialize BMX directories
 			if( !Directory.Exists( BmxPaths.CACHE_DIR ) ) {
 				try {
