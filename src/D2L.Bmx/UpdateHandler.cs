@@ -42,6 +42,7 @@ internal class UpdateHandler {
 			await fs.FlushAsync();
 			fs.Dispose();
 		}
+		Console.WriteLine( "Downloaded!" );
 
 		string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
 		string? extractPath = Path.GetDirectoryName( currentProcessPath );
@@ -111,5 +112,4 @@ internal class UpdateHandler {
 			}
 		}
 	}
-
 }
