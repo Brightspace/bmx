@@ -42,27 +42,30 @@ internal class UpdateHandler {
 			await fs.FlushAsync();
 			fs.Dispose();
 		}
-		Console.WriteLine( "Downloaded!" );
 
 		string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
 		string? extractPath = Path.GetDirectoryName( currentProcessPath );
 
 		if( extension.Equals( ".zip" ) ) {
 			DecompressZipFile( downloadPath, extractPath! );
-		} else if( extension.Equals( ".tar.gz" ) ) {
+		} else if( extension.Equals( ".gz" ) ) {
 			DecompressTarGzipFile( downloadPath, extractPath! );
 		} else {
+			Console.WriteLine( extension );
 			throw new Exception( "Unknown archive type" );
 		}
 
-		string newExecutablePath = Path.Combine( extractPath!, Path.GetFileName( currentProcessPath ) );
+		string newExecutablePath = Path.Combine(
+			extractPath!,
+			Path.GetFileName( currentProcessPath )!
+		);
 		File.Move( newExecutablePath, currentProcessPath, overwrite: true );
 	}
 
 	private static string GetOSFileName() {
 
 		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			return "bmx-win-x64.zip";
+			return "bmx-linux-x64.tar.gz";
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
 			return "bmx-osx-x64.tar.gz";
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
@@ -94,12 +97,18 @@ internal class UpdateHandler {
 			Path.GetDirectoryName( decompressedFilePath )!,
 			Path.GetFileNameWithoutExtension( decompressedFilePath )! + ".tar" );
 
-		using FileStream compressedFileStream = File.Open( compressedFilePath, FileMode.Open );
-		using FileStream outputFileStream = File.Create( tarPath );
-		using var decompressor = new GZipStream( compressedFileStream, CompressionMode.Decompress );
-		decompressor.CopyTo( outputFileStream );
+		using( FileStream compressedFileStream = File.Open(
+			compressedFilePath,
+			FileMode.Open,
+			FileAccess.Read,
+			FileShare.Read )
+		) {
+			using FileStream outputFileStream = File.Create( tarPath );
+			using var decompressor = new GZipStream( compressedFileStream, CompressionMode.Decompress );
+			decompressor.CopyTo( outputFileStream );
+		}
 
-		TarFile.ExtractToDirectory( outputFileStream, decompressedFilePath, true );
+		TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
 	}
 
 	private static void DecompressZipFile( string compressedFilePath, string decompressedFilePath ) {
