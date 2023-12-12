@@ -1,7 +1,7 @@
+using System.Formats.Tar;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Formats.Tar;
 
 namespace D2L.Bmx;
 
