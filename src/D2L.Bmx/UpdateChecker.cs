@@ -111,7 +111,7 @@ internal static class UpdateChecker {
 		}
 		return false;
 	}
-	
+
 	public static void UpdateSelf( byte[] buffer ) {
 		string self = System.Reflection.Assembly.GetExecutingAssembly().Location;
 		self = self.Replace( ".dll", ".exe" );
@@ -148,12 +148,26 @@ internal static class UpdateChecker {
 			Environment.Exit( 0 );
 		}
 	}
-	
+
 }
 
 internal record GithubRelease {
 	[JsonPropertyName( "tag_name" )]
 	public string? TagName { get; set; }
+
+	[JsonPropertyName( "assets" )]
+	public List<Assets>? Assets { get; set; }
+}
+
+internal record Assets {
+	[JsonPropertyName( "url" )]
+	public string? Url { get; set; }
+
+	[JsonPropertyName( "name" )]
+	public string? Name { get; set; }
+
+	[JsonPropertyName( "browser_download_url" )]
+	public string? BrowserDownloadUrl { get; set; }
 }
 
 internal record UpdateCheckCache {
