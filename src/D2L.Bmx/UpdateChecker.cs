@@ -110,7 +110,6 @@ internal static class UpdateChecker {
 		}
 		return false;
 	}
-
 }
 
 internal record GithubRelease {
