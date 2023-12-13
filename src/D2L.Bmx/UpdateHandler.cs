@@ -1,7 +1,7 @@
-using System.IO.Compression;
-using System.Runtime.InteropServices;
 using System.Formats.Tar;
+using System.IO.Compression;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace D2L.Bmx;
 
@@ -12,7 +12,7 @@ internal class UpdateHandler {
 		var releaseData = await UpdateChecker.GetLatestReleaseDataAsync();
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 		var latestVersion = new Version( UpdateChecker.GetLatestReleaseVersion( releaseData ) );
-		if ( latestVersion <= localVersion ) {
+		if( latestVersion <= localVersion ) {
 			Console.WriteLine( $"Already own the latest version {latestVersion}" );
 			return;
 		}
@@ -32,7 +32,7 @@ internal class UpdateHandler {
 				await fs.FlushAsync();
 				fs.Dispose();
 			}
-		} catch	( Exception ex ) {
+		} catch( Exception ex ) {
 			throw new BmxException( "Failed to download the update", ex );
 		}
 
@@ -67,7 +67,7 @@ internal class UpdateHandler {
 			);
 			File.Move( newExecutablePath, currentProcessPath, overwrite: true );
 		} catch( Exception ex ) {
-			if (currentProcessPath != "C:/bin") {
+			if( currentProcessPath != "C:/bin" ) {
 				File.Move( backupPath, currentProcessPath );
 			}
 			throw new BmxException( "Failed to update", ex );
