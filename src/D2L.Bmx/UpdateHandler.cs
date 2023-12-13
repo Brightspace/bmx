@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Formats.Tar;
+using System.Reflection;
 
 namespace D2L.Bmx;
 
@@ -9,25 +9,38 @@ internal class UpdateHandler {
 
 	public async Task HandleAsync() {
 		using var httpClient = new HttpClient();
-		httpClient.BaseAddress = new Uri( "https://api.github.com" );
-		httpClient.Timeout = TimeSpan.FromSeconds( 2 );
-		httpClient.DefaultRequestHeaders.Add( "User-Agent", "BMX" );
-		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
-		response.EnsureSuccessStatusCode();
-
-		await using var responseStream = await response.Content.ReadAsStreamAsync();
-		var releaseData = await JsonSerializer.DeserializeAsync(
-			responseStream,
-			SourceGenerationContext.Default.GithubRelease
-		);
+		var releaseData = await UpdateChecker.GetLatestReleaseDataAsync();
+		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
+		var latestVersion = new Version( UpdateChecker.GetLatestReleaseVersion( releaseData ) );
+		if ( latestVersion <= localVersion ) {
+			Console.WriteLine( $"Already own the latest version {latestVersion}" );
+			return;
+		}
 		string archiveName = GetOSFileName();
 		string downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl
 			?? string.Empty;
-		string? currentProcessPath = Environment.ProcessPath;
-		string backupPath = currentProcessPath + ".old.bak"; // will figure out how to do version later
 		if( string.IsNullOrWhiteSpace( downloadUrl ) ) {
 			return;
 		}
+
+		string? downloadPath = Path.GetTempFileName();
+
+		try {
+			var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
+			using( var fs = new FileStream( downloadPath, FileMode.Create, FileAccess.Write, FileShare.None ) ) {
+				await archiveRes.Content.CopyToAsync( fs );
+				await fs.FlushAsync();
+				fs.Dispose();
+			}
+		} catch	( Exception ex ) {
+			throw new BmxException( "Failed to download the update", ex );
+		}
+
+
+		string? currentProcessPath = Environment.ProcessPath;
+		string? currentProcessFileName = Path.GetFileNameWithoutExtension( currentProcessPath );
+		string? currentProcessExtention = Path.GetExtension( currentProcessPath );
+		string backupPath = $"{currentProcessFileName}v{localVersion}{currentProcessExtention}";
 
 		if( !string.IsNullOrEmpty( currentProcessPath ) ) {
 			File.Move( currentProcessPath, backupPath );
@@ -35,37 +48,36 @@ internal class UpdateHandler {
 			currentProcessPath = "C:/bin";
 		}
 
-		var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
-		string? downloadPath = Path.GetTempFileName();
-		using( var fs = new FileStream( downloadPath, FileMode.Create, FileAccess.Write, FileShare.None ) ) {
-			await archiveRes.Content.CopyToAsync( fs );
-			await fs.FlushAsync();
-			fs.Dispose();
+		try {
+			string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
+			string? extractPath = Path.GetDirectoryName( currentProcessPath );
+
+			if( extension.Equals( ".zip" ) ) {
+				DecompressZipFile( downloadPath, extractPath! );
+			} else if( extension.Equals( ".gz" ) ) {
+				DecompressTarGzipFile( downloadPath, extractPath! );
+			} else {
+				Console.WriteLine( extension );
+				throw new Exception( "Unknown archive type" );
+			}
+
+			string newExecutablePath = Path.Combine(
+				extractPath!,
+				Path.GetFileName( currentProcessPath )!
+			);
+			File.Move( newExecutablePath, currentProcessPath, overwrite: true );
+		} catch( Exception ex ) {
+			if (currentProcessPath != "C:/bin") {
+				File.Move( backupPath, currentProcessPath );
+			}
+			throw new BmxException( "Failed to update", ex );
 		}
-
-		string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
-		string? extractPath = Path.GetDirectoryName( currentProcessPath );
-
-		if( extension.Equals( ".zip" ) ) {
-			DecompressZipFile( downloadPath, extractPath! );
-		} else if( extension.Equals( ".gz" ) ) {
-			DecompressTarGzipFile( downloadPath, extractPath! );
-		} else {
-			Console.WriteLine( extension );
-			throw new Exception( "Unknown archive type" );
-		}
-
-		string newExecutablePath = Path.Combine(
-			extractPath!,
-			Path.GetFileName( currentProcessPath )!
-		);
-		File.Move( newExecutablePath, currentProcessPath, overwrite: true );
 	}
 
 	private static string GetOSFileName() {
 
 		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			return "bmx-linux-x64.tar.gz";
+			return "bmx-win-x64.zip";
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
 			return "bmx-osx-x64.tar.gz";
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
@@ -84,7 +96,7 @@ internal class UpdateHandler {
 		Console.WriteLine( $"Cleaning up old binaries in {processDirectory}" );
 		foreach( string file in Directory.GetFiles( processDirectory, "*.old.bak" ) ) {
 			try {
-				Console.WriteLine( file );
+				Console.WriteLine( $"Cleaning up {file}" );
 				File.Delete( file );
 			} catch( Exception ex ) {
 				Console.WriteLine( $"Failed to delete old binary {file}: {ex.Message}" );
