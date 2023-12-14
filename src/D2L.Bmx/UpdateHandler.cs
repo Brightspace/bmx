@@ -1,7 +1,7 @@
-using System.IO.Compression;
-using System.Runtime.InteropServices;
 using System.Formats.Tar;
+using System.IO.Compression;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace D2L.Bmx;
 
@@ -98,7 +98,7 @@ internal class UpdateHandler {
 	}
 
 	private static void DecompressTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
-		string tarPath = Path.Combine( decompressedFilePath , "bmx.tar" );
+		string tarPath = Path.Combine( decompressedFilePath, "bmx.tar" );
 		using( FileStream compressedFileStream = File.Open(
 			compressedFilePath,
 			FileMode.Open,
@@ -112,7 +112,7 @@ internal class UpdateHandler {
 
 		try {
 			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
-		}  finally {
+		} finally {
 			File.Delete( tarPath );
 		}
 	}
