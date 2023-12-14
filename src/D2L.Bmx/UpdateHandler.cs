@@ -12,7 +12,7 @@ internal class UpdateHandler {
 		var releaseData = await UpdateChecker.GetLatestReleaseDataAsync();
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 		var latestVersion = new Version( UpdateChecker.GetLatestReleaseVersion( releaseData ) );
-		if ( latestVersion <= localVersion ) {
+		if( latestVersion <= localVersion ) {
 			Console.WriteLine( $"Already own the latest version {latestVersion}" );
 			return;
 		}
@@ -20,10 +20,20 @@ internal class UpdateHandler {
 		string downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl
 			?? string.Empty;
 		if( string.IsNullOrWhiteSpace( downloadUrl ) ) {
-			return;
+			throw new BmxException( "Failed to get update download url" );
 		}
 
 		string? downloadPath = Path.GetTempFileName();
+
+		string? currentProcessPath = Environment.ProcessPath;
+		string? currentProcessFileName = Path.GetFileNameWithoutExtension( currentProcessPath );
+		string backupPath = $"{currentProcessFileName}v{localVersion}.old.bak";
+
+		if( !string.IsNullOrEmpty( currentProcessPath ) ) {
+			File.Move( currentProcessPath, backupPath );
+		} else {
+			throw new Exception( "Could not get current process path" );
+		}
 
 		try {
 			var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
@@ -32,20 +42,9 @@ internal class UpdateHandler {
 				await fs.FlushAsync();
 				fs.Dispose();
 			}
-		} catch	( Exception ex ) {
+		} catch( Exception ex ) {
+			File.Move( backupPath, currentProcessPath );
 			throw new BmxException( "Failed to download the update", ex );
-		}
-
-
-		string? currentProcessPath = Environment.ProcessPath;
-		string? currentProcessFileName = Path.GetFileNameWithoutExtension( currentProcessPath );
-		string? currentProcessExtention = Path.GetExtension( currentProcessPath );
-		string backupPath = $"{currentProcessFileName}v{localVersion}{currentProcessExtention}";
-
-		if( !string.IsNullOrEmpty( currentProcessPath ) ) {
-			File.Move( currentProcessPath, backupPath );
-		} else {
-			currentProcessPath = "C:/bin";
 		}
 
 		try {
@@ -57,20 +56,17 @@ internal class UpdateHandler {
 			} else if( extension.Equals( ".gz" ) ) {
 				DecompressTarGzipFile( downloadPath, extractPath! );
 			} else {
-				Console.WriteLine( extension );
 				throw new Exception( "Unknown archive type" );
 			}
-
 			string newExecutablePath = Path.Combine(
 				extractPath!,
 				Path.GetFileName( currentProcessPath )!
 			);
-			File.Move( newExecutablePath, currentProcessPath, overwrite: true );
 		} catch( Exception ex ) {
-			if (currentProcessPath != "C:/bin") {
-				File.Move( backupPath, currentProcessPath );
-			}
+			File.Move( backupPath, currentProcessPath );
 			throw new BmxException( "Failed to update", ex );
+		} finally {
+			File.Delete( downloadPath );
 		}
 	}
 
@@ -92,23 +88,17 @@ internal class UpdateHandler {
 		if( string.IsNullOrEmpty( processDirectory ) ) {
 			return;
 		}
-
-		Console.WriteLine( $"Cleaning up old binaries in {processDirectory}" );
 		foreach( string file in Directory.GetFiles( processDirectory, "*.old.bak" ) ) {
 			try {
-				Console.WriteLine( $"Cleaning up {file}" );
 				File.Delete( file );
 			} catch( Exception ex ) {
-				Console.WriteLine( $"Failed to delete old binary {file}: {ex.Message}" );
+				Console.Error.WriteLine( $"WARNING: Failed to delete old version {file}" );
 			}
 		}
 	}
 
 	private static void DecompressTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
-		string? tarPath = Path.Combine(
-			Path.GetDirectoryName( decompressedFilePath )!,
-			Path.GetFileNameWithoutExtension( decompressedFilePath )! + ".tar" );
-
+		string tarPath = Path.Combine( decompressedFilePath , "bmx.tar" );
 		using( FileStream compressedFileStream = File.Open(
 			compressedFilePath,
 			FileMode.Open,
@@ -120,13 +110,17 @@ internal class UpdateHandler {
 			decompressor.CopyTo( outputFileStream );
 		}
 
-		TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
+		try {
+			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
+		}  finally {
+			File.Delete( tarPath );
+		}
 	}
 
 	private static void DecompressZipFile( string compressedFilePath, string decompressedFilePath ) {
 		using( ZipArchive archive = ZipFile.OpenRead( compressedFilePath ) ) {
 			foreach( ZipArchiveEntry entry in archive.Entries ) {
-				string? destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
+				string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
 				if( destinationPath.StartsWith( decompressedFilePath!, StringComparison.Ordinal ) ) {
 					entry.ExtractToFile( destinationPath, overwrite: true );
 				}
