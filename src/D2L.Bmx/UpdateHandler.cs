@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
@@ -25,13 +26,17 @@ internal class UpdateHandler {
 
 		string? downloadPath = Path.GetTempFileName();
 
-		string? currentProcessPath = Environment.ProcessPath;
-		string? currentProcessFileName = Path.GetFileNameWithoutExtension( currentProcessPath );
-		string backupPath = $"{currentProcessFileName}v{localVersion}.old.bak";
+		string currentFilePath = Process.GetCurrentProcess().MainModule!.FileName;
+		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
+		string backupPath = $"{BmxPaths.OLD_BMX_VERSION_FILE_NAME}v{localVersion}.old.bak";
 
-		if( !string.IsNullOrEmpty( currentProcessPath ) ) {
-			File.Move( currentProcessPath, backupPath );
-		} else {
+		try {
+			Console.Error.WriteLine( currentFilePath );
+			Console.Error.WriteLine( backupPath );
+			File.Move( currentFilePath, backupPath );
+		} catch( IOException ex ) {
+			throw new BmxException( "Could move the old version, try with elevated permissions", ex );
+		} catch {
 			throw new Exception( "Could not get current process path" );
 		}
 
@@ -43,27 +48,22 @@ internal class UpdateHandler {
 				fs.Dispose();
 			}
 		} catch( Exception ex ) {
-			File.Move( backupPath, currentProcessPath );
+			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "Failed to download the update", ex );
 		}
 
 		try {
 			string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
-			string? extractPath = Path.GetDirectoryName( currentProcessPath );
 
 			if( extension.Equals( ".zip" ) ) {
-				DecompressZipFile( downloadPath, extractPath! );
+				ExtractZipFile( downloadPath, currentDirectory );
 			} else if( extension.Equals( ".gz" ) ) {
-				DecompressTarGzipFile( downloadPath, extractPath! );
+				ExtractTarGzipFile( downloadPath, currentDirectory );
 			} else {
 				throw new Exception( "Unknown archive type" );
 			}
-			string newExecutablePath = Path.Combine(
-				extractPath!,
-				Path.GetFileName( currentProcessPath )!
-			);
 		} catch( Exception ex ) {
-			File.Move( backupPath, currentProcessPath );
+			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "Failed to update with new files", ex );
 		} finally {
 			File.Delete( downloadPath );
@@ -84,7 +84,7 @@ internal class UpdateHandler {
 	}
 
 	public static void Cleanup() {
-		string processDirectory = Path.GetDirectoryName( Environment.ProcessPath ) ?? string.Empty;
+		string processDirectory = Path.GetDirectoryName( BmxPaths.OLD_BMX_VERSION_FILE_NAME ) ?? string.Empty;
 		if( string.IsNullOrEmpty( processDirectory ) ) {
 			return;
 		}
@@ -97,7 +97,7 @@ internal class UpdateHandler {
 		}
 	}
 
-	private static void DecompressTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
+	private static void ExtractTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
 		string tarPath = Path.Combine( decompressedFilePath, "bmx.tar" );
 		using( FileStream compressedFileStream = File.Open(
 			compressedFilePath,
@@ -117,7 +117,7 @@ internal class UpdateHandler {
 		}
 	}
 
-	private static void DecompressZipFile( string compressedFilePath, string decompressedFilePath ) {
+	private static void ExtractZipFile( string compressedFilePath, string decompressedFilePath ) {
 		using( ZipArchive archive = ZipFile.OpenRead( compressedFilePath ) ) {
 			foreach( ZipArchiveEntry entry in archive.Entries ) {
 				string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
