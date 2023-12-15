@@ -1,22 +1,29 @@
 language/csharp:
-  - "**/*.cs"
-  - "**/*.csproj"
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.cs'
+          - '**/*.csproj'
 language/js:
-  - "**/*.js"
-  - "**/package.json*"
-  - "**/*.ts"
-  - "**/*.vue"
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.js'
+          - '**/package.json*'
+          - '**/*.ts'
+          - '**/*.vue'
 language/sql:
-  - "**/*.sql"
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.sql'
 language/terraform:
-  - "**/*.tf"
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.tf'
 language/powershell:
-  - "**/*.ps1"
-  - "**/*.psm1"
-
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.ps1'
+          - '**/*.psm1'
 area/github-actions:
-  - ".github/workflows/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
