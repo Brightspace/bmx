@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
@@ -10,9 +9,9 @@ internal class UpdateHandler {
 
 	public async Task HandleAsync() {
 		using var httpClient = new HttpClient();
-		var releaseData = await UpdateChecker.GetLatestReleaseDataAsync();
+		var releaseData = await GithubUtilities.GetLatestReleaseDataAsync();
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
-		var latestVersion = new Version( UpdateChecker.GetLatestReleaseVersion( releaseData ) );
+		var latestVersion = new Version( GithubUtilities.GetReleaseVersion( releaseData ) );
 		if( latestVersion <= localVersion ) {
 			Console.WriteLine( $"Already own the latest version {latestVersion}" );
 			return;
@@ -24,20 +23,21 @@ internal class UpdateHandler {
 			throw new BmxException( "Failed to get update download url" );
 		}
 
-		string? downloadPath = Path.GetTempFileName();
+		string downloadPath = Path.GetTempFileName();
 
-		string currentFilePath = Process.GetCurrentProcess().MainModule!.FileName;
+		string? currentFilePath = Environment.ProcessPath;
+		if ( string.IsNullOrEmpty(currentFilePath) ) {
+			throw new BmxException( "BMX could not update" );
+		}
 		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
 		string backupPath = $"{BmxPaths.OLD_BMX_VERSION_FILE_NAME}v{localVersion}.old.bak";
 
 		try {
-			Console.Error.WriteLine( currentFilePath );
-			Console.Error.WriteLine( backupPath );
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
 			throw new BmxException( "Could move the old version, try with elevated permissions", ex );
 		} catch {
-			throw new Exception( "Could not get current process path" );
+			throw new BmxException( "BMX could not update" );
 		}
 
 		try {

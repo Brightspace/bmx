@@ -11,7 +11,9 @@ internal static class UpdateChecker {
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				latestVersion = new Version( GetLatestReleaseVersion( await GetLatestReleaseDataAsync() ) );
+				var latestVersionString = GithubUtilities.GetReleaseVersion( await GithubUtilities.GetLatestReleaseDataAsync() );
+				latestVersion = new Version ( latestVersionString );
+				SaveVersion( latestVersionString );
 			}
 
 			string updateLocation = string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase )
@@ -48,32 +50,7 @@ internal static class UpdateChecker {
 		Console.Error.WriteLine();
 	}
 
-	internal static string GetLatestReleaseVersion( GithubRelease? releaseData ) {
-		string version = releaseData?.TagName?.TrimStart( 'v' ) ?? string.Empty;
-		SaveLatestVersion( version );
-		return version;
-	}
-
-	internal static async Task<GithubRelease?> GetLatestReleaseDataAsync() {
-		using var httpClient = new HttpClient();
-		httpClient.BaseAddress = new Uri( "https://api.github.com" );
-		httpClient.Timeout = TimeSpan.FromSeconds( 2 );
-		httpClient.DefaultRequestHeaders.Add( "User-Agent", "BMX" );
-		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
-		response.EnsureSuccessStatusCode();
-
-		await using var responseStream = await response.Content.ReadAsStreamAsync();
-		var releaseData = await JsonSerializer.DeserializeAsync(
-			responseStream,
-			SourceGenerationContext.Default.GithubRelease
-		);
-		return releaseData;
-	}
-
-	private static void SaveLatestVersion( string version ) {
-		if( string.IsNullOrWhiteSpace( version ) ) {
-			return;
-		}
+	private static void SaveVersion( string version ) {
 		var cache = new UpdateCheckCache {
 			VersionName = version,
 			TimeLastChecked = DateTimeOffset.UtcNow
