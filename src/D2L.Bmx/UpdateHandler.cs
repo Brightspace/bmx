@@ -26,7 +26,7 @@ internal class UpdateHandler {
 		string downloadPath = Path.GetTempFileName();
 
 		string? currentFilePath = Environment.ProcessPath;
-		if ( string.IsNullOrEmpty(currentFilePath) ) {
+		if( string.IsNullOrEmpty( currentFilePath ) ) {
 			throw new BmxException( "BMX could not update" );
 		}
 		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
