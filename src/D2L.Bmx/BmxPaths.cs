@@ -11,5 +11,5 @@ internal static class BmxPaths {
 	public static readonly string SESSIONS_FILE_LEGACY_NAME = Path.Join( BMX_DIR, "sessions" );
 	public static readonly string UPDATE_CHECK_FILE_NAME = Path.Join( CACHE_DIR, "updateCheck" );
 	public static readonly string AWS_CREDS_CACHE_FILE_NAME = Path.Join( CACHE_DIR, "awsCreds" );
-	public static readonly string OLD_BMX_VERSION_FILE_NAME = Path.Join( BMX_DIR, "bmx" );
+	public static readonly string OLD_BMX_VERSIONS_PATH = Path.Join( BMX_DIR, "temp" );
 }

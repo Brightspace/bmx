@@ -9,29 +9,32 @@ internal class UpdateHandler {
 
 	public async Task HandleAsync() {
 		using var httpClient = new HttpClient();
-		var releaseData = await GithubUtilities.GetLatestReleaseDataAsync();
+		GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
+		Version? latestVersion = releaseData?.GetReleaseVersion();
+		if( latestVersion is null ) {
+			throw new BmxException( "Failed to grab the latest version" );
+		}
+
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
-		var latestVersion = new Version( GithubUtilities.GetReleaseVersion( releaseData ) );
 		if( latestVersion <= localVersion ) {
 			Console.WriteLine( $"Already own the latest version {latestVersion}" );
 			return;
 		}
+
 		string archiveName = GetOSFileName();
-		string downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl
-			?? string.Empty;
+		string? downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl;
 		if( string.IsNullOrWhiteSpace( downloadUrl ) ) {
 			throw new BmxException( "Failed to get update download url" );
 		}
-
-		string downloadPath = Path.GetTempFileName();
 
 		string? currentFilePath = Environment.ProcessPath;
 		if( string.IsNullOrEmpty( currentFilePath ) ) {
 			throw new BmxException( "BMX could not update" );
 		}
-		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
-		string backupPath = $"{BmxPaths.OLD_BMX_VERSION_FILE_NAME}v{localVersion}.old.bak";
 
+		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
+		long backupPathTimeStamp = DateTime.Now.Millisecond;
+		string backupPath = Path.Join( BmxPaths.OLD_BMX_VERSIONS_PATH, $"bmx-v{localVersion}-{backupPathTimeStamp}-old.bak" );
 		try {
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
@@ -40,24 +43,24 @@ internal class UpdateHandler {
 			throw new BmxException( "BMX could not update" );
 		}
 
+
+		string downloadPath = Path.GetTempFileName();
 		try {
 			var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
-			using( var fs = new FileStream( downloadPath, FileMode.Create, FileAccess.Write, FileShare.None ) ) {
-				await archiveRes.Content.CopyToAsync( fs );
-				await fs.FlushAsync();
-				fs.Dispose();
-			}
+			using var fs = new FileStream( downloadPath, FileMode.Create, FileAccess.Write, FileShare.None );
+			await archiveRes.Content.CopyToAsync( fs );
+			await fs.FlushAsync();
 		} catch( Exception ex ) {
 			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "Failed to download the update", ex );
 		}
 
 		try {
-			string extension = Path.GetExtension( downloadUrl ).ToLowerInvariant();
+			string extension = Path.GetExtension( downloadUrl );
 
-			if( extension.Equals( ".zip" ) ) {
+			if( extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase ) ) {
 				ExtractZipFile( downloadPath, currentDirectory );
-			} else if( extension.Equals( ".gz" ) ) {
+			} else if( extension.Equals( ".gz", StringComparison.OrdinalIgnoreCase ) ) {
 				ExtractTarGzipFile( downloadPath, currentDirectory );
 			} else {
 				throw new Exception( "Unknown archive type" );
@@ -79,19 +82,23 @@ internal class UpdateHandler {
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
 			return "bmx-linux-x64.tar.gz";
 		} else {
-			throw new Exception( "Unknown OS" );
+			throw new BmxException( "New version does not support you current OS" );
 		}
 	}
 
 	public static void Cleanup() {
-		string processDirectory = Path.GetDirectoryName( BmxPaths.OLD_BMX_VERSION_FILE_NAME ) ?? string.Empty;
-		if( string.IsNullOrEmpty( processDirectory ) ) {
-			return;
+		if( !Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
+			try {
+				Directory.CreateDirectory( BmxPaths.OLD_BMX_VERSIONS_PATH );
+			} catch( Exception ex ) {
+				throw new BmxException( "Failed to initialize temporary BMX file directory (~/.bmx/temp)", ex );
+			}
 		}
-		foreach( string file in Directory.GetFiles( processDirectory, "*.old.bak" ) ) {
+		string processDirectory = BmxPaths.OLD_BMX_VERSIONS_PATH;
+		foreach( string file in Directory.GetFiles( processDirectory, "*old.bak" ) ) {
 			try {
 				File.Delete( file );
-			} catch( Exception ex ) {
+			} catch( Exception ) {
 				Console.Error.WriteLine( $"WARNING: Failed to delete old version {file}" );
 			}
 		}
@@ -99,17 +106,10 @@ internal class UpdateHandler {
 
 	private static void ExtractTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
 		string tarPath = Path.Combine( decompressedFilePath, "bmx.tar" );
-		using( FileStream compressedFileStream = File.Open(
-			compressedFilePath,
-			FileMode.Open,
-			FileAccess.Read,
-			FileShare.Read )
-		) {
-			using FileStream outputFileStream = File.Create( tarPath );
-			using var decompressor = new GZipStream( compressedFileStream, CompressionMode.Decompress );
-			decompressor.CopyTo( outputFileStream );
-		}
-
+		using FileStream compressedFS = File.Open( compressedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read );
+		using FileStream outputFS = File.Create( tarPath );
+		var decompressor = new GZipStream( compressedFS, CompressionMode.Decompress );
+		decompressor.CopyTo( outputFS );
 		try {
 			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
 		} finally {
@@ -118,12 +118,11 @@ internal class UpdateHandler {
 	}
 
 	private static void ExtractZipFile( string compressedFilePath, string decompressedFilePath ) {
-		using( ZipArchive archive = ZipFile.OpenRead( compressedFilePath ) ) {
-			foreach( ZipArchiveEntry entry in archive.Entries ) {
-				string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
-				if( destinationPath.StartsWith( decompressedFilePath!, StringComparison.Ordinal ) ) {
-					entry.ExtractToFile( destinationPath, overwrite: true );
-				}
+		using ZipArchive archive = ZipFile.OpenRead( compressedFilePath );
+		foreach( ZipArchiveEntry entry in archive.Entries ) {
+			string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
+			if( destinationPath.StartsWith( decompressedFilePath!, StringComparison.Ordinal ) ) {
+				entry.ExtractToFile( destinationPath, overwrite: true );
 			}
 		}
 	}
