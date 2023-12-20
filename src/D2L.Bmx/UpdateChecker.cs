@@ -11,9 +11,12 @@ internal static class UpdateChecker {
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				string latestVersionString = GithubUtilities.GetReleaseVersion( await GithubUtilities.GetLatestReleaseDataAsync() );
-				latestVersion = new Version( latestVersionString );
-				SaveVersion( latestVersionString );
+				GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
+				latestVersion = releaseData?.GetReleaseVersion();
+				if( latestVersion is null ) {
+					return;
+				}
+				SaveVersion( latestVersion );
 			}
 
 			string updateLocation = string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase )
@@ -50,9 +53,9 @@ internal static class UpdateChecker {
 		Console.Error.WriteLine();
 	}
 
-	private static void SaveVersion( string version ) {
+	private static void SaveVersion( Version version ) {
 		var cache = new UpdateCheckCache {
-			VersionName = version,
+			VersionName = version.ToString(),
 			TimeLastChecked = DateTimeOffset.UtcNow
 		};
 		string content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
