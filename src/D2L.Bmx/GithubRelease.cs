@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace D2L.Bmx;
 internal record GithubRelease {
 	[JsonPropertyName( "tag_name" )]
-	public string? TagName { get; init;}
+	public string? TagName { get; init; }
 
 	[JsonPropertyName( "assets" )]
 	public List<GithubAsset>? Assets { get; init; }
