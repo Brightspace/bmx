@@ -97,7 +97,7 @@ internal class UpdateHandler {
 	public static void Cleanup() {
 		if( Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
 			try {
-				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH,true );
+				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH, true );
 			} catch( Exception ) {
 				Console.Error.WriteLine( "WARNING: Failed to delete old version files" );
 			}
