@@ -106,10 +106,17 @@ internal class UpdateHandler {
 
 	private static void ExtractTarGzipFile( string compressedFilePath, string decompressedFilePath ) {
 		string tarPath = Path.Combine( decompressedFilePath, "bmx.tar" );
-		using FileStream compressedFS = File.Open( compressedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read );
-		using FileStream outputFS = File.Create( tarPath );
-		using var decompressor = new GZipStream( compressedFS, CompressionMode.Decompress );
-		decompressor.CopyTo( outputFS );
+		using( FileStream compressedFileStream = File.Open(
+			compressedFilePath,
+			FileMode.Open,
+			FileAccess.Read,
+			FileShare.Read )
+		) {
+			using FileStream outputFileStream = File.Create( tarPath );
+			using var decompressor = new GZipStream( compressedFileStream, CompressionMode.Decompress );
+			decompressor.CopyTo( outputFileStream );
+		}
+
 		try {
 			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
 		} finally {
