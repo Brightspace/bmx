@@ -108,7 +108,7 @@ internal class UpdateHandler {
 		string tarPath = Path.Combine( decompressedFilePath, "bmx.tar" );
 		using FileStream compressedFS = File.Open( compressedFilePath, FileMode.Open, FileAccess.Read, FileShare.Read );
 		using FileStream outputFS = File.Create( tarPath );
-		var decompressor = new GZipStream( compressedFS, CompressionMode.Decompress );
+		using var decompressor = new GZipStream( compressedFS, CompressionMode.Decompress );
 		decompressor.CopyTo( outputFS );
 		try {
 			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
