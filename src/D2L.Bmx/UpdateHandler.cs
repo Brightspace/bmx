@@ -93,7 +93,7 @@ internal class UpdateHandler {
 				string destinationFile = Path.Combine( currentDirectory, Path.GetFileName( file ) );
 				File.Move( file, destinationFile );
 			}
-		} catch ( Exception ex ) { 
+		} catch ( Exception ex ) {
 			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "BMX could not update with the new version", ex );
 		} finally {
