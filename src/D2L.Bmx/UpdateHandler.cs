@@ -72,7 +72,7 @@ internal class UpdateHandler {
 				throw new Exception( "Unknown archive type" );
 			}
 		} catch( Exception ex ) {
-			Directory.Delete( extractFolder, true );
+			Directory.Delete( extractFolder, recursive: true );
 			throw new BmxException( "Failed to update with new files", ex );
 		} finally {
 			File.Delete( downloadPath );
@@ -81,10 +81,10 @@ internal class UpdateHandler {
 		try {
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
-			Directory.Delete( extractFolder, true );
+			Directory.Delete( extractFolder, recursive: true );
 			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
 		} catch {
-			Directory.Delete( extractFolder, true );
+			Directory.Delete( extractFolder, recursive: true );
 			throw new BmxException( "BMX could not update" );
 		}
 
@@ -97,7 +97,7 @@ internal class UpdateHandler {
 			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "BMX could not update with the new version", ex );
 		} finally {
-			Directory.Delete( extractFolder, true );
+			Directory.Delete( extractFolder, recursive: true );
 		}
 	}
 
@@ -117,7 +117,7 @@ internal class UpdateHandler {
 	public static void Cleanup() {
 		if( Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
 			try {
-				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH, true );
+				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH, recursive: true );
 			} catch( Exception ) {
 				Console.Error.WriteLine( "WARNING: Failed to delete old version files" );
 			}
@@ -147,8 +147,8 @@ internal class UpdateHandler {
 	private static void ExtractZipFile( string compressedFilePath, string decompressedFilePath ) {
 		using ZipArchive archive = ZipFile.OpenRead( compressedFilePath );
 		foreach( ZipArchiveEntry entry in archive.Entries ) {
-			string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath!, entry.FullName ) );
-			if( destinationPath.StartsWith( decompressedFilePath!, StringComparison.Ordinal ) ) {
+			string destinationPath = Path.GetFullPath( Path.Combine( decompressedFilePath, entry.FullName ) );
+			if( destinationPath.StartsWith( decompressedFilePath, StringComparison.Ordinal ) ) {
 				entry.ExtractToFile( destinationPath, overwrite: true );
 			}
 		}
