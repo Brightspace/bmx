@@ -198,6 +198,12 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 	);
 } );
 
+var updateCommand = new Command( "update", "Updates BMX to the latest version" );
+updateCommand.SetHandler( ( InvocationContext context ) => {
+	var handler = new UpdateHandler();
+	return handler.HandleAsync();
+} );
+
 // root command
 var rootCommand = new RootCommand( "BMX grants you API access to your AWS accounts!" ) {
 	// put more frequently used commands first, as the order here affects help text
@@ -205,6 +211,7 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 	writeCommand,
 	loginCommand,
 	configureCommand,
+	updateCommand,
 };
 
 // start bmx
@@ -226,6 +233,7 @@ return await new CommandLineBuilder( rootCommand )
 				}
 			}
 
+			UpdateHandler.Cleanup();
 			await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
 
 			await next( context );

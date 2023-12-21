@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace D2L.Bmx;
 
@@ -12,7 +11,12 @@ internal static class UpdateChecker {
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				latestVersion = new Version( await GetLatestReleaseVersionAsync() );
+				GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
+				latestVersion = releaseData?.GetReleaseVersion();
+				if( latestVersion is null ) {
+					return;
+				}
+				SaveVersion( latestVersion );
 			}
 
 			string updateLocation = string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase )
@@ -49,30 +53,9 @@ internal static class UpdateChecker {
 		Console.Error.WriteLine();
 	}
 
-	private static async Task<string> GetLatestReleaseVersionAsync() {
-		using var httpClient = new HttpClient();
-		httpClient.BaseAddress = new Uri( "https://api.github.com" );
-		httpClient.Timeout = TimeSpan.FromSeconds( 2 );
-		httpClient.DefaultRequestHeaders.Add( "User-Agent", "BMX" );
-		var response = await httpClient.GetAsync( "repos/Brightspace/bmx/releases/latest" );
-		response.EnsureSuccessStatusCode();
-
-		await using var responseStream = await response.Content.ReadAsStreamAsync();
-		var releaseData = await JsonSerializer.DeserializeAsync(
-			responseStream,
-			SourceGenerationContext.Default.GithubRelease
-		);
-		string version = releaseData?.TagName?.TrimStart( 'v' ) ?? string.Empty;
-		SaveLatestVersion( version );
-		return version;
-	}
-
-	private static void SaveLatestVersion( string version ) {
-		if( string.IsNullOrWhiteSpace( version ) ) {
-			return;
-		}
+	private static void SaveVersion( Version version ) {
 		var cache = new UpdateCheckCache {
-			VersionName = version,
+			VersionName = version.ToString(),
 			TimeLastChecked = DateTimeOffset.UtcNow
 		};
 		string content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
@@ -112,10 +95,6 @@ internal static class UpdateChecker {
 	}
 }
 
-internal record GithubRelease {
-	[JsonPropertyName( "tag_name" )]
-	public string? TagName { get; set; }
-}
 
 internal record UpdateCheckCache {
 	public string? VersionName { get; set; }
