@@ -10,7 +10,7 @@ internal record GithubRelease {
 	public List<GithubAsset>? Assets { get; init; }
 
 	public Version? GetReleaseVersion() {
-		string? version = TagName?.TrimStart( 'v' ) ?? null;
+		string? version = TagName?.TrimStart( 'v' );
 		if( version is null ) {
 			return null;
 		}

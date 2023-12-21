@@ -8,23 +8,31 @@ namespace D2L.Bmx;
 internal class UpdateHandler {
 
 	public async Task HandleAsync() {
+		if( !Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
+			try {
+				Directory.CreateDirectory( BmxPaths.OLD_BMX_VERSIONS_PATH );
+			} catch( Exception ex ) {
+				throw new BmxException( "Failed to initialize temporary BMX file directory (~/.bmx/temp)", ex );
+			}
+		}
+
 		using var httpClient = new HttpClient();
 		GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
 		Version? latestVersion = releaseData?.GetReleaseVersion();
 		if( latestVersion is null ) {
-			throw new BmxException( "Failed to grab the latest version" );
+			throw new BmxException( "Failed to find the latest version of BMX." );
 		}
 
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 		if( latestVersion <= localVersion ) {
-			Console.WriteLine( $"Already own the latest version {latestVersion}" );
+			Console.WriteLine( $"You already have the latest version {latestVersion}" );
 			return;
 		}
 
 		string archiveName = GetOSFileName();
 		string? downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl;
 		if( string.IsNullOrWhiteSpace( downloadUrl ) ) {
-			throw new BmxException( "Failed to get update download url" );
+			throw new BmxException( "Failed to find the download URL of the latest BMX" );
 		}
 
 		string? currentFilePath = Environment.ProcessPath;
@@ -38,7 +46,7 @@ internal class UpdateHandler {
 		try {
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
-			throw new BmxException( "Could move the old version, try with elevated permissions", ex );
+			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
 		} catch {
 			throw new BmxException( "BMX could not update" );
 		}
@@ -87,19 +95,11 @@ internal class UpdateHandler {
 	}
 
 	public static void Cleanup() {
-		if( !Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
+		if( Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
 			try {
-				Directory.CreateDirectory( BmxPaths.OLD_BMX_VERSIONS_PATH );
-			} catch( Exception ex ) {
-				throw new BmxException( "Failed to initialize temporary BMX file directory (~/.bmx/temp)", ex );
-			}
-		}
-		string processDirectory = BmxPaths.OLD_BMX_VERSIONS_PATH;
-		foreach( string file in Directory.GetFiles( processDirectory, "*old.bak" ) ) {
-			try {
-				File.Delete( file );
+				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH,true );
 			} catch( Exception ) {
-				Console.Error.WriteLine( $"WARNING: Failed to delete old version {file}" );
+				Console.Error.WriteLine( "WARNING: Failed to delete old version files" );
 			}
 		}
 	}
