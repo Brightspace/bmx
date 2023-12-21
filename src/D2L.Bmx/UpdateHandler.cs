@@ -40,18 +40,6 @@ internal class UpdateHandler {
 			throw new BmxException( "BMX could not update" );
 		}
 
-		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
-		long backupPathTimeStamp = DateTime.Now.Millisecond;
-		string backupPath = Path.Join( BmxPaths.OLD_BMX_VERSIONS_PATH, $"bmx-v{localVersion}-{backupPathTimeStamp}-old.bak" );
-		try {
-			File.Move( currentFilePath, backupPath );
-		} catch( IOException ex ) {
-			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
-		} catch {
-			throw new BmxException( "BMX could not update" );
-		}
-
-
 		string downloadPath = Path.GetTempFileName();
 		try {
 			var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
@@ -59,25 +47,57 @@ internal class UpdateHandler {
 			await archiveRes.Content.CopyToAsync( fs );
 			await fs.FlushAsync();
 		} catch( Exception ex ) {
-			File.Move( backupPath, currentFilePath );
 			throw new BmxException( "Failed to download the update", ex );
 		}
 
+		string extractFolder = Path.Combine( Path.GetTempPath(), Path.GetRandomFileName() );
+		try {
+			Directory.CreateDirectory( extractFolder );
+		} catch( Exception ex ) {
+			File.Delete( downloadPath );
+			throw new BmxException( "Failed to initialize temporary folder for downloaded file", ex );
+		}
+
+		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
+		long backupPathTimeStamp = DateTime.Now.Millisecond;
+		string backupPath = Path.Join( BmxPaths.OLD_BMX_VERSIONS_PATH, $"bmx-v{localVersion}-{backupPathTimeStamp}-old.bak" );
 		try {
 			string extension = Path.GetExtension( downloadUrl );
 
 			if( extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase ) ) {
-				ExtractZipFile( downloadPath, currentDirectory );
+				ExtractZipFile( downloadPath, extractFolder );
 			} else if( extension.Equals( ".gz", StringComparison.OrdinalIgnoreCase ) ) {
-				ExtractTarGzipFile( downloadPath, currentDirectory );
+				ExtractTarGzipFile( downloadPath, extractFolder );
 			} else {
 				throw new Exception( "Unknown archive type" );
 			}
 		} catch( Exception ex ) {
-			File.Move( backupPath, currentFilePath );
+			Directory.Delete( extractFolder, true );
 			throw new BmxException( "Failed to update with new files", ex );
 		} finally {
 			File.Delete( downloadPath );
+		}
+
+		try {
+			File.Move( currentFilePath, backupPath );
+		} catch( IOException ex ) {
+			Directory.Delete( extractFolder, true );
+			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
+		} catch {
+			Directory.Delete( extractFolder, true );
+			throw new BmxException( "BMX could not update" );
+		}
+
+		try {
+			foreach( string file in Directory.GetFiles( extractFolder ) ) {
+				string destinationFile = Path.Combine( currentDirectory, Path.GetFileName( file ) );
+				File.Move( file, destinationFile );
+			}
+		} catch ( Exception ex ) { 
+			File.Move( backupPath, currentFilePath );
+			throw new BmxException( "BMX could not update with the new version", ex );
+		} finally {
+			Directory.Delete( extractFolder, true );
 		}
 	}
 
