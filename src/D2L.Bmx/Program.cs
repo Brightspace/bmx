@@ -6,11 +6,14 @@ using Amazon.Runtime;
 using Amazon.SecurityToken;
 using D2L.Bmx;
 using D2L.Bmx.Aws;
+using D2L.Bmx.GitHub;
 using D2L.Bmx.Okta;
 using IniParser;
 
-
+// pre-create objects used by all commands and/or the middleware
 var configProvider = new BmxConfigProvider( new FileIniDataParser() );
+var config = configProvider.GetConfiguration();
+var github = new GitHubClient();
 
 // common options
 var orgOption = new Option<string>(
@@ -30,7 +33,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaApi(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
-		configProvider.GetConfiguration()
+		config
 	) );
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -122,7 +125,6 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = configProvider.GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -169,7 +171,6 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var config = configProvider.GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -200,7 +201,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 
 var updateCommand = new Command( "update", "Updates BMX to the latest version" );
 updateCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new UpdateHandler();
+	var handler = new UpdateHandler( github );
 	return handler.HandleAsync();
 } );
 
@@ -234,7 +235,9 @@ return await new CommandLineBuilder( rootCommand )
 			}
 
 			UpdateHandler.Cleanup();
-			await UpdateChecker.CheckForUpdatesAsync( configProvider.GetConfiguration() );
+
+			var updateChecker = new UpdateChecker( github, config );
+			await updateChecker.CheckForUpdatesAsync();
 
 			await next( context );
 		},

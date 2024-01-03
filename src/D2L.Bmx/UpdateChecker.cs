@@ -1,18 +1,19 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal static class UpdateChecker {
-	public static async Task CheckForUpdatesAsync( BmxConfig config ) {
+internal class UpdateChecker( IGitHubClient github, BmxConfig config ) {
+	public async Task CheckForUpdatesAsync() {
 		try {
 			var cachedVersion = GetUpdateCheckCache();
 			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
 			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
-				latestVersion = releaseData?.GetReleaseVersion();
+				var releaseData = await github.GetLatestBmxReleaseAsync();
+				latestVersion = releaseData.Version;
 				if( latestVersion is null ) {
 					return;
 				}
@@ -24,8 +25,12 @@ internal static class UpdateChecker {
 				: "https://github.com/Brightspace/bmx/releases/latest";
 
 			if( latestVersion > localVersion ) {
-				DisplayUpdateMessage( $"A new BMX release is available: v{latestVersion} (current: v{localVersion})\n" +
-					$"Upgrade now at {updateLocation}" );
+				DisplayUpdateMessage(
+					$"""
+					A new BMX release is available: v{latestVersion} (current: v{localVersion})
+					Upgrade now at {updateLocation}
+					"""
+				);
 			}
 		} catch( Exception ) {
 			// Give up and don't bother telling the user we couldn't check for updates
@@ -58,7 +63,7 @@ internal static class UpdateChecker {
 			VersionName = version.ToString(),
 			TimeLastChecked = DateTimeOffset.UtcNow
 		};
-		string content = JsonSerializer.Serialize( cache, SourceGenerationContext.Default.UpdateCheckCache );
+		string content = JsonSerializer.Serialize( cache, JsonCamelCaseContext.Default.UpdateCheckCache );
 		var op = new FileStreamOptions {
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,
@@ -78,7 +83,7 @@ internal static class UpdateChecker {
 
 		string content = File.ReadAllText( BmxPaths.UPDATE_CHECK_FILE_NAME );
 		try {
-			return JsonSerializer.Deserialize( content, SourceGenerationContext.Default.UpdateCheckCache );
+			return JsonSerializer.Deserialize( content, JsonCamelCaseContext.Default.UpdateCheckCache );
 		} catch( JsonException ) {
 			return null;
 		}

@@ -14,7 +14,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 
 		string jsonString = JsonSerializer.Serialize(
 			sessions,
-			SourceGenerationContext.Default.ListOktaSessionCache );
+			JsonCamelCaseContext.Default.ListOktaSessionCache );
 		WriteTextToFile( BmxPaths.SESSIONS_FILE_NAME, jsonString );
 	}
 
@@ -25,7 +25,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 
 		try {
 			string sessionsJson = File.ReadAllText( BmxPaths.SESSIONS_FILE_NAME );
-			return JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListOktaSessionCache )
+			return JsonSerializer.Deserialize( sessionsJson, JsonCamelCaseContext.Default.ListOktaSessionCache )
 				?? new();
 		} catch( JsonException ) {
 			return new();
