@@ -2,11 +2,11 @@ using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateHandler {
-
+internal class UpdateHandler( IGitHubClient github ) {
 	public async Task HandleAsync() {
 		if( !Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
 			try {
@@ -16,12 +16,14 @@ internal class UpdateHandler {
 			}
 		}
 
-		using var httpClient = new HttpClient();
-		GithubRelease? releaseData = await GithubRelease.GetLatestReleaseDataAsync();
-		Version? latestVersion = releaseData?.GetReleaseVersion();
-		if( latestVersion is null ) {
-			throw new BmxException( "Failed to find the latest version of BMX." );
+		GitHubRelease releaseData;
+		try {
+			releaseData = await github.GetLatestBmxReleaseAsync();
+		} catch {
+			throw new BmxException( "Failed to find the latest BMX release." );
 		}
+		Version latestVersion = releaseData.Version
+			?? throw new BmxException( "Failed to find the latest version of BMX." );
 
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 		if( latestVersion <= localVersion ) {
@@ -30,10 +32,8 @@ internal class UpdateHandler {
 		}
 
 		string archiveName = GetOSFileName();
-		string? downloadUrl = releaseData?.Assets?.FirstOrDefault( a => a.Name == archiveName )?.BrowserDownloadUrl;
-		if( string.IsNullOrWhiteSpace( downloadUrl ) ) {
-			throw new BmxException( "Failed to find the download URL of the latest BMX" );
-		}
+		var asset = releaseData?.Assets.Find( a => a.Name == archiveName )
+			?? throw new BmxException( "Failed to find the download URL of the latest BMX" );
 
 		string? currentFilePath = Environment.ProcessPath;
 		if( string.IsNullOrEmpty( currentFilePath ) ) {
@@ -42,10 +42,7 @@ internal class UpdateHandler {
 
 		string downloadPath = Path.GetTempFileName();
 		try {
-			var archiveRes = await httpClient.GetAsync( downloadUrl, HttpCompletionOption.ResponseHeadersRead );
-			using var fs = new FileStream( downloadPath, FileMode.Create, FileAccess.Write, FileShare.None );
-			await archiveRes.Content.CopyToAsync( fs );
-			await fs.FlushAsync();
+			await github.DownloadAssetAsync( asset, downloadPath );
 		} catch( Exception ex ) {
 			throw new BmxException( "Failed to download the update", ex );
 		}
@@ -62,7 +59,7 @@ internal class UpdateHandler {
 		long backupPathTimeStamp = DateTime.Now.Millisecond;
 		string backupPath = Path.Join( BmxPaths.OLD_BMX_VERSIONS_PATH, $"bmx-v{localVersion}-{backupPathTimeStamp}-old.bak" );
 		try {
-			string extension = Path.GetExtension( downloadUrl );
+			string extension = Path.GetExtension( archiveName );
 
 			if( extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase ) ) {
 				ExtractZipFile( downloadPath, extractFolder );
@@ -102,7 +99,6 @@ internal class UpdateHandler {
 	}
 
 	private static string GetOSFileName() {
-
 		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			return "bmx-win-x64.zip";
 		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {

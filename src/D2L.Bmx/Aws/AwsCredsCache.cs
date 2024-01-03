@@ -27,7 +27,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 		}
 		try {
 			string sessionsJson = File.ReadAllText( BmxPaths.AWS_CREDS_CACHE_FILE_NAME );
-			return JsonSerializer.Deserialize( sessionsJson, SourceGenerationContext.Default.ListAwsCacheModel )
+			return JsonSerializer.Deserialize( sessionsJson, JsonCamelCaseContext.Default.ListAwsCacheModel )
 				?? new();
 		} catch( JsonException ) {
 			return new();
@@ -67,7 +67,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 			.Select( o => o.Last() );
 
 		string jsonString = JsonSerializer.Serialize( prunedEntries.ToList(),
-			SourceGenerationContext.Default.ListAwsCacheModel );
+			JsonCamelCaseContext.Default.ListAwsCacheModel );
 
 		WriteTextToFile( BmxPaths.AWS_CREDS_CACHE_FILE_NAME, jsonString );
 	}
