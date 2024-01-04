@@ -1,12 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateChecker( IGitHubClient github ) {
+internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProvider ) {
 	public async Task CheckForUpdatesAsync() {
 		try {
 			var updateCheckCache = GetUpdateCheckCacheOrNull();
@@ -25,11 +24,14 @@ internal class UpdateChecker( IGitHubClient github ) {
 				}
 			}
 
-			Version? localVersion = Assembly.GetExecutingAssembly().GetName().Version;
+			// assembly version (System.Version) is easier to compare,
+			// but informational version (string) is what users usually see (e.g. in GitHub & when running "bmx --version")
+			Version? localVersion = versionProvider.GetAssemblyVersion();
 			if( latestVersion > localVersion ) {
+				string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion.ToString();
 				DisplayUpdateMessage(
 					$"""
-					A new BMX release is available: v{latestVersion} (current: v{localVersion})
+					A new BMX release is available: v{latestVersion} (current: {displayVersion})
 					Run "bmx update" now to upgrade.
 					"""
 				);
