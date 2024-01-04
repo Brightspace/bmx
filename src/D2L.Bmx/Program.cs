@@ -233,10 +233,16 @@ return await new CommandLineBuilder( rootCommand )
 					throw new BmxException( "Failed to initialize BMX directory (~/.bmx)", ex );
 				}
 			}
+			// clean up temp files from earlier runs
+			if( Directory.Exists( BmxPaths.TEMP_DIR ) ) {
+				try {
+					Directory.Delete( BmxPaths.TEMP_DIR, recursive: true );
+				} catch( Exception ) {
+					// ignore errors as this doesn't impact normal BMX usage
+				}
+			}
 
-			UpdateHandler.Cleanup();
-
-			var updateChecker = new UpdateChecker( github, config );
+			var updateChecker = new UpdateChecker( github );
 			await updateChecker.CheckForUpdatesAsync();
 
 			await next( context );

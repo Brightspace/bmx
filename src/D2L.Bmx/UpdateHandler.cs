@@ -8,21 +8,23 @@ namespace D2L.Bmx;
 
 internal class UpdateHandler( IGitHubClient github ) {
 	public async Task HandleAsync() {
-		if( !Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
-			try {
-				Directory.CreateDirectory( BmxPaths.OLD_BMX_VERSIONS_PATH );
-			} catch( Exception ex ) {
-				throw new BmxException( "Failed to initialize temporary BMX file directory (~/.bmx/temp)", ex );
-			}
+		string workspaceDir = Path.Join( BmxPaths.TEMP_DIR, Path.GetRandomFileName() );
+		try {
+			Directory.CreateDirectory( workspaceDir );
+		} catch( Exception ex ) {
+			throw new BmxException( "Failed to create temporary BMX directory in ~/.bmx/temp", ex );
 		}
 
-		GitHubRelease releaseData;
+		var bmxFileInfo = GetFileInfo();
+
+		Console.WriteLine( "Finding the latest BMX release..." );
+		GitHubRelease latestRelease;
 		try {
-			releaseData = await github.GetLatestBmxReleaseAsync();
+			latestRelease = await github.GetLatestBmxReleaseAsync();
 		} catch {
 			throw new BmxException( "Failed to find the latest BMX release." );
 		}
-		Version latestVersion = releaseData.Version
+		Version latestVersion = latestRelease.Version
 			?? throw new BmxException( "Failed to find the latest version of BMX." );
 
 		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -30,93 +32,83 @@ internal class UpdateHandler( IGitHubClient github ) {
 			Console.WriteLine( $"You already have the latest version {latestVersion}" );
 			return;
 		}
-
-		string archiveName = GetOSFileName();
-		var asset = releaseData?.Assets.Find( a => a.Name == archiveName )
+		var asset = latestRelease.Assets.Find( a => a.Name == bmxFileInfo.ArchiveName )
 			?? throw new BmxException( "Failed to find the download URL of the latest BMX" );
 
-		string? currentFilePath = Environment.ProcessPath;
-		if( string.IsNullOrEmpty( currentFilePath ) ) {
-			throw new BmxException( "BMX could not update" );
-		}
-
-		string downloadPath = Path.GetTempFileName();
+		Console.WriteLine( "Downloading the latest BMX..." );
+		string downloadPath = Path.Join( workspaceDir, bmxFileInfo.ArchiveName );
 		try {
 			await github.DownloadAssetAsync( asset, downloadPath );
 		} catch( Exception ex ) {
 			throw new BmxException( "Failed to download the update", ex );
 		}
 
-		string extractFolder = Path.Combine( Path.GetTempPath(), Path.GetRandomFileName() );
+		Console.WriteLine( "Extracting files from archive..." );
+		string extractFolder = Path.Join( workspaceDir, "latest" );
 		try {
 			Directory.CreateDirectory( extractFolder );
-		} catch( Exception ex ) {
-			File.Delete( downloadPath );
-			throw new BmxException( "Failed to initialize temporary folder for downloaded file", ex );
-		}
-
-		string currentDirectory = Path.GetDirectoryName( currentFilePath )!;
-		long backupPathTimeStamp = DateTime.Now.Millisecond;
-		string backupPath = Path.Join( BmxPaths.OLD_BMX_VERSIONS_PATH, $"bmx-v{localVersion}-{backupPathTimeStamp}-old.bak" );
-		try {
-			string extension = Path.GetExtension( archiveName );
-
-			if( extension.Equals( ".zip", StringComparison.OrdinalIgnoreCase ) ) {
+			if( bmxFileInfo.ArchiveType == ArchiveType.Zip ) {
 				ExtractZipFile( downloadPath, extractFolder );
-			} else if( extension.Equals( ".gz", StringComparison.OrdinalIgnoreCase ) ) {
-				ExtractTarGzipFile( downloadPath, extractFolder );
 			} else {
-				throw new Exception( "Unknown archive type" );
+				ExtractTarGzipFile( downloadPath, extractFolder );
 			}
 		} catch( Exception ex ) {
-			Directory.Delete( extractFolder, recursive: true );
-			throw new BmxException( "Failed to update with new files", ex );
-		} finally {
-			File.Delete( downloadPath );
+			throw new BmxException( "Failed to extract from downloaded archive", ex );
 		}
 
+		Console.WriteLine( "Replacing the currently running BMX executable..." );
+		string currentFilePath = Environment.ProcessPath
+			?? throw new BmxException( "Failed to locate the current BMX executable." );
+		string backupPath = Path.Join( workspaceDir, $"bmx-v{localVersion}-old.bak" );
 		try {
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
-			Directory.Delete( extractFolder, recursive: true );
 			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
-		} catch {
-			Directory.Delete( extractFolder, recursive: true );
-			throw new BmxException( "BMX could not update" );
-		}
-
-		try {
-			foreach( string file in Directory.GetFiles( extractFolder ) ) {
-				string destinationFile = Path.Combine( currentDirectory, Path.GetFileName( file ) );
-				File.Move( file, destinationFile );
-			}
 		} catch( Exception ex ) {
-			File.Move( backupPath, currentFilePath );
-			throw new BmxException( "BMX could not update with the new version", ex );
-		} finally {
-			Directory.Delete( extractFolder, recursive: true );
+			throw new BmxException( "Failed to back up the old version", ex );
 		}
-	}
-
-	private static string GetOSFileName() {
-		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
-			return "bmx-win-x64.zip";
-		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
-			return "bmx-osx-x64.tar.gz";
-		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
-			return "bmx-linux-x64.tar.gz";
-		} else {
-			throw new BmxException( "New version does not support you current OS" );
-		}
-	}
-
-	public static void Cleanup() {
-		if( Directory.Exists( BmxPaths.OLD_BMX_VERSIONS_PATH ) ) {
+		string newFilePath = Path.Join( extractFolder, bmxFileInfo.ExeName );
+		try {
+			File.Move( newFilePath, currentFilePath );
+		} catch( Exception ex ) {
+			string errorMessage = "Failed to update with the new version.";
 			try {
-				Directory.Delete( BmxPaths.OLD_BMX_VERSIONS_PATH, recursive: true );
-			} catch( Exception ) {
-				Console.Error.WriteLine( "WARNING: Failed to delete old version files" );
+				File.Move( backupPath, currentFilePath );
+			} catch {
+				errorMessage += $"""
+
+					Failed to restore the backup.
+					Your BMX executable is now at {backupPath}. Please restore manually.
+					""";
 			}
+			throw new BmxException( errorMessage, ex );
+		}
+
+		Console.WriteLine( $"BMX updated to v{latestVersion} successfully!" );
+	}
+
+	private static BmxFileInfo GetFileInfo() {
+		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+			return new BmxFileInfo(
+				ArchiveName: "bmx-win-x64.zip",
+				ExeName: "bmx.exe",
+				ArchiveType: ArchiveType.Zip
+			);
+		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
+			return new BmxFileInfo(
+				ArchiveName: "bmx-osx-x64.tar.gz",
+				ExeName: "bmx",
+				ArchiveType: ArchiveType.TarGzip
+			);
+		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
+			return new BmxFileInfo(
+				ArchiveName: "bmx-linux-x64.tar.gz",
+				ExeName: "bmx",
+				ArchiveType: ArchiveType.TarGzip
+			);
+		} else {
+			throw new BmxException(
+				"Unable to choose the appropriate file for your current OS. Please update manually." );
 		}
 	}
 
@@ -134,7 +126,7 @@ internal class UpdateHandler( IGitHubClient github ) {
 		}
 
 		try {
-			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, true );
+			TarFile.ExtractToDirectory( tarPath, decompressedFilePath, overwriteFiles: true );
 		} finally {
 			File.Delete( tarPath );
 		}
@@ -148,5 +140,17 @@ internal class UpdateHandler( IGitHubClient github ) {
 				entry.ExtractToFile( destinationPath, overwrite: true );
 			}
 		}
+	}
+
+
+	private readonly record struct BmxFileInfo(
+		string ArchiveName,
+		string ExeName,
+		ArchiveType ArchiveType
+	);
+
+	private enum ArchiveType {
+		TarGzip,
+		Zip,
 	}
 }

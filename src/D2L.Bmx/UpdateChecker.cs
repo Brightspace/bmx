@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -5,30 +6,31 @@ using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateChecker( IGitHubClient github, BmxConfig config ) {
+internal class UpdateChecker( IGitHubClient github ) {
 	public async Task CheckForUpdatesAsync() {
 		try {
-			var cachedVersion = GetUpdateCheckCache();
-			var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
-			var latestVersion = new Version( cachedVersion?.VersionName ?? "0.0.0" );
-			if( ShouldFetchLatestVersion( cachedVersion ) ) {
-				var releaseData = await github.GetLatestBmxReleaseAsync();
-				latestVersion = releaseData.Version;
+			var updateCheckCache = GetUpdateCheckCacheOrNull();
+
+			Version? latestVersion;
+			if( ShouldFetchLatestVersion( updateCheckCache ) ) {
+				latestVersion = ( await github.GetLatestBmxReleaseAsync() ).Version;
 				if( latestVersion is null ) {
 					return;
 				}
-				SaveVersion( latestVersion );
+				SetUpdateCheckCache( latestVersion );
+			} else {
+				latestVersion = updateCheckCache.VersionName;
+				if( latestVersion is null ) {
+					return;
+				}
 			}
 
-			string updateLocation = string.Equals( config.Org, "d2l", StringComparison.OrdinalIgnoreCase )
-				? "https://bmx.d2l.dev"
-				: "https://github.com/Brightspace/bmx/releases/latest";
-
+			Version? localVersion = Assembly.GetExecutingAssembly().GetName().Version;
 			if( latestVersion > localVersion ) {
 				DisplayUpdateMessage(
 					$"""
 					A new BMX release is available: v{latestVersion} (current: v{localVersion})
-					Upgrade now at {updateLocation}
+					Run "bmx update" now to upgrade.
 					"""
 				);
 			}
@@ -58,11 +60,11 @@ internal class UpdateChecker( IGitHubClient github, BmxConfig config ) {
 		Console.Error.WriteLine();
 	}
 
-	private static void SaveVersion( Version version ) {
-		var cache = new UpdateCheckCache {
-			VersionName = version.ToString(),
-			TimeLastChecked = DateTimeOffset.UtcNow
-		};
+	private static void SetUpdateCheckCache( Version version ) {
+		var cache = new UpdateCheckCache(
+			VersionName: version,
+			TimeLastChecked: DateTimeOffset.UtcNow
+		);
 		string content = JsonSerializer.Serialize( cache, JsonCamelCaseContext.Default.UpdateCheckCache );
 		var op = new FileStreamOptions {
 			Mode = FileMode.OpenOrCreate,
@@ -76,7 +78,7 @@ internal class UpdateChecker( IGitHubClient github, BmxConfig config ) {
 		writer.Write( content );
 	}
 
-	private static UpdateCheckCache? GetUpdateCheckCache() {
+	private static UpdateCheckCache? GetUpdateCheckCacheOrNull() {
 		if( !File.Exists( BmxPaths.UPDATE_CHECK_FILE_NAME ) ) {
 			return null;
 		}
@@ -89,19 +91,18 @@ internal class UpdateChecker( IGitHubClient github, BmxConfig config ) {
 		}
 	}
 
-	private static bool ShouldFetchLatestVersion( UpdateCheckCache? cache ) {
-		if( cache is null || string.IsNullOrWhiteSpace( cache.VersionName )
-			|| ( DateTimeOffset.UtcNow - cache.TimeLastChecked ) > TimeSpan.FromDays( 1 )
-			|| ( cache.TimeLastChecked > DateTimeOffset.UtcNow )
-		) {
-			return true;
-		}
-		return false;
+	private static bool ShouldFetchLatestVersion(
+		[NotNullWhen( returnValue: false )] UpdateCheckCache? cache
+	) {
+		return cache?.VersionName is null
+			|| cache.TimeLastChecked is null
+			|| DateTimeOffset.UtcNow - cache.TimeLastChecked > TimeSpan.FromDays( 1 )
+			|| cache.TimeLastChecked > DateTimeOffset.UtcNow;
 	}
 }
 
 
-internal record UpdateCheckCache {
-	public string? VersionName { get; set; }
-	public DateTimeOffset? TimeLastChecked { get; set; }
-}
+internal record UpdateCheckCache(
+	Version? VersionName,
+	DateTimeOffset? TimeLastChecked
+);
