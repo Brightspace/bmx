@@ -32,7 +32,7 @@ internal class UpdateHandler( IGitHubClient github ) {
 			Console.WriteLine( $"You already have the latest version {latestVersion}" );
 			return;
 		}
-		var asset = latestRelease?.Assets.Find( a => a.Name == bmxFileInfo.ArchiveName )
+		var asset = latestRelease.Assets.Find( a => a.Name == bmxFileInfo.ArchiveName )
 			?? throw new BmxException( "Failed to find the download URL of the latest BMX" );
 
 		Console.WriteLine( "Downloading the latest BMX..." );
