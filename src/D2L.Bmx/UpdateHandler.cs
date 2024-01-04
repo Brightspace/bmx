@@ -1,12 +1,11 @@
 using System.Formats.Tar;
 using System.IO.Compression;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateHandler( IGitHubClient github ) {
+internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProvider ) {
 	public async Task HandleAsync() {
 		string workspaceDir = Path.Join( BmxPaths.TEMP_DIR, Path.GetRandomFileName() );
 		try {
@@ -27,9 +26,12 @@ internal class UpdateHandler( IGitHubClient github ) {
 		Version latestVersion = latestRelease.Version
 			?? throw new BmxException( "Failed to find the latest version of BMX." );
 
-		var localVersion = Assembly.GetExecutingAssembly().GetName().Version;
+		// assembly version (System.Version) is easier to compare,
+		// but informational version (string) is what users usually see (e.g. in GitHub & when running "bmx --version")
+		Version? localVersion = versionProvider.GetAssemblyVersion();
 		if( latestVersion <= localVersion ) {
-			Console.WriteLine( $"You already have the latest version {latestVersion}" );
+			string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion.ToString();
+			Console.WriteLine( $"You already have the latest version {displayVersion}" );
 			return;
 		}
 		var asset = latestRelease.Assets.Find( a => a.Name == bmxFileInfo.ArchiveName )

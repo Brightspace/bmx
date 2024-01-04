@@ -199,7 +199,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 
 var updateCommand = new Command( "update", "Updates BMX to the latest version" );
 updateCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new UpdateHandler( new GitHubClient() );
+	var handler = new UpdateHandler( new GitHubClient(), new VersionProvider() );
 	return handler.HandleAsync();
 } );
 
@@ -241,7 +241,7 @@ return await new CommandLineBuilder( rootCommand )
 			}
 
 			if( context.ParseResult.CommandResult.Command != updateCommand ) {
-				var updateChecker = new UpdateChecker( new GitHubClient() );
+				var updateChecker = new UpdateChecker( new GitHubClient(), new VersionProvider() );
 				await updateChecker.CheckForUpdatesAsync();
 			}
 
