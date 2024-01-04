@@ -10,11 +10,6 @@ using D2L.Bmx.GitHub;
 using D2L.Bmx.Okta;
 using IniParser;
 
-// pre-create objects used by all commands and/or the middleware
-var configProvider = new BmxConfigProvider( new FileIniDataParser() );
-var config = configProvider.GetConfiguration();
-var github = new GitHubClient();
-
 // common options
 var orgOption = new Option<string>(
 	name: "--org",
@@ -29,6 +24,7 @@ var loginCommand = new Command( "login", "Log into Okta and save an Okta session
 	userOption,
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new LoginHandler( new OktaAuthenticator(
 		new OktaApi(),
 		new OktaSessionStorage(),
@@ -70,7 +66,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		configProvider,
+		new BmxConfigProvider( new FileIniDataParser() ),
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -125,6 +121,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -171,6 +168,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -201,7 +199,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 
 var updateCommand = new Command( "update", "Updates BMX to the latest version" );
 updateCommand.SetHandler( ( InvocationContext context ) => {
-	var handler = new UpdateHandler( github );
+	var handler = new UpdateHandler( new GitHubClient() );
 	return handler.HandleAsync();
 } );
 
@@ -242,8 +240,10 @@ return await new CommandLineBuilder( rootCommand )
 				}
 			}
 
-			var updateChecker = new UpdateChecker( github );
-			await updateChecker.CheckForUpdatesAsync();
+			if( context.ParseResult.CommandResult.Command != updateCommand ) {
+				var updateChecker = new UpdateChecker( new GitHubClient() );
+				await updateChecker.CheckForUpdatesAsync();
+			}
 
 			await next( context );
 		},
