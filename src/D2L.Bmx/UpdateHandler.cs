@@ -7,15 +7,6 @@ namespace D2L.Bmx;
 
 internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProvider ) {
 	public async Task HandleAsync() {
-		string workspaceDir = Path.Join( BmxPaths.TEMP_DIR, Path.GetRandomFileName() );
-		try {
-			Directory.CreateDirectory( workspaceDir );
-		} catch( Exception ex ) {
-			throw new BmxException( "Failed to create temporary BMX directory in ~/.bmx/temp", ex );
-		}
-
-		var bmxFileInfo = GetFileInfo();
-
 		Console.WriteLine( "Finding the latest BMX release..." );
 		GitHubRelease latestRelease;
 		try {
@@ -26,16 +17,25 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 		Version latestVersion = latestRelease.Version
 			?? throw new BmxException( "Failed to find the latest version of BMX." );
 
+		var bmxFileInfo = GetFileInfo();
+
 		// assembly version (System.Version) is easier to compare,
 		// but informational version (string) is what users usually see (e.g. in GitHub & when running "bmx --version")
 		Version? localVersion = versionProvider.GetAssemblyVersion();
+		string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion?.ToString();
 		if( latestVersion <= localVersion ) {
-			string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion.ToString();
 			Console.WriteLine( $"You already have the latest version {displayVersion}" );
 			return;
 		}
 		var asset = latestRelease.Assets.Find( a => a.Name == bmxFileInfo.ArchiveName )
 			?? throw new BmxException( "Failed to find the download URL of the latest BMX" );
+
+		string workspaceDir = Path.Join( Path.GetTempPath(), Path.GetRandomFileName() );
+		try {
+			Directory.CreateDirectory( workspaceDir );
+		} catch( Exception ex ) {
+			throw new BmxException( "Failed to create a temporary directory for the update", ex );
+		}
 
 		Console.WriteLine( "Downloading the latest BMX..." );
 		string downloadPath = Path.Join( workspaceDir, bmxFileInfo.ArchiveName );
@@ -61,7 +61,7 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 		Console.WriteLine( "Replacing the currently running BMX executable..." );
 		string currentFilePath = Environment.ProcessPath
 			?? throw new BmxException( "Failed to locate the current BMX executable." );
-		string backupPath = Path.Join( workspaceDir, $"bmx-v{localVersion}-old.bak" );
+		string backupPath = Path.Join( workspaceDir, $"bmx-{displayVersion}-old.bak" );
 		try {
 			File.Move( currentFilePath, backupPath );
 		} catch( IOException ex ) {
@@ -87,6 +87,13 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 		}
 
 		Console.WriteLine( $"BMX updated to v{latestVersion} successfully!" );
+
+		try {
+			Directory.Delete( workspaceDir, recursive: true );
+		} catch {
+			// Ignore any errors from clean-up.
+			// This just isn't always possible (e.g. when on Windows), and it's harmless anyway.
+		}
 	}
 
 	private static BmxFileInfo GetFileInfo() {
