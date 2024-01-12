@@ -66,9 +66,12 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 			File.Move( currentFilePath, backupPath );
 		} catch( UnauthorizedAccessException ex ) {
 			throw new BmxException(
-				"Permission denied when removing the old version. Please try again with elevated permissions.", ex );
+				$"""
+				Permission denied when removing the old version ({currentFilePath}).
+				Please try again with elevated permissions.
+				""", ex );
 		} catch( Exception ex ) {
-			throw new BmxException( "Failed to back up the old version", ex );
+			throw new BmxException( $"Failed to back up the old version ({currentFilePath})", ex );
 		}
 		string newFilePath = Path.Join( extractFolder, bmxFileInfo.ExeName );
 		try {
