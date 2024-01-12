@@ -64,8 +64,9 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 		string backupPath = Path.Join( workspaceDir, $"bmx-v{localVersion}-old.bak" );
 		try {
 			File.Move( currentFilePath, backupPath );
-		} catch( IOException ex ) {
-			throw new BmxException( "Could not remove the old version. Please try again with elevated permissions.", ex );
+		} catch( UnauthorizedAccessException ex ) {
+			throw new BmxException(
+				"Permission denied when removing the old version. Please try again with elevated permissions.", ex );
 		} catch( Exception ex ) {
 			throw new BmxException( "Failed to back up the old version", ex );
 		}
