@@ -23,16 +23,12 @@ internal class AwsCredsCreator(
 			);
 		}
 
-		if( string.IsNullOrEmpty( account ) ) {
-			if( !string.IsNullOrEmpty( config.Account ) ) {
-				account = config.Account;
-			}
+		if( string.IsNullOrEmpty( account ) && !string.IsNullOrEmpty( config.Account ) ) {
+			account = config.Account;
 		}
 
-		if( string.IsNullOrEmpty( role ) ) {
-			if( !string.IsNullOrEmpty( config.Role ) ) {
-				role = config.Role;
-			}
+		if( string.IsNullOrEmpty( role ) && !string.IsNullOrEmpty( config.Role ) ) {
+			role = config.Role;
 		}
 
 		if( duration is null or 0 ) {
@@ -43,11 +39,8 @@ internal class AwsCredsCreator(
 			}
 		}
 
-		if( cache ) {
-			if( string.IsNullOrEmpty( account ) || string.IsNullOrEmpty( role ) ) {
-				throw new BmxException( "Account & Role must be provided when using cached AWS credentials" );
-			}
-
+		// if using cache, avoid calling Okta at all if possible
+		if( cache && !string.IsNullOrEmpty( account ) && !string.IsNullOrEmpty( role ) ) {
 			var cachedCredentials = awsCredentialCache.GetCredentials(
 				org: oktaApi.Org,
 				user: oktaApi.User,
@@ -61,16 +54,14 @@ internal class AwsCredsCreator(
 			}
 		}
 
-		//cache this one?
 		OktaApp[] awsApps = await oktaApi.Api.GetAwsAccountAppsAsync();
 
 		if( string.IsNullOrEmpty( account ) ) {
-			if( !nonInteractive ) {
-				string[] accounts = awsApps.Select( app => app.Label ).ToArray();
-				account = consolePrompter.PromptAccount( accounts );
-			} else {
+			if( nonInteractive ) {
 				throw new BmxException( "Account value was not provided" );
 			}
+			string[] accounts = awsApps.Select( app => app.Label ).ToArray();
+			account = consolePrompter.PromptAccount( accounts );
 		}
 
 		OktaApp selectedAwsApp = Array.Find(
@@ -83,11 +74,25 @@ internal class AwsCredsCreator(
 		AwsRole[] rolesData = HtmlXmlHelper.GetRolesFromSamlResponse( samlResponse );
 
 		if( string.IsNullOrEmpty( role ) ) {
-			if( !nonInteractive ) {
-				string[] roles = rolesData.Select( r => r.RoleName ).ToArray();
-				role = consolePrompter.PromptRole( roles );
-			} else {
+			if( nonInteractive ) {
 				throw new BmxException( "Role value was not provided" );
+			}
+			string[] roles = rolesData.Select( r => r.RoleName ).ToArray();
+			role = consolePrompter.PromptRole( roles );
+		}
+
+		// try getting from cache again even if calling Okta is inevitable (we still avoid the AWS call)
+		if( cache ) {
+			var cachedCredentials = awsCredentialCache.GetCredentials(
+				org: oktaApi.Org,
+				user: oktaApi.User,
+				accountName: account,
+				roleName: role,
+				duration: duration.Value
+			);
+
+			if( cachedCredentials is not null ) {
+				return cachedCredentials;
 			}
 		}
 
