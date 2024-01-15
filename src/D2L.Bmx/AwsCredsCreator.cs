@@ -3,13 +3,20 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
 
+internal record AwsCredentialsInfo(
+	string Account,
+	string Role,
+	int Duration,
+	AwsCredentials Credentials
+);
+
 internal class AwsCredsCreator(
 	IAwsClient awsClient,
 	IConsolePrompter consolePrompter,
 	IAwsCredentialCache awsCredentialCache,
 	BmxConfig config
 ) {
-	public async Task<AwsCredentials> CreateAwsCredsAsync(
+	public async Task<AwsCredentialsInfo> CreateAwsCredsAsync(
 		AuthenticatedOktaApi oktaApi,
 		string? account,
 		string? role,
@@ -50,7 +57,11 @@ internal class AwsCredsCreator(
 			);
 
 			if( cachedCredentials is not null ) {
-				return cachedCredentials;
+				return new(
+					Account: account,
+					Role: role,
+					Duration: duration.Value,
+					Credentials: cachedCredentials );
 			}
 		}
 
@@ -92,7 +103,11 @@ internal class AwsCredsCreator(
 			);
 
 			if( cachedCredentials is not null ) {
-				return cachedCredentials;
+				return new(
+					Account: account,
+					Role: role,
+					Duration: duration.Value,
+					Credentials: cachedCredentials );
 			}
 		}
 
@@ -117,6 +132,10 @@ internal class AwsCredsCreator(
 			);
 		}
 
-		return credentials;
+		return new(
+			Account: account,
+			Role: role,
+			Duration: duration.Value,
+			Credentials: credentials );
 	}
 }

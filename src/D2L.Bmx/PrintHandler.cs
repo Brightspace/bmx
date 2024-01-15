@@ -22,14 +22,14 @@ internal class PrintHandler(
 			nonInteractive: nonInteractive,
 			ignoreCache: false
 		);
-		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync(
+		var awsCreds = ( await awsCredsCreator.CreateAwsCredsAsync(
 			oktaApi: oktaApi,
 			account: account,
 			role: role,
 			duration: duration,
 			nonInteractive: nonInteractive,
 			cache: cacheAwsCredentials
-		);
+		) ).Credentials;
 
 		if( string.Equals( format, PrintFormat.Bash, StringComparison.OrdinalIgnoreCase ) ) {
 			PrintBash( awsCreds );
