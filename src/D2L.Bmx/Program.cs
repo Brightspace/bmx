@@ -167,7 +167,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	userOption,
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
-	useCredentialProcessOption
+	useCredentialProcessOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
