@@ -153,6 +153,9 @@ var outputOption = new Option<string>(
 var profileOption = new Option<string>(
 	name: "--profile",
 	description: ParameterDescriptions.Profile );
+var useCredentialProcessOption = new Option<bool>(
+	name: "--use-credential-process",
+	description: ParameterDescriptions.UseCredentialProcess );
 
 var writeCommand = new Command( "write", "Write AWS credentials to the credentials file" ) {
 	accountOption,
@@ -164,6 +167,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	userOption,
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
+	useCredentialProcessOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
@@ -193,7 +197,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
-		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption )
+		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
+		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption )
 	);
 } );
 

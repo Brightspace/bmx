@@ -20,15 +20,18 @@ internal class WriteHandler(
 		bool nonInteractive,
 		string? output,
 		string? profile,
-		bool cacheAwsCredentials
+		bool cacheAwsCredentials,
+		bool useCredentialProcess
 	) {
+		cacheAwsCredentials = cacheAwsCredentials || useCredentialProcess;
+
 		var oktaApi = await oktaAuth.AuthenticateAsync(
 			org: org,
 			user: user,
 			nonInteractive: nonInteractive,
 			ignoreCache: false
 		);
-		var awsCreds = await awsCredsCreator.CreateAwsCredsAsync(
+		var awsCredsInfo = await awsCredsCreator.CreateAwsCredsAsync(
 			oktaApi: oktaApi,
 			account: account,
 			role: role,
@@ -48,24 +51,41 @@ internal class WriteHandler(
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
 			output = "./" + output;
 		}
-		string credentialsFilePath = new SharedCredentialsFile( output ).FilePath;
-		string credentialsFolderPath = Path.GetDirectoryName( credentialsFilePath )
-			?? throw new BmxException( "Invalid AWS credentials file path" );
-		if( !Directory.Exists( credentialsFolderPath ) ) {
-			Directory.CreateDirectory( credentialsFolderPath );
-		}
-		if( !File.Exists( credentialsFilePath ) ) {
-			using( File.Create( credentialsFilePath ) ) { };
+		if( string.IsNullOrEmpty( output ) ) {
+			output = useCredentialProcess
+				? SharedCredentialsFile.DefaultConfigFilePath
+				: SharedCredentialsFile.DefaultFilePath;
 		}
 
-		var data = parser.ReadFile( credentialsFilePath );
-		if( !data.Sections.ContainsSection( profile ) ) {
-			data.Sections.AddSection( profile );
+		string outputFolder = Path.GetDirectoryName( output )
+			?? throw new BmxException( "Invalid output path" );
+		Directory.CreateDirectory( outputFolder );
+		if( !File.Exists( output ) ) {
+			using( File.Create( output ) ) { };
 		}
-		data[profile]["aws_access_key_id"] = awsCreds.AccessKeyId;
-		data[profile]["aws_secret_access_key"] = awsCreds.SecretAccessKey;
-		data[profile]["aws_session_token"] = awsCreds.SessionToken;
 
-		parser.WriteFile( credentialsFilePath, data, new UTF8Encoding( false ) );
+		var data = parser.ReadFile( output );
+		if( useCredentialProcess ) {
+			string sectionName = $"profile {profile}";
+			if( !data.Sections.ContainsSection( sectionName ) ) {
+				data.Sections.AddSection( sectionName );
+			}
+			data[sectionName]["credential_process"] =
+				"bmx print --format json --cache --non-interactive"
+				+ $" --org \"{oktaApi.Org}\""
+				+ $" --user \"{oktaApi.User}\""
+				+ $" --account \"{awsCredsInfo.Account}\""
+				+ $" --role \"{awsCredsInfo.Role}\""
+				+ $" --duration {awsCredsInfo.Duration}";
+		} else {
+			if( !data.Sections.ContainsSection( profile ) ) {
+				data.Sections.AddSection( profile );
+			}
+			data[profile]["aws_access_key_id"] = awsCredsInfo.Credentials.AccessKeyId;
+			data[profile]["aws_secret_access_key"] = awsCredsInfo.Credentials.SecretAccessKey;
+			data[profile]["aws_session_token"] = awsCredsInfo.Credentials.SessionToken;
+		}
+
+		parser.WriteFile( output, data, new UTF8Encoding( encoderShouldEmitUTF8Identifier: false ) );
 	}
 }
