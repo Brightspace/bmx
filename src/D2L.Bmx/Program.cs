@@ -217,6 +217,13 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 	configureCommand,
 	updateCommand,
 };
+rootCommand.SetHandler( ( InvocationContext context ) =>
+	context.HelpBuilder.Write( new(
+		context.HelpBuilder,
+		rootCommand,
+		Console.Out,
+		context.ParseResult ) )
+);
 
 // start bmx
 return await new CommandLineBuilder( rootCommand )
