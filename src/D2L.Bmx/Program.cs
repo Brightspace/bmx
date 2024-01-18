@@ -217,6 +217,16 @@ var rootCommand = new RootCommand( "BMX grants you API access to your AWS accoun
 	configureCommand,
 	updateCommand,
 };
+rootCommand.SetHandler( ( InvocationContext context ) => {
+	return ( (IConsolePrompter)new ConsolePrompter() ).PromptCommand() switch {
+		"print" => printCommand.Handler!.InvokeAsync( context ),
+		"write" => writeCommand.Handler!.InvokeAsync( context ),
+		"login" => loginCommand.Handler!.InvokeAsync( context ),
+		"configure" => configureCommand.Handler!.InvokeAsync( context ),
+		"update" => updateCommand.Handler!.InvokeAsync( context ),
+		_ => throw new BmxException( "Must enter a valid command" ),
+	};
+} );
 
 // start bmx
 return await new CommandLineBuilder( rootCommand )

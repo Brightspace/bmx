@@ -12,6 +12,7 @@ internal interface IConsolePrompter {
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
+	string PromptCommand();
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
 	string GetMfaResponse( string mfaInputPrompt );
 }
@@ -204,6 +205,25 @@ internal class ConsolePrompter : IConsolePrompter {
 			throw new BmxException( "Invalid MFA selection" );
 		}
 		return mfaOptions[index - 1];
+	}
+
+	string IConsolePrompter.PromptCommand() {
+		string[] commands = [
+			"print",
+			"write",
+			"login",
+			"configure",
+			"update",
+		];
+		for( int i = 0; i < commands.Length; i++ ) {
+			Console.Error.WriteLine( $"[{i + 1}] {commands[i]}" );
+		}
+		Console.Error.Write( "Select a command: " );
+		if( !int.TryParse( _stdinReader.ReadLine(), out int index ) || index > commands.Length || index < 1 ) {
+			throw new BmxException( "Invalid command selection" );
+		}
+
+		return commands[index - 1];
 	}
 
 	string IConsolePrompter.GetMfaResponse( string mfaInputPrompt ) {
