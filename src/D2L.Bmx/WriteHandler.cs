@@ -71,9 +71,9 @@ internal class WriteHandler(
 				data.Sections.AddSection( sectionName );
 			}
 			var defaultCredentialsFile = parser.ReadFile( SharedCredentialsFile.DefaultFilePath );
-			if (defaultCredentialsFile.Sections.ContainsSection( profile ) ) {
+			if( defaultCredentialsFile.Sections.ContainsSection( profile ) ) {
 				defaultCredentialsFile.Sections.RemoveSection( profile );
-				parser.WriteFile(SharedCredentialsFile.DefaultFilePath, defaultCredentialsFile);
+				parser.WriteFile( SharedCredentialsFile.DefaultFilePath, defaultCredentialsFile );
 			}
 			data[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
