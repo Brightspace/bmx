@@ -70,7 +70,7 @@ internal class WriteHandler(
 			if( !data.Sections.ContainsSection( sectionName ) ) {
 				data.Sections.AddSection( sectionName );
 			}
-			if (File.Exists(SharedCredentialsFile.DefaultFilePath)) {
+			if ( File.Exists( SharedCredentialsFile.DefaultFilePath ) ) {
 				var defaultCredentialsFile = parser.ReadFile( SharedCredentialsFile.DefaultFilePath );
 				if ( defaultCredentialsFile.Sections.ContainsSection( profile ) ) {
 					defaultCredentialsFile.Sections.RemoveSection( profile );
