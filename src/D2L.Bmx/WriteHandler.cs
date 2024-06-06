@@ -70,6 +70,13 @@ internal class WriteHandler(
 			if( !data.Sections.ContainsSection( sectionName ) ) {
 				data.Sections.AddSection( sectionName );
 			}
+			if( File.Exists( SharedCredentialsFile.DefaultFilePath ) ) {
+				var defaultCredentialsFile = parser.ReadFile( SharedCredentialsFile.DefaultFilePath );
+				if( defaultCredentialsFile.Sections.ContainsSection( profile ) ) {
+					defaultCredentialsFile.Sections.RemoveSection( profile );
+					parser.WriteFile( SharedCredentialsFile.DefaultFilePath, defaultCredentialsFile );
+				}
+			}
 			data[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
 				+ $" --org \"{oktaApi.Org}\""
