@@ -87,7 +87,7 @@ internal class OktaApi : IOktaApi {
 			);
 		}
 		throw new BmxException(
-			$"Okta authentication for user '{username}' and org '{organization}' failed."
+			$"Okta authentication for user '{username}' in org '{organization}' failed."
 				+ " Check if org, user and password is correct" );
 	}
 
