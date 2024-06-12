@@ -50,7 +50,7 @@ internal class OktaAuthenticator(
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
-		string password = consolePrompter.PromptPassword();
+		string password = consolePrompter.PromptPassword( user, org );
 
 		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
 
@@ -86,7 +86,7 @@ internal class OktaAuthenticator(
 			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
 
-		throw new BmxException( "Okta authentication failed" );
+		throw new BmxException( $"Okta authentication failed using username {user} in org {org}" );
 	}
 
 	private bool TryAuthenticateFromCache(
