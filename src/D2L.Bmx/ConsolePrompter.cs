@@ -84,8 +84,9 @@ internal class ConsolePrompter : IConsolePrompter {
 			readKey = () => (char)_stdinReader.Read();
 		}
 
-		string passwordPrompt = string.Format( ParameterDescriptions.Password, user, org );
-		Console.Error.Write( $"{passwordPrompt}: " );
+		Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
+		Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
+		Console.Error.Write( $"{ParameterDescriptions.Password}: " );
 
 		string? originalTerminalSettings = null;
 		try {
