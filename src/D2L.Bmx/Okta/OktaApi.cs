@@ -23,7 +23,7 @@ internal interface IOktaApi {
 internal class OktaApi : IOktaApi {
 	private readonly CookieContainer _cookieContainer;
 	private readonly HttpClient _httpClient;
-	private string organization = string.Empty;
+	private string? _organization;
 
 	public OktaApi() {
 		_cookieContainer = new CookieContainer();
@@ -34,7 +34,7 @@ internal class OktaApi : IOktaApi {
 	}
 
 	void IOktaApi.SetOrganization( string organization ) {
-		this.organization = organization;
+		_organization = organization;
 		if( !organization.Contains( '.' ) ) {
 			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
 		} else {
@@ -86,9 +86,11 @@ internal class OktaApi : IOktaApi {
 				authnResponse.Embedded.Factors
 			);
 		}
+
+		string org = _organization is not null ? _organization : "unknown";
 		throw new BmxException(
-			$"Okta authentication for user '{username}' in org '{organization}' failed."
-				+ " Check if org, user, and password is correct" );
+			$"Okta authentication for user '{username}' in org '{org}'"
+				 + "failed. Check if org, user, and password is correct" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
