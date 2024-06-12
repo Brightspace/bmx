@@ -23,15 +23,18 @@ internal interface IOktaApi {
 internal class OktaApi : IOktaApi {
 	private readonly CookieContainer _cookieContainer;
 	private readonly HttpClient _httpClient;
+	private string organization = string.Empty;
 
 	public OktaApi() {
 		_cookieContainer = new CookieContainer();
-		_httpClient = new HttpClient( new HttpClientHandler { CookieContainer = _cookieContainer } );
-		_httpClient.Timeout = TimeSpan.FromSeconds( 30 );
+		_httpClient = new HttpClient( new HttpClientHandler { CookieContainer = _cookieContainer } ) {
+			Timeout = TimeSpan.FromSeconds( 30 )
+		};
 		_httpClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
 	}
 
 	void IOktaApi.SetOrganization( string organization ) {
+		this.organization = organization;
 		if( !organization.Contains( '.' ) ) {
 			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
 		} else {
@@ -83,7 +86,9 @@ internal class OktaApi : IOktaApi {
 				authnResponse.Embedded.Factors
 			);
 		}
-		throw new BmxException( "Okta authentication failed. Check if org, user and password is correct" );
+		throw new BmxException(
+			$"Okta authentication for user '{username}' and org '{organization}' failed."
+				+ " Check if org, user and password is correct" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
@@ -168,7 +173,6 @@ internal class OktaApi : IOktaApi {
 
 		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
-
 	}
 
 	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {

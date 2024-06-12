@@ -86,7 +86,7 @@ internal class OktaAuthenticator(
 			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
 
-		throw new BmxException( $"Okta authentication failed using username {user} in org {org}" );
+		throw new BmxException( "Okta authentication failed" );
 	}
 
 	private bool TryAuthenticateFromCache(
