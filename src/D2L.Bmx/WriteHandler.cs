@@ -79,10 +79,10 @@ internal class WriteHandler(
 			}
 			data[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
-				+ $" --org \"{oktaApi.Org}\""
-				+ $" --user \"{oktaApi.User}\""
-				+ $" --account \"{awsCredsInfo.Account}\""
-				+ $" --role \"{awsCredsInfo.Role}\""
+				+ $" --org {oktaApi.Org}"
+				+ $" --user {oktaApi.User}"
+				+ $" --account {awsCredsInfo.Account}"
+				+ $" --role {awsCredsInfo.Role}"
 				+ $" --duration {awsCredsInfo.Duration}";
 		} else {
 			if( !data.Sections.ContainsSection( profile ) ) {
