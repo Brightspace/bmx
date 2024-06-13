@@ -87,7 +87,7 @@ internal class OktaApi : IOktaApi {
 			);
 		}
 
-		string org = _organization is not null ? _organization : "unknown";
+		string org = _organization ?? "unknown";
 		throw new BmxException(
 			$"Okta authentication for user '{username}' in org '{org}'"
 				+ "failed. Check if org, user, and password is correct" );
