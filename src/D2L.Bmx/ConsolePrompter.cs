@@ -8,7 +8,7 @@ internal interface IConsolePrompter {
 	string PromptOrg( bool allowEmptyInput );
 	string PromptProfile();
 	string PromptUser( bool allowEmptyInput );
-	string PromptPassword();
+	string PromptPassword( string user, string org );
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
@@ -63,7 +63,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		return user;
 	}
 
-	string IConsolePrompter.PromptPassword() {
+	string IConsolePrompter.PromptPassword( string user, string org ) {
 		Func<char> readKey;
 		if( IS_WINDOWS ) {
 			// On Windows, Console.ReadKey calls native console API, and will fail without a console attached
@@ -84,6 +84,8 @@ internal class ConsolePrompter : IConsolePrompter {
 			readKey = () => (char)_stdinReader.Read();
 		}
 
+		Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
+		Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
 		Console.Error.Write( $"{ParameterDescriptions.Password}: " );
 
 		string? originalTerminalSettings = null;
