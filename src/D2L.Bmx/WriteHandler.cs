@@ -85,6 +85,27 @@ internal class WriteHandler(
 				+ $" --role {awsCredsInfo.Role}"
 				+ $" --duration {awsCredsInfo.Duration}";
 		} else {
+			if( File.Exists( SharedCredentialsFile.DefaultConfigFilePath ) ) {
+				string profileName = $"profile {profile}";
+				var defaultConfigFile = parser.ReadFile( SharedCredentialsFile.DefaultConfigFilePath );
+				if( defaultConfigFile.Sections.ContainsSection( profileName )
+					&& defaultConfigFile[profileName].ContainsKey( "credential_process" ) ) {
+
+					if( defaultConfigFile[profileName].Count == 1 ) {
+						defaultConfigFile.Sections.RemoveSection( profileName );
+					} else {
+						defaultConfigFile[profileName].RemoveKey( "credential_process" );
+					}
+					parser.WriteFile( SharedCredentialsFile.DefaultConfigFilePath, defaultConfigFile );
+					Console.WriteLine(
+						"""
+						An existing profile with the same name using the `credential_process` key was found in the default config file.
+						The key has been removed, and static credentials will be used for the profile.
+						To continue using non-static credentials, rerun the command with the --use-credential-process flag.
+						"""
+					);
+				}
+			}
 			if( !data.Sections.ContainsSection( profile ) ) {
 				data.Sections.AddSection( profile );
 			}
