@@ -99,8 +99,8 @@ internal class WriteHandler(
 					parser.WriteFile( SharedCredentialsFile.DefaultConfigFilePath, defaultConfigFile );
 					Console.WriteLine(
 						"""
-						An existing profile with the same name using the `credential_process` key was found in the default config file.
-						The key has been removed, and static credentials will be used for the profile.
+						An existing profile with the same name using the `credential_process` setting was found in the default config file.
+						The setting has been removed, and static credentials will be used for the profile.
 						To continue using non-static credentials, rerun the command with the --use-credential-process flag.
 						"""
 					);
