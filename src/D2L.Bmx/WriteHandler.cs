@@ -86,23 +86,23 @@ internal class WriteHandler(
 				+ $" --duration {awsCredsInfo.Duration}";
 		} else {
 			if( File.Exists( SharedCredentialsFile.DefaultConfigFilePath ) ) {
-				string profileName = $"profile {profile}";
+				string sectionName = $"profile {profile}";
 				var defaultConfigFile = parser.ReadFile( SharedCredentialsFile.DefaultConfigFilePath );
-				if( defaultConfigFile.Sections.ContainsSection( profileName )
-					&& defaultConfigFile[profileName].ContainsKey( "credential_process" ) ) {
+				if( defaultConfigFile.Sections.ContainsSection( sectionName )
+					&& defaultConfigFile[sectionName].ContainsKey( "credential_process" ) ) {
 
-					if( defaultConfigFile[profileName].Count == 1 ) {
-						defaultConfigFile.Sections.RemoveSection( profileName );
+					if( defaultConfigFile[sectionName].Count == 1 ) {
+						defaultConfigFile.Sections.RemoveSection( sectionName );
 					} else {
-						defaultConfigFile[profileName].RemoveKey( "credential_process" );
+						defaultConfigFile[sectionName].RemoveKey( "credential_process" );
 					}
 					parser.WriteFile( SharedCredentialsFile.DefaultConfigFilePath, defaultConfigFile );
 					Console.WriteLine(
-						"""
-						An existing profile with the same name using the `credential_process` setting was found in the default config file.
-						The setting has been removed, and static credentials will be used for the profile.
-						To continue using non-static credentials, rerun the command with the --use-credential-process flag.
-						"""
+"""
+An existing profile with the same name using the `credential_process` setting was found in the default config file.
+The setting has been removed, and static credentials will be used for the profile.
+To continue using non-static credentials, rerun the command with the --use-credential-process flag.
+"""
 					);
 				}
 			}
