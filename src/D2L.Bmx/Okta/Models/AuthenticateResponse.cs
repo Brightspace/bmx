@@ -21,11 +21,16 @@ internal record AuthenticateResponseEmbedded(
 	OktaMfaFactor[]? Factors
 );
 
+internal record OktaMfaQuestionProfile(
+	string QuestionText
+);
+
 internal record OktaMfaFactor(
 	string Id,
 	string FactorType,
 	string Provider,
-	string VendorName
+	string VendorName,
+	OktaMfaQuestionProfile Profile
 );
 
 internal enum AuthenticationStatus {
