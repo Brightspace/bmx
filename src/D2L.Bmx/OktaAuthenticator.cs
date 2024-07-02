@@ -65,7 +65,11 @@ internal class OktaAuthenticator(
 			if( mfaFactor.FactorType is "sms" or "call" or "email" ) {
 				await oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
 			}
-			string mfaResponse = consolePrompter.GetMfaResponse( mfaFactor.FactorType == "question" ? "Answer" : "PassCode" );
+
+			string mfaResponse = consolePrompter.GetMfaResponse(
+				mfaFactor.FactorType == "question" ? mfaFactor.Profile.QuestionText : "PassCode"
+			);
+
 			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
 		}
 
