@@ -10,5 +10,5 @@ jobs:
       - uses: Brightspace/third-party-actions@actions/checkout
       - uses: Brightspace/third-party-actions@actions/setup-node
         with:
-          node-version: '20.x'
+          node-version: '20'
       - run: npx editorconfig-checker

@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Text;
 using Amazon.Runtime.CredentialManagement;
 using IniParser;
+using IniParser.Model;
 
 namespace D2L.Bmx;
 
@@ -11,6 +13,9 @@ internal class WriteHandler(
 	BmxConfig config,
 	FileIniDataParser parser
 ) {
+	// this is different from `Encoding.UTF8` which has the undesirable `encoderShouldEmitUTF8Identifier: true`
+	private static readonly UTF8Encoding Utf8 = new();
+
 	public async Task HandleAsync(
 		string? org,
 		string? user,
@@ -64,39 +69,50 @@ internal class WriteHandler(
 			using( File.Create( output ) ) { };
 		}
 
-		var data = parser.ReadFile( output );
+		string awsConfigFilePath = useCredentialProcess ? output : SharedCredentialsFile.DefaultConfigFilePath;
+		var awsConfig = GetParsedIniFileOrNull( awsConfigFilePath );
+
+		string awsCredentialsFilePath = useCredentialProcess ? SharedCredentialsFile.DefaultFilePath : output;
+		var awsCredentials = GetParsedIniFileOrNull( awsCredentialsFilePath );
+
 		if( useCredentialProcess ) {
-			string sectionName = $"profile {profile}";
-			if( !data.Sections.ContainsSection( sectionName ) ) {
-				data.Sections.AddSection( sectionName );
+			Debug.Assert( awsConfig is not null );
+
+			if( awsCredentials is not null && awsCredentials.Sections.ContainsSection( profile ) ) {
+				awsCredentials.Sections.RemoveSection( profile );
+				parser.WriteFile( awsCredentialsFilePath, awsCredentials, Utf8 );
 			}
-			if( File.Exists( SharedCredentialsFile.DefaultFilePath ) ) {
-				var defaultCredentialsFile = parser.ReadFile( SharedCredentialsFile.DefaultFilePath );
-				if( defaultCredentialsFile.Sections.ContainsSection( profile ) ) {
-					defaultCredentialsFile.Sections.RemoveSection( profile );
-					parser.WriteFile( SharedCredentialsFile.DefaultFilePath, defaultCredentialsFile );
-				}
+
+			string sectionName = profile == "default" ? "default" : $"profile {profile}";
+
+			if( !awsConfig.Sections.ContainsSection( sectionName ) ) {
+				awsConfig.Sections.AddSection( sectionName );
 			}
-			data[sectionName]["credential_process"] =
+			awsConfig[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
 				+ $" --org {oktaApi.Org}"
 				+ $" --user {oktaApi.User}"
 				+ $" --account {awsCredsInfo.Account}"
 				+ $" --role {awsCredsInfo.Role}"
 				+ $" --duration {awsCredsInfo.Duration}";
-		} else {
-			if( File.Exists( SharedCredentialsFile.DefaultConfigFilePath ) ) {
-				string sectionName = $"profile {profile}";
-				var defaultConfigFile = parser.ReadFile( SharedCredentialsFile.DefaultConfigFilePath );
-				if( defaultConfigFile.Sections.ContainsSection( sectionName )
-					&& defaultConfigFile[sectionName].ContainsKey( "credential_process" ) ) {
 
-					if( defaultConfigFile[sectionName].Count == 1 ) {
-						defaultConfigFile.Sections.RemoveSection( sectionName );
+			parser.WriteFile( awsConfigFilePath, awsConfig, Utf8 );
+		} else {
+			Debug.Assert( awsCredentials is not null );
+
+			if( awsConfig is not null ) {
+				string sectionName = profile == "default" ? "default" : $"profile {profile}";
+
+				if(
+					awsConfig.Sections.ContainsSection( sectionName )
+					&& awsConfig[sectionName].ContainsKey( "credential_process" )
+				) {
+					if( awsConfig[sectionName].Count == 1 ) {
+						awsConfig.Sections.RemoveSection( sectionName );
 					} else {
-						defaultConfigFile[sectionName].RemoveKey( "credential_process" );
+						awsConfig[sectionName].RemoveKey( "credential_process" );
 					}
-					parser.WriteFile( SharedCredentialsFile.DefaultConfigFilePath, defaultConfigFile );
+					parser.WriteFile( awsConfigFilePath, awsConfig, Utf8 );
 					Console.WriteLine(
 """
 An existing profile with the same name using the `credential_process` setting was found in the default config file.
@@ -106,14 +122,19 @@ To continue using non-static credentials, rerun the command with the --use-crede
 					);
 				}
 			}
-			if( !data.Sections.ContainsSection( profile ) ) {
-				data.Sections.AddSection( profile );
-			}
-			data[profile]["aws_access_key_id"] = awsCredsInfo.Credentials.AccessKeyId;
-			data[profile]["aws_secret_access_key"] = awsCredsInfo.Credentials.SecretAccessKey;
-			data[profile]["aws_session_token"] = awsCredsInfo.Credentials.SessionToken;
-		}
 
-		parser.WriteFile( output, data, new UTF8Encoding( encoderShouldEmitUTF8Identifier: false ) );
+			if( !awsCredentials.Sections.ContainsSection( profile ) ) {
+				awsCredentials.Sections.AddSection( profile );
+			}
+			awsCredentials[profile]["aws_access_key_id"] = awsCredsInfo.Credentials.AccessKeyId;
+			awsCredentials[profile]["aws_secret_access_key"] = awsCredsInfo.Credentials.SecretAccessKey;
+			awsCredentials[profile]["aws_session_token"] = awsCredsInfo.Credentials.SessionToken;
+
+			parser.WriteFile( awsCredentialsFilePath, awsCredentials, Utf8 );
+		}
+	}
+
+	private IniData? GetParsedIniFileOrNull( string path ) {
+		return File.Exists( path ) ? parser.ReadFile( path ) : null;
 	}
 }
