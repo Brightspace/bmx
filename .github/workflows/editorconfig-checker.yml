@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   editorconfig-checker:
-    runs-on: [self-hosted, AWS, Linux]
+    runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
       - uses: Brightspace/vulcan-shared-workflows/actions/editorconfig-checker@main
