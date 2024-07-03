@@ -1,10 +1,14 @@
 name: editorconfig-checker
 
-on: [pull_request]
+on: pull_request
 
 jobs:
-  editorconfig-checker:
-    runs-on: [self-hosted, AWS, Linux]
+  eclint:
+    runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - uses: Brightspace/vulcan-shared-workflows/actions/editorconfig-checker@main
+      - uses: Brightspace/third-party-actions@actions/checkout
+      - uses: Brightspace/third-party-actions@actions/setup-node
+        with:
+          node-version: '20.x'
+      - run: npx editorconfig-checker
