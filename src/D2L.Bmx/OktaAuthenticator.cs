@@ -67,7 +67,8 @@ internal class OktaAuthenticator(
 			}
 
 			string mfaResponse = consolePrompter.GetMfaResponse(
-				mfaFactor.FactorType == "question" ? mfaFactor.Profile.QuestionText : "PassCode"
+				mfaFactor.FactorType == "question" ? mfaFactor.Profile.QuestionText : "PassCode",
+				mfaFactor.FactorType == "question"
 			);
 
 			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
