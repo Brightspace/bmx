@@ -38,8 +38,9 @@ internal record OktaMfaFactor {
 	public required string Provider { get; set; }
 	public required string VendorName { get; set; }
 
+	public const string FactorType = "unknown";
 	[JsonIgnore]
-	public virtual string FactorName => "Unknown";
+	public virtual string FactorName => "unknown";
 	[JsonIgnore]
 	public virtual bool RequireChallengeIssue => false;
 }
