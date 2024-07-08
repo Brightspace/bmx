@@ -44,9 +44,10 @@ internal record OktaMfaFactor {
 	public virtual bool RequireChallengeIssue => false;
 }
 
-internal record OktaMfaQuestionFactor() : OktaMfaFactor() {
+internal record OktaMfaQuestionFactor(
+	OktaMfaQuestionProfile Profile
+) : OktaMfaFactor {
 	public override string FactorName => "Security Question";
-	public required OktaMfaQuestionProfile Profile { get; set; }
 }
 
 internal record OktaMfaQuestionProfile(
