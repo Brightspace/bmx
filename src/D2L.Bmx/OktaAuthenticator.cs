@@ -57,18 +57,18 @@ internal class OktaAuthenticator(
 		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
 			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
 
-			if( !IsMfaFactorTypeSupported( mfaFactor.FactorType ) ) {
+			if( mfaFactor.FactorName == "Unknown" ) {
 				throw new BmxException( "Selected MFA not supported by BMX" );
 			}
 
 			// TODO: Handle retry
-			if( mfaFactor.FactorType is "sms" or "call" or "email" ) {
+			if( mfaFactor.RequireChallengeIssue ) {
 				await oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
 			}
 
 			string mfaResponse = consolePrompter.GetMfaResponse(
-				mfaFactor.FactorType == "question" ? mfaFactor.Profile.QuestionText : "PassCode",
-				mfaFactor.FactorType == "question"
+				mfaFactor is OktaMfaQuestionFactor questionFactor ? questionFactor.Profile.QuestionText : "PassCode",
+				mfaFactor is OktaMfaQuestionFactor // Security question factor is a static value
 			);
 
 			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
@@ -133,17 +133,4 @@ internal class OktaAuthenticator(
 		var currTime = DateTimeOffset.Now;
 		return sourceCache.Where( session => session.ExpiresAt > currTime ).ToList();
 	}
-
-	private static bool IsMfaFactorTypeSupported( string mfaFactorType ) {
-		return mfaFactorType is
-			"call"
-			or "email"
-			or "question"
-			or "sms"
-			or "token:hardware"
-			or "token:hotp"
-			or "token:software:totp"
-			or "token";
-	}
-
 }
