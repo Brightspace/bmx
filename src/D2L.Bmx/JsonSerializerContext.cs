@@ -5,7 +5,10 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
 
-[JsonSourceGenerationOptions( PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase )]
+[JsonSourceGenerationOptions(
+	PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+	AllowOutOfOrderMetadataProperties = true
+)]
 [JsonSerializable( typeof( AuthenticateRequest ) )]
 [JsonSerializable( typeof( IssueMfaChallengeRequest ) )]
 [JsonSerializable( typeof( VerifyMfaChallengeResponseRequest ) )]

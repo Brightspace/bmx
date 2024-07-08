@@ -130,12 +130,12 @@ internal class ConsolePrompter : IConsolePrompter {
 		}
 
 		if( mfaOptions.Length == 1 ) {
-			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}-{mfaOptions[0].FactorType}" );
+			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}-{mfaOptions[0].FactorName}" );
 			return mfaOptions[0];
 		}
 
 		for( int i = 0; i < mfaOptions.Length; i++ ) {
-			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}-{mfaOptions[i].FactorType}" );
+			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}-{mfaOptions[i].FactorName}" );
 		}
 		Console.Error.Write( "Select an available MFA option: " );
 		if( !int.TryParse( _stdinReader.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
