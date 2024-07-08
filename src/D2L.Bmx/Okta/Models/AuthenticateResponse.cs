@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace D2L.Bmx.Okta.Models;
 
 internal abstract record AuthenticateResponse {
-	public record MfaRequired( string StateToken, OktaMfaFactor[] Factors ) : AuthenticateResponse;
+	public record MfaRequired( string StateToken, UnsupportedOktaMfaFactor[] Factors ) : AuthenticateResponse;
 	public record Success( string SessionToken ) : AuthenticateResponse;
 }
 
@@ -18,14 +18,14 @@ internal record AuthenticateResponseRaw(
 );
 
 internal record AuthenticateResponseEmbedded(
-	OktaMfaFactor[]? Factors
+	UnsupportedOktaMfaFactor[]? Factors
 );
 
 [JsonPolymorphic(
 	TypeDiscriminatorPropertyName = "factorType",
 	IgnoreUnrecognizedTypeDiscriminators = true
 )]
-[JsonDerivedType( typeof( OktaMfaQuestionFactor ), OktaMfaQuestionFactor.FactorType )]
+[JsonDerivedType( typeof( UnsupportedOktaMfaQuestionFactor ), UnsupportedOktaMfaQuestionFactor.FactorType )]
 [JsonDerivedType( typeof( OktaMfaTokenFactor ), OktaMfaTokenFactor.FactorType )]
 [JsonDerivedType( typeof( OktaMfaHardwareTokenFactor ), OktaMfaHardwareTokenFactor.FactorType )]
 [JsonDerivedType( typeof( OktaMfaSoftwareTotpFactor ), OktaMfaSoftwareTotpFactor.FactorType )]
@@ -33,21 +33,20 @@ internal record AuthenticateResponseEmbedded(
 [JsonDerivedType( typeof( OktaMfaSmsFactor ), OktaMfaSmsFactor.FactorType )]
 [JsonDerivedType( typeof( OktaMfaCallFactor ), OktaMfaCallFactor.FactorType )]
 [JsonDerivedType( typeof( OktaMfaEmailFactor ), OktaMfaEmailFactor.FactorType )]
-internal record OktaMfaFactor {
+internal abstract record UnsupportedOktaMfaFactor {
 	public required string Id { get; set; }
 	public required string Provider { get; set; }
 	public required string VendorName { get; set; }
 
-	public const string FactorType = "unknown";
 	[JsonIgnore]
 	public virtual string FactorName => "unknown";
 	[JsonIgnore]
 	public virtual bool RequireChallengeIssue => false;
 }
 
-internal record OktaMfaQuestionFactor(
+internal record UnsupportedOktaMfaQuestionFactor(
 	OktaMfaQuestionProfile Profile
-) : OktaMfaFactor {
+) : UnsupportedOktaMfaFactor {
 	public const string FactorType = "question";
 	public override string FactorName => "Security Question";
 }
@@ -56,39 +55,39 @@ internal record OktaMfaQuestionProfile(
 	string QuestionText
 );
 
-internal record OktaMfaTokenFactor() : OktaMfaFactor {
+internal record OktaMfaTokenFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "token";
 	public override string FactorName => "Token";
 }
 
-internal record OktaMfaHardwareTokenFactor() : OktaMfaFactor {
+internal record OktaMfaHardwareTokenFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "token:hardware";
 	public override string FactorName => "Hardware Token";
 }
 
-internal record OktaMfaSoftwareTotpFactor() : OktaMfaFactor {
+internal record OktaMfaSoftwareTotpFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "token:software:totp";
 	public override string FactorName => "Software TOTP";
 }
 
-internal record OktaMfaHotpFactor() : OktaMfaFactor {
+internal record OktaMfaHotpFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "token:hotp";
 	public override string FactorName => "HOTP";
 }
 
-internal record OktaMfaSmsFactor() : OktaMfaFactor {
+internal record OktaMfaSmsFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "sms";
 	public override string FactorName => "SMS";
 	public override bool RequireChallengeIssue => true;
 }
 
-internal record OktaMfaCallFactor() : OktaMfaFactor {
+internal record OktaMfaCallFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "call";
 	public override string FactorName => "Call";
 	public override bool RequireChallengeIssue => true;
 }
 
-internal record OktaMfaEmailFactor() : OktaMfaFactor {
+internal record OktaMfaEmailFactor : UnsupportedOktaMfaFactor {
 	public const string FactorType = "email";
 	public override string FactorName => "Email";
 	public override bool RequireChallengeIssue => true;

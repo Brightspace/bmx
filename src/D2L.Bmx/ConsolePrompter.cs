@@ -12,7 +12,7 @@ internal interface IConsolePrompter {
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
-	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
+	UnsupportedOktaMfaFactor SelectMfa( UnsupportedOktaMfaFactor[] mfaOptions );
 	string GetMfaResponse( string mfaInputPrompt, bool maskInput );
 }
 
@@ -122,7 +122,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		return roles[index - 1];
 	}
 
-	OktaMfaFactor IConsolePrompter.SelectMfa( OktaMfaFactor[] mfaOptions ) {
+	UnsupportedOktaMfaFactor IConsolePrompter.SelectMfa( UnsupportedOktaMfaFactor[] mfaOptions ) {
 		Console.Error.WriteLine( "MFA Required" );
 
 		if( mfaOptions.Length == 0 ) {

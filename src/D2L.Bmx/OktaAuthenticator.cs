@@ -55,9 +55,9 @@ internal class OktaAuthenticator(
 		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
 
 		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
-			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
+			UnsupportedOktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
 
-			if( mfaFactor.FactorName == OktaMfaFactor.FactorType ) {
+			if (mfaFactor.GetType() == typeof(UnsupportedOktaMfaFactor)) {
 				throw new BmxException( "Selected MFA not supported by BMX" );
 			}
 
@@ -67,8 +67,8 @@ internal class OktaAuthenticator(
 			}
 
 			string mfaResponse = consolePrompter.GetMfaResponse(
-				mfaFactor is OktaMfaQuestionFactor questionFactor ? questionFactor.Profile.QuestionText : "PassCode",
-				mfaFactor is OktaMfaQuestionFactor // Security question factor is a static value
+				mfaFactor is UnsupportedOktaMfaQuestionFactor questionFactor ? questionFactor.Profile.QuestionText : "PassCode",
+				mfaFactor is UnsupportedOktaMfaQuestionFactor // Security question factor is a static value
 			);
 
 			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
