@@ -57,7 +57,7 @@ internal class OktaAuthenticator(
 		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
 			UnsupportedOktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
 
-			if (mfaFactor.GetType() == typeof(UnsupportedOktaMfaFactor)) {
+			if( mfaFactor.GetType() == typeof( UnsupportedOktaMfaFactor ) ) {
 				throw new BmxException( "Selected MFA not supported by BMX" );
 			}
 
