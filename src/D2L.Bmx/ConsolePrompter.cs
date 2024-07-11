@@ -13,7 +13,7 @@ internal interface IConsolePrompter {
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
-	string GetMfaResponse( string mfaInputPrompt );
+	string GetMfaResponse( string mfaInputPrompt, bool maskInput );
 }
 
 internal class ConsolePrompter : IConsolePrompter {
@@ -64,73 +64,9 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	string IConsolePrompter.PromptPassword( string user, string org ) {
-		Func<char> readKey;
-		if( IS_WINDOWS ) {
-			// On Windows, Console.ReadKey calls native console API, and will fail without a console attached
-			if( Console.IsInputRedirected ) {
-				Console.Error.WriteLine( """
-					====== WARNING ======
-					Input to BMX is redirected. Password input may be displayed on screen!
-					If you're using mintty (with Git Bash, Cygwin, MSYS2 etc.), consider switching
-					to Windows Terminal for a better experience.
-					If you must use mintty, prefix your bmx command with 'winpty '.
-					=====================
-					""" );
-				readKey = () => (char)_stdinReader.Read();
-			} else {
-				readKey = () => Console.ReadKey( intercept: true ).KeyChar;
-			}
-		} else {
-			readKey = () => (char)_stdinReader.Read();
-		}
-
 		Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
 		Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
-		Console.Error.Write( $"{ParameterDescriptions.Password}: " );
-
-		string? originalTerminalSettings = null;
-		try {
-			if( !IS_WINDOWS ) {
-				originalTerminalSettings = GetCurrentTerminalSettings();
-				EnableTerminalRawMode();
-			}
-
-			var passwordBuilder = new StringBuilder();
-			while( true ) {
-				char key = readKey();
-
-				if( key == CTRL_C ) {
-					// Ctrl+C should terminate the program.
-					// Using an empty string as the exception message because this message is displayed to the user,
-					// but the user doesn't need to see anything when they themselves ended the program.
-					throw new BmxException( string.Empty );
-				}
-				if( key == '\n' || key == '\r' ) {
-					// when the terminal is in raw mode, writing \r is needed to start the new line properly
-					Console.Error.Write( "\r\n" );
-					return passwordBuilder.ToString();
-				}
-
-				if( key == CTRL_U ) {
-					string moveLeftString = new( '\b', passwordBuilder.Length );
-					string emptyString = new( ' ', passwordBuilder.Length );
-					Console.Error.Write( moveLeftString + emptyString + moveLeftString );
-					passwordBuilder.Clear();
-				} else
-				// The backspace key is received as the DEL character in raw mode
-				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
-					Console.Error.Write( "\b \b" );
-					passwordBuilder.Length--;
-				} else if( !char.IsControl( key ) ) {
-					Console.Error.Write( '*' );
-					passwordBuilder.Append( key );
-				}
-			}
-		} finally {
-			if( !IS_WINDOWS && !string.IsNullOrEmpty( originalTerminalSettings ) ) {
-				SetTerminalSettings( originalTerminalSettings );
-			}
-		}
+		return GetMaskedInput( $"{ParameterDescriptions.Password}: " );
 	}
 
 	int? IConsolePrompter.PromptDuration() {
@@ -194,12 +130,12 @@ internal class ConsolePrompter : IConsolePrompter {
 		}
 
 		if( mfaOptions.Length == 1 ) {
-			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider}-{mfaOptions[0].FactorType}" );
+			Console.Error.WriteLine( $"MFA method: {mfaOptions[0].Provider} : {mfaOptions[0].FactorName}" );
 			return mfaOptions[0];
 		}
 
 		for( int i = 0; i < mfaOptions.Length; i++ ) {
-			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider}-{mfaOptions[i].FactorType}" );
+			Console.Error.WriteLine( $"[{i + 1}] {mfaOptions[i].Provider} : {mfaOptions[i].FactorName}" );
 		}
 		Console.Error.Write( "Select an available MFA option: " );
 		if( !int.TryParse( _stdinReader.ReadLine(), out int index ) || index > mfaOptions.Length || index < 1 ) {
@@ -208,14 +144,88 @@ internal class ConsolePrompter : IConsolePrompter {
 		return mfaOptions[index - 1];
 	}
 
-	string IConsolePrompter.GetMfaResponse( string mfaInputPrompt ) {
-		Console.Error.Write( $"{mfaInputPrompt}: " );
-		string? mfaInput = _stdinReader.ReadLine();
+	string IConsolePrompter.GetMfaResponse( string mfaInputPrompt, bool maskInput ) {
+		string? mfaInput;
+
+		if( maskInput ) {
+			mfaInput = GetMaskedInput( $"{mfaInputPrompt}: " );
+		} else {
+			Console.Error.Write( $"{mfaInputPrompt}: " );
+			mfaInput = _stdinReader.ReadLine();
+		}
 
 		if( mfaInput is not null ) {
 			return mfaInput;
 		}
 		throw new BmxException( "Invalid MFA Input" );
+	}
+
+	private string GetMaskedInput( string prompt ) {
+		Func<char> readKey;
+		if( IS_WINDOWS ) {
+			// On Windows, Console.ReadKey calls native console API, and will fail without a console attached
+			if( Console.IsInputRedirected ) {
+				Console.Error.WriteLine( """
+					====== WARNING ======
+					Input to BMX is redirected. Input may be displayed on screen!
+					If you're using mintty (with Git Bash, Cygwin, MSYS2 etc.), consider switching
+					to Windows Terminal for a better experience.
+					If you must use mintty, prefix your bmx command with 'winpty '.
+					=====================
+					""" );
+				readKey = () => (char)_stdinReader.Read();
+			} else {
+				readKey = () => Console.ReadKey( intercept: true ).KeyChar;
+			}
+		} else {
+			readKey = () => (char)_stdinReader.Read();
+		}
+
+		Console.Error.Write( prompt );
+
+		string? originalTerminalSettings = null;
+		try {
+			if( !IS_WINDOWS ) {
+				originalTerminalSettings = GetCurrentTerminalSettings();
+				EnableTerminalRawMode();
+			}
+
+			var passwordBuilder = new StringBuilder();
+			while( true ) {
+				char key = readKey();
+
+				if( key == CTRL_C ) {
+					// Ctrl+C should terminate the program.
+					// Using an empty string as the exception message because this message is displayed to the user,
+					// but the user doesn't need to see anything when they themselves ended the program.
+					throw new BmxException( string.Empty );
+				}
+				if( key == '\n' || key == '\r' ) {
+					// when the terminal is in raw mode, writing \r is needed to start the new line properly
+					Console.Error.Write( "\r\n" );
+					return passwordBuilder.ToString();
+				}
+
+				if( key == CTRL_U ) {
+					string moveLeftString = new( '\b', passwordBuilder.Length );
+					string emptyString = new( ' ', passwordBuilder.Length );
+					Console.Error.Write( moveLeftString + emptyString + moveLeftString );
+					passwordBuilder.Clear();
+				} else
+				// The backspace key is received as the DEL character in raw mode
+				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
+					Console.Error.Write( "\b \b" );
+					passwordBuilder.Length--;
+				} else if( !char.IsControl( key ) ) {
+					Console.Error.Write( '*' );
+					passwordBuilder.Append( key );
+				}
+			}
+		} finally {
+			if( !IS_WINDOWS && !string.IsNullOrEmpty( originalTerminalSettings ) ) {
+				SetTerminalSettings( originalTerminalSettings );
+			}
+		}
 	}
 
 	private static string GetCurrentTerminalSettings() {
