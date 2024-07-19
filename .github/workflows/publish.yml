@@ -76,7 +76,7 @@ jobs:
       - name: set up .NET
         uses: Brightspace/third-party-actions@actions/setup-dotnet
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
 
       - name: publish
         shell: pwsh
