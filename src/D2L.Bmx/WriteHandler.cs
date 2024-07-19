@@ -88,6 +88,7 @@ internal class WriteHandler(
 			if( !awsConfig.Sections.ContainsSection( sectionName ) ) {
 				awsConfig.Sections.AddSection( sectionName );
 			}
+			RemoveCredentialProviderSettings( awsConfig[sectionName], out _ );
 			awsConfig[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
 				+ $" --org {oktaApi.Org}"
@@ -103,23 +104,21 @@ internal class WriteHandler(
 			if( awsConfig is not null ) {
 				string sectionName = profile == "default" ? "default" : $"profile {profile}";
 
-				if(
-					awsConfig.Sections.ContainsSection( sectionName )
-					&& awsConfig[sectionName].ContainsKey( "credential_process" )
-				) {
-					if( awsConfig[sectionName].Count == 1 ) {
+				if( awsConfig.Sections.ContainsSection( sectionName ) ) {
+					RemoveCredentialProviderSettings( awsConfig[sectionName], out bool foundCredentialProcess );
+					if( awsConfig[sectionName].Count == 0 ) {
 						awsConfig.Sections.RemoveSection( sectionName );
-					} else {
-						awsConfig[sectionName].RemoveKey( "credential_process" );
 					}
 					parser.WriteFile( awsConfigFilePath, awsConfig, Utf8 );
-					Console.WriteLine(
+					if( foundCredentialProcess ) {
+						Console.WriteLine(
 """
 An existing profile with the same name using the `credential_process` setting was found in the default config file.
 The setting has been removed, and static credentials will be used for the profile.
 To continue using non-static credentials, rerun the command with the --use-credential-process flag.
 """
-					);
+						);
+					}
 				}
 			}
 
@@ -135,6 +134,28 @@ To continue using non-static credentials, rerun the command with the --use-crede
 	}
 
 	private IniData? GetParsedIniFileOrNull( string path ) {
-		return File.Exists( path ) ? parser.ReadFile( path ) : null;
+		return File.Exists( path ) ? parser.ReadFile( path, Utf8 ) : null;
+	}
+
+	private static void RemoveCredentialProviderSettings( KeyDataCollection iniKeyData, out bool foundCredentialProcess ) {
+		// https://docs.aws.amazon.com/sdkref/latest/guide/settings-reference.html
+		iniKeyData.RemoveKey( "aws_access_key_id" );
+		iniKeyData.RemoveKey( "aws_secret_access_key" );
+		iniKeyData.RemoveKey( "aws_session_token" );
+		iniKeyData.RemoveKey( "credential_source" );
+		iniKeyData.RemoveKey( "duration_seconds" );
+		iniKeyData.RemoveKey( "external_id" );
+		iniKeyData.RemoveKey( "mfa_serial" );
+		iniKeyData.RemoveKey( "role_arn" );
+		iniKeyData.RemoveKey( "role_session_name" );
+		iniKeyData.RemoveKey( "source_profile" );
+		iniKeyData.RemoveKey( "sso_account_id" );
+		iniKeyData.RemoveKey( "sso_region" );
+		iniKeyData.RemoveKey( "sso_registration_scopes" );
+		iniKeyData.RemoveKey( "sso_role_name" );
+		iniKeyData.RemoveKey( "sso_start_url" );
+		iniKeyData.RemoveKey( "web_identity_token_file" );
+
+		foundCredentialProcess = iniKeyData.RemoveKey( "credential_process" );
 	}
 }
