@@ -176,7 +176,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var consoleWriter  = new ConsoleWriter();
+	var consoleWriter = new ConsoleWriter();
 	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
