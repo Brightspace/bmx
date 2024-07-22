@@ -29,6 +29,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaApi(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
+		new ConsoleWriter(),
 		config
 	) );
 	return handler.HandleAsync(
@@ -121,16 +122,19 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var consoleWriter = new ConsoleWriter();
 	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
 			new OktaSessionStorage(),
 			consolePrompter,
+			consoleWriter,
 			config ),
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
+			consoleWriter,
 			new AwsCredsCache(),
 			config )
 	);
@@ -172,16 +176,19 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
+	var consoleWriter = new ConsoleWriter();
 	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
 			new OktaSessionStorage(),
 			consolePrompter,
+			consoleWriter,
 			config ),
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
+			consoleWriter,
 			new AwsCredsCache(),
 			config ),
 		consolePrompter,
