@@ -15,27 +15,45 @@ internal class OktaAuthenticator(
 	IConsolePrompter consolePrompter,
 	BmxConfig config
 ) {
+	private enum ParameterSource {
+		CliArg,
+		Config,
+		Prompt,
+	}
+
 	public async Task<AuthenticatedOktaApi> AuthenticateAsync(
 		string? org,
 		string? user,
 		bool nonInteractive,
 		bool ignoreCache
 	) {
+		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) ) {
 			if( !string.IsNullOrEmpty( config.Org ) ) {
 				org = config.Org;
+				orgSource = ParameterSource.Config;
 			} else if( !nonInteractive ) {
 				org = consolePrompter.PromptOrg( allowEmptyInput: false );
+				orgSource = ParameterSource.Prompt;
 			} else {
 				throw new BmxException( "Org value was not provided" );
 			}
 		}
 
+		var userSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( user ) ) {
 			if( !string.IsNullOrEmpty( config.User ) ) {
 				user = config.User;
+				userSource = ParameterSource.Config;
+				if( orgSource == ParameterSource.Prompt ) {
+					Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
+				}
 			} else if( !nonInteractive ) {
+				if( orgSource != ParameterSource.Prompt ) {
+					Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
+				}
 				user = consolePrompter.PromptUser( allowEmptyInput: false );
+				userSource = ParameterSource.Prompt;
 			} else {
 				throw new BmxException( "User value was not provided" );
 			}
@@ -50,7 +68,11 @@ internal class OktaAuthenticator(
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
-		string password = consolePrompter.PromptPassword( user, org );
+		if( userSource != ParameterSource.Prompt && orgSource != ParameterSource.Prompt ) {
+			Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
+			Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
+		}
+		string password = consolePrompter.PromptPassword();
 
 		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
 

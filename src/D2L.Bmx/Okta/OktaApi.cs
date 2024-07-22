@@ -88,9 +88,10 @@ internal class OktaApi : IOktaApi {
 		}
 
 		string org = _organization ?? "unknown";
-		throw new BmxException(
-			$"Okta authentication for user '{username}' in org '{org}'"
-				+ "failed. Check if org, user, and password is correct" );
+		throw new BmxException( $"""
+			Okta authentication for user '{username}' in org '{org}' failed.
+			Check if org, user, and password is correct
+			""" );
 	}
 
 	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
