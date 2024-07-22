@@ -13,6 +13,7 @@ internal class OktaAuthenticator(
 	IOktaApi oktaApi,
 	IOktaSessionStorage sessionStorage,
 	IConsolePrompter consolePrompter,
+	IConsoleWriter consoleWriter,
 	BmxConfig config
 ) {
 	public async Task<AuthenticatedOktaApi> AuthenticateAsync(
@@ -21,24 +22,32 @@ internal class OktaAuthenticator(
 		bool nonInteractive,
 		bool ignoreCache
 	) {
+		var orgSource = ParameterSource.CliArg;
+		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
+			org = config.Org;
+			orgSource = ParameterSource.Config;
+		}
 		if( string.IsNullOrEmpty( org ) ) {
-			if( !string.IsNullOrEmpty( config.Org ) ) {
-				org = config.Org;
-			} else if( !nonInteractive ) {
-				org = consolePrompter.PromptOrg( allowEmptyInput: false );
-			} else {
+			if( nonInteractive ) {
 				throw new BmxException( "Org value was not provided" );
 			}
+			org = consolePrompter.PromptOrg( allowEmptyInput: false );
+		} else if( !nonInteractive ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.Org, org, orgSource );
 		}
 
+		var userSource = ParameterSource.CliArg;
+		if( string.IsNullOrEmpty( user ) && !string.IsNullOrEmpty( config.User ) ) {
+			user = config.User;
+			userSource = ParameterSource.Config;
+		}
 		if( string.IsNullOrEmpty( user ) ) {
-			if( !string.IsNullOrEmpty( config.User ) ) {
-				user = config.User;
-			} else if( !nonInteractive ) {
-				user = consolePrompter.PromptUser( allowEmptyInput: false );
-			} else {
+			if( nonInteractive ) {
 				throw new BmxException( "User value was not provided" );
 			}
+			user = consolePrompter.PromptUser( allowEmptyInput: false );
+		} else if( !nonInteractive ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
 		oktaApi.SetOrganization( org );
@@ -50,7 +59,7 @@ internal class OktaAuthenticator(
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
-		string password = consolePrompter.PromptPassword( user, org );
+		string password = consolePrompter.PromptPassword();
 
 		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
 

@@ -1,7 +1,7 @@
 namespace D2L.Bmx;
 
 internal static class ParameterDescriptions {
-	public const string Org = "Okta org short name or domain name";
+	public const string Org = "Okta org or domain name";
 	public const string User = "Okta username";
 	public const string Password = "Okta password";
 	public const string Account = "AWS account name";

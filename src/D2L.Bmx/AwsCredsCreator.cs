@@ -13,6 +13,7 @@ internal record AwsCredentialsInfo(
 internal class AwsCredsCreator(
 	IAwsClient awsClient,
 	IConsolePrompter consolePrompter,
+	IConsoleWriter consoleWriter,
 	IAwsCredentialCache awsCredentialCache,
 	BmxConfig config
 ) {
@@ -30,12 +31,22 @@ internal class AwsCredsCreator(
 			);
 		}
 
+		var accountSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( account ) && !string.IsNullOrEmpty( config.Account ) ) {
 			account = config.Account;
+			accountSource = ParameterSource.Config;
+		}
+		if( !string.IsNullOrEmpty( account ) && !nonInteractive ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.Account, account, accountSource );
 		}
 
+		var roleSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( role ) && !string.IsNullOrEmpty( config.Role ) ) {
 			role = config.Role;
+			roleSource = ParameterSource.Config;
+		}
+		if( !string.IsNullOrEmpty( role ) && !nonInteractive ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.Role, role, roleSource );
 		}
 
 		if( duration is null or 0 ) {
