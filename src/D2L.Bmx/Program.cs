@@ -192,6 +192,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 			new AwsCredsCache(),
 			config ),
 		consolePrompter,
+		consoleWriter,
 		config,
 		new FileIniDataParser()
 	);
