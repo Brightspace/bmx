@@ -246,7 +246,7 @@ return await new CommandLineBuilder( rootCommand )
 			}
 
 			if( context.ParseResult.CommandResult.Command != updateCommand ) {
-				var updateChecker = new UpdateChecker( new GitHubClient(), new VersionProvider() );
+				var updateChecker = new UpdateChecker( new GitHubClient(), new VersionProvider(), new ConsoleWriter() );
 				await updateChecker.CheckForUpdatesAsync();
 			}
 
@@ -258,17 +258,15 @@ return await new CommandLineBuilder( rootCommand )
 		order: MiddlewareOrder.ExceptionHandler + 1
 	)
 	.UseExceptionHandler( ( exception, context ) => {
-		Console.ResetColor();
-		Console.ForegroundColor = ConsoleColor.Red;
+		IConsoleWriter consoleWriter = new ConsoleWriter();
 		if( exception is BmxException ) {
-			Console.Error.WriteLine( exception.Message );
+			consoleWriter.WriteError( exception.Message );
 		} else {
-			Console.Error.WriteLine( "BMX exited with unexpected internal error" );
+			consoleWriter.WriteError( "BMX exited with unexpected internal error" );
 		}
 		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {
-			Console.Error.WriteLine( exception );
+			consoleWriter.WriteError( exception.ToString() );
 		}
-		Console.ResetColor();
 	} )
 	.Build()
 	.InvokeAsync( args );

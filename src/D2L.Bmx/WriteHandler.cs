@@ -118,7 +118,7 @@ internal class WriteHandler(
 					}
 					parser.WriteFile( awsConfigFilePath, awsConfig, Utf8 );
 					if( foundCredentialProcess ) {
-						Console.WriteLine(
+						consoleWriter.WriteWarning(
 """
 An existing profile with the same name using the `credential_process` setting was found in the default config file.
 The setting has been removed, and static credentials will be used for the profile.
