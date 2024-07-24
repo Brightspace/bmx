@@ -10,6 +10,7 @@ internal class WriteHandler(
 	OktaAuthenticator oktaAuth,
 	AwsCredsCreator awsCredsCreator,
 	IConsolePrompter consolePrompter,
+	IConsoleWriter consoleWriter,
 	BmxConfig config,
 	FileIniDataParser parser
 ) {
@@ -45,12 +46,18 @@ internal class WriteHandler(
 			cache: cacheAwsCredentials
 		);
 
+		var profileSource = ParameterSource.CliArg;
+		if( string.IsNullOrEmpty( profile ) && !string.IsNullOrEmpty( config.Profile ) ) {
+			profile = config.Profile;
+			profileSource = ParameterSource.Config;
+		}
 		if( string.IsNullOrEmpty( profile ) ) {
-			if( !string.IsNullOrEmpty( config.Profile ) ) {
-				profile = config.Profile;
-			} else {
-				profile = consolePrompter.PromptProfile();
+			if( nonInteractive ) {
+				throw new BmxException( "Profile value was not provided" );
 			}
+			profile = consolePrompter.PromptProfile();
+		} else if( !nonInteractive ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.Profile, profile, profileSource );
 		}
 
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {

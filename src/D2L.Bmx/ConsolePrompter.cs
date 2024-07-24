@@ -8,7 +8,7 @@ internal interface IConsolePrompter {
 	string PromptOrg( bool allowEmptyInput );
 	string PromptProfile();
 	string PromptUser( bool allowEmptyInput );
-	string PromptPassword( string user, string org );
+	string PromptPassword();
 	int? PromptDuration();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
@@ -63,9 +63,7 @@ internal class ConsolePrompter : IConsolePrompter {
 		return user;
 	}
 
-	string IConsolePrompter.PromptPassword( string user, string org ) {
-		Console.Error.WriteLine( $"{ParameterDescriptions.Org}: {org}" );
-		Console.Error.WriteLine( $"{ParameterDescriptions.User}: {user}" );
+	string IConsolePrompter.PromptPassword() {
 		return GetMaskedInput( $"{ParameterDescriptions.Password}: " );
 	}
 
