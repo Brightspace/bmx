@@ -163,14 +163,16 @@ internal class ConsolePrompter : IConsolePrompter {
 		if( IS_WINDOWS ) {
 			// On Windows, Console.ReadKey calls native console API, and will fail without a console attached
 			if( Console.IsInputRedirected ) {
-				Console.Error.WriteLine( """
+				if( Environment.GetEnvironmentVariable( "TERM_PROGRAM" ) == "mintty" ) {
+					Console.Error.WriteLine( "\x1b[93m" + """
 					====== WARNING ======
-					Input to BMX is redirected. Input may be displayed on screen!
-					If you're using mintty (with Git Bash, Cygwin, MSYS2 etc.), consider switching
-					to Windows Terminal for a better experience.
+					Secret input won't be masked on screen!
+					This is because you are using mintty (possibly via Git Bash, Cygwin, MSYS2 etc.).
+					Consider switching to Windows Terminal for a better experience.
 					If you must use mintty, prefix your bmx command with 'winpty '.
 					=====================
-					""" );
+					""" + "\x1b[0m" );
+				}
 				readKey = () => (char)_stdinReader.Read();
 			} else {
 				readKey = () => Console.ReadKey( intercept: true ).KeyChar;
