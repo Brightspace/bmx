@@ -15,10 +15,11 @@ internal interface IConsoleWriter {
 internal class ConsoleWriter : IConsoleWriter {
 	// .NET runtime subscribes to the informal standard from https://no-color.org/. We should too.
 	// https://github.com/dotnet/runtime/blob/v9.0.0-preview.6.24327.7/src/libraries/Common/src/System/Console/ConsoleUtils.cs#L32-L34
-	private static readonly bool _noColor = Environment.GetEnvironmentVariable( "NO_COLOR" ) == "1";
+	private readonly bool _noColor
+		= Environment.GetEnvironmentVariable( "NO_COLOR" ) == "1" || !VirtualTerminal.TryEnableOnStderr();
 
 	void IConsoleWriter.WriteParameter( string description, string value, ParameterSource source ) {
-		if( _noColor || !VirtualTerminal.TryEnableOnStderr() ) {
+		if( _noColor ) {
 			Console.Error.WriteLine( $"{description}: {value} (from {source})" );
 		}
 		// description: default
@@ -28,7 +29,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	}
 
 	void IConsoleWriter.WriteUpdateMessage( string text ) {
-		if( _noColor || !VirtualTerminal.TryEnableOnStderr() ) {
+		if( _noColor ) {
 			Console.Error.WriteLine( text );
 		}
 		string[] lines = text.Split( '\n' );
@@ -41,7 +42,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	}
 
 	void IConsoleWriter.WriteWarning( string text ) {
-		if( _noColor || !VirtualTerminal.TryEnableOnStderr() ) {
+		if( _noColor ) {
 			Console.Error.WriteLine( text );
 		}
 		// bright yellow - 93
@@ -49,7 +50,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	}
 
 	void IConsoleWriter.WriteError( string text ) {
-		if( _noColor || !VirtualTerminal.TryEnableOnStderr() ) {
+		if( _noColor ) {
 			Console.Error.WriteLine( text );
 		}
 		// bright red - 91
