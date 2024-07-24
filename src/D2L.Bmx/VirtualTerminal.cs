@@ -10,32 +10,25 @@ internal static partial class VirtualTerminal {
 	private const int STD_ERROR_HANDLE = -12;
 	private const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
 
-	private static bool _enablingAttempted = false;
-	private static bool _enabled = false;
-
 	// https://learn.microsoft.com/en-us/windows/console/classic-vs-vt
 	public static bool TryEnableOnStderr() {
-		if( _enablingAttempted ) {
-			return _enabled;
-		}
-		_enablingAttempted = true;
-
 		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
 			// POSIX systems all support ANSI escape codes
-			_enabled = true;
+			return true;
+		}
+		if( Environment.GetEnvironmentVariable( "TERM_PROGRAM" ) == "mintty" ) {
+			// mintty supports ANSI escape codes, but console-related Win32 API calls will fail in it,
+			// so we must handle it specially and before making any Win32 API calls.
 			return true;
 		}
 		nint stderrHandle = GetStdHandle( STD_ERROR_HANDLE );
 		if( !GetConsoleMode( stderrHandle, out int mode ) ) {
-			_enabled = false;
 			return false;
 		}
 		if( ( mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING ) == ENABLE_VIRTUAL_TERMINAL_PROCESSING ) {
-			_enabled = true;
 			return true;
 		}
-		_enabled = SetConsoleMode( stderrHandle, (int)( mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) );
-		return _enabled;
+		return SetConsoleMode( stderrHandle, (int)( mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING ) );
 	}
 
 	// https://learn.microsoft.com/en-us/windows/console/getstdhandle

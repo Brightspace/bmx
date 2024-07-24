@@ -21,6 +21,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	void IConsoleWriter.WriteParameter( string description, string value, ParameterSource source ) {
 		if( _noColor ) {
 			Console.Error.WriteLine( $"{description}: {value} (from {source})" );
+			return;
 		}
 		// description: default
 		// value: bright cyan
@@ -31,6 +32,8 @@ internal class ConsoleWriter : IConsoleWriter {
 	void IConsoleWriter.WriteUpdateMessage( string text ) {
 		if( _noColor ) {
 			Console.Error.WriteLine( text );
+			Console.Error.WriteLine();
+			return;
 		}
 		string[] lines = text.Split( '\n' );
 		int maxLineLength = lines.Max( l => l.Length );
@@ -44,6 +47,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	void IConsoleWriter.WriteWarning( string text ) {
 		if( _noColor ) {
 			Console.Error.WriteLine( text );
+			return;
 		}
 		// bright yellow - 93
 		Console.Error.WriteLine( $"\x1b[0m\x1b[93m{text}\x1b[0m" );
@@ -52,6 +56,7 @@ internal class ConsoleWriter : IConsoleWriter {
 	void IConsoleWriter.WriteError( string text ) {
 		if( _noColor ) {
 			Console.Error.WriteLine( text );
+			return;
 		}
 		// bright red - 91
 		Console.Error.WriteLine( $"\x1b[0m\x1b[91m{text}\x1b[0m" );
