@@ -61,7 +61,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 				&& o.Org == org
 			)
 			// Prune older (closer to expiry) credentials for the same role
-			.GroupBy( o => $"{o.AccountName}.${o.RoleName}", ( _, entries ) =>
+			.GroupBy( o => (o.AccountName, o.RoleName), ( _, entries ) =>
 				entries.OrderBy( o => o.Credentials.Expiration )
 			)
 			.Select( o => o.Last() );

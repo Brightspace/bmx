@@ -91,10 +91,10 @@ internal class OktaAuthenticator(
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			} else {
-				consoleWriter.WriteWarning(
-					"No config file found. Your Okta session will not be cached. " +
-					"Consider running `bmx configure` if you own this machine."
-				);
+				consoleWriter.WriteWarning( """
+					No config file found. Your Okta session will not be cached.
+					Consider running `bmx configure` if you own this machine.
+					""" );
 			}
 			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
 		}
