@@ -24,12 +24,13 @@ var loginCommand = new Command( "login", "Log into Okta and save an Okta session
 	userOption,
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var consoleWriter = new ConsoleWriter();
+	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new LoginHandler( new OktaAuthenticator(
 		new OktaApi(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
-		new ConsoleWriter(),
+		consoleWriter,
 		config
 	) );
 	return handler.HandleAsync(
@@ -67,7 +68,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider( new FileIniDataParser() ),
+		new BmxConfigProvider( new FileIniDataParser(), new ConsoleWriter() ),
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -123,7 +124,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var consoleWriter = new ConsoleWriter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
@@ -177,7 +178,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
 	var consoleWriter = new ConsoleWriter();
-	var config = new BmxConfigProvider( new FileIniDataParser() ).GetConfiguration();
+	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaApi(),
