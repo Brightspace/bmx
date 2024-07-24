@@ -5,7 +5,7 @@ using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProvider ) {
+internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProvider, IConsoleWriter consoleWriter ) {
 	public async Task CheckForUpdatesAsync() {
 		try {
 			var updateCheckCache = GetUpdateCheckCacheOrNull();
@@ -29,7 +29,7 @@ internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProv
 			Version? localVersion = versionProvider.GetAssemblyVersion();
 			if( latestVersion > localVersion ) {
 				string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion.ToString();
-				DisplayUpdateMessage(
+				consoleWriter.WriteUpdateMessage(
 					$"""
 					A new BMX release is available: v{latestVersion} (current: {displayVersion})
 					Run "bmx update" now to upgrade.
@@ -39,27 +39,6 @@ internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProv
 		} catch( Exception ) {
 			// Give up and don't bother telling the user we couldn't check for updates
 		}
-	}
-
-	private static void DisplayUpdateMessage( string message ) {
-		var originalBackgroundColor = Console.BackgroundColor;
-		var originalForegroundColor = Console.ForegroundColor;
-
-		Console.BackgroundColor = ConsoleColor.Gray;
-		Console.ForegroundColor = ConsoleColor.Black;
-
-		string[] lines = message.Split( "\n" );
-		int consoleWidth = Console.WindowWidth;
-
-		foreach( string line in lines ) {
-			Console.Error.Write( line.PadRight( consoleWidth ) );
-			Console.Error.WriteLine();
-		}
-
-		Console.BackgroundColor = originalBackgroundColor;
-		Console.ForegroundColor = originalForegroundColor;
-		Console.ResetColor();
-		Console.Error.WriteLine();
 	}
 
 	private static void SetUpdateCheckCache( Version version ) {
