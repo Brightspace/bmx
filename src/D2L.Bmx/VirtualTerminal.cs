@@ -16,15 +16,17 @@ internal static partial class VirtualTerminal {
 			// POSIX systems all support ANSI escape codes
 			return true;
 		}
-		if( Environment.GetEnvironmentVariable( "TERM_PROGRAM" ) == "mintty" ) {
-			// mintty supports ANSI escape codes, but console-related Win32 API calls will fail in it,
-			// so we must handle it specially and before making any Win32 API calls.
-			return true;
-		}
 		nint stderrHandle = GetStdHandle( STD_ERROR_HANDLE );
 		if( !GetConsoleMode( stderrHandle, out int mode ) ) {
-			return false;
+			// If BMX is invoked in mintty without winpty, console-related Win32 API calls will fail,
+			// but mintty does support ANSI escape codes.
+			return Environment.GetEnvironmentVariable( "TERM_PROGRAM" ) == "mintty";
 		}
+		// If BMX is invoked in mintty with winpty, console-related Win32 API calls should succeed,
+		// but ANSI escape codes are only supported after setting ENABLE_VIRTUAL_TERMINAL_PROCESSING
+		// (so the SetConsoleMode call below is necessary).
+		// See also https://github.com/rprichard/winpty/issues/140.
+
 		if( ( mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING ) == ENABLE_VIRTUAL_TERMINAL_PROCESSING ) {
 			return true;
 		}
