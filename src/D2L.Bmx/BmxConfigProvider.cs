@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using IniParser;
 using IniParser.Model;
 namespace D2L.Bmx;
@@ -60,7 +59,7 @@ internal class BmxConfigProvider(
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,
 		};
-		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( !OperatingSystem.IsWindows() ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var fs = new FileStream( BmxPaths.CONFIG_FILE_NAME, op );

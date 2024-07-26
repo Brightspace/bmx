@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using D2L.Bmx.GitHub;
 
@@ -51,7 +50,7 @@ internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProv
 			Mode = FileMode.OpenOrCreate,
 			Access = FileAccess.ReadWrite,
 		};
-		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( !OperatingSystem.IsWindows() ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var fs = new FileStream( BmxPaths.UPDATE_CHECK_FILE_NAME, op );

@@ -1,6 +1,5 @@
 using System.Formats.Tar;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
@@ -101,19 +100,19 @@ internal class UpdateHandler( IGitHubClient github, IVersionProvider versionProv
 	}
 
 	private static BmxFileInfo GetFileInfo() {
-		if( RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( OperatingSystem.IsWindows() ) {
 			return new BmxFileInfo(
 				ArchiveName: "bmx-win-x64.zip",
 				ExeName: "bmx.exe",
 				ArchiveType: ArchiveType.Zip
 			);
-		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.OSX ) ) {
+		} else if( OperatingSystem.IsMacOS() ) {
 			return new BmxFileInfo(
 				ArchiveName: "bmx-osx-x64.tar.gz",
 				ExeName: "bmx",
 				ArchiveType: ArchiveType.TarGzip
 			);
-		} else if( RuntimeInformation.IsOSPlatform( OSPlatform.Linux ) ) {
+		} else if( OperatingSystem.IsLinux() ) {
 			return new BmxFileInfo(
 				ArchiveName: "bmx-linux-x64.tar.gz",
 				ExeName: "bmx",

@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace D2L.Bmx.Aws;
@@ -14,7 +13,7 @@ internal class AwsCredsCache : IAwsCredentialCache {
 			Mode = FileMode.Create,
 			Access = FileAccess.Write,
 		};
-		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( !OperatingSystem.IsWindows() ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var writer = new StreamWriter( path, op );

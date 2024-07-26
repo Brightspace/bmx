@@ -12,7 +12,7 @@ internal static partial class VirtualTerminal {
 
 	// https://learn.microsoft.com/en-us/windows/console/classic-vs-vt
 	public static bool TryEnableOnStderr() {
-		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( !OperatingSystem.IsWindows() ) {
 			// POSIX systems all support ANSI escape codes
 			return true;
 		}
