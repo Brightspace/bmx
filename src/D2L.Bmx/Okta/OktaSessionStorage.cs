@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using D2L.Bmx.Okta.Models;
 
@@ -37,7 +36,7 @@ internal class OktaSessionStorage : IOktaSessionStorage {
 			Mode = FileMode.Create,
 			Access = FileAccess.Write,
 		};
-		if( !RuntimeInformation.IsOSPlatform( OSPlatform.Windows ) ) {
+		if( !OperatingSystem.IsWindows() ) {
 			op.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 		}
 		using var writer = new StreamWriter( path, op );
