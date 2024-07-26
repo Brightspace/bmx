@@ -59,7 +59,7 @@ internal class AwsCredsCreator(
 				durationSource = ParameterSource.BuiltInDefault;
 			}
 		}
-		if( durationSource != ParameterSource.BuiltInDefault ) {
+		if( durationSource != ParameterSource.BuiltInDefault && !nonInteractive ) {
 			consoleWriter.WriteParameter( ParameterDescriptions.Duration, duration.Value.ToString(), durationSource );
 		}
 
