@@ -9,6 +9,7 @@ internal record ParameterSource {
 
 	public static ParameterSource CliArg => new( "command line argument" );
 	public static ParameterSource Config => new( "config file" );
+	public static ParameterSource BuiltInDefault => new( "built-in default" );
 
 	public override string ToString() => Description;
 }
