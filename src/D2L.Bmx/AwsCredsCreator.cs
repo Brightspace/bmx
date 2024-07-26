@@ -49,12 +49,18 @@ internal class AwsCredsCreator(
 			consoleWriter.WriteParameter( ParameterDescriptions.Role, role, roleSource );
 		}
 
+		var durationSource = ParameterSource.CliArg;
 		if( duration is null or 0 ) {
 			if( config.Duration is not ( null or 0 ) ) {
 				duration = config.Duration;
+				durationSource = ParameterSource.Config;
 			} else {
 				duration = 60;
+				durationSource = ParameterSource.BuiltInDefault;
 			}
+		}
+		if( durationSource != ParameterSource.BuiltInDefault ) {
+			consoleWriter.WriteParameter( ParameterDescriptions.Duration, duration.Value.ToString(), durationSource );
 		}
 
 		// if using cache, avoid calling Okta at all if possible
