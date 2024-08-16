@@ -31,14 +31,14 @@ internal class WriteHandler(
 	) {
 		cacheAwsCredentials = cacheAwsCredentials || useCredentialProcess;
 
-		var oktaApi = await oktaAuth.AuthenticateAsync(
+		var oktaContext = await oktaAuth.AuthenticateAsync(
 			org: org,
 			user: user,
 			nonInteractive: nonInteractive,
 			ignoreCache: false
 		);
 		var awsCredsInfo = await awsCredsCreator.CreateAwsCredsAsync(
-			oktaApi: oktaApi,
+			okta: oktaContext,
 			account: account,
 			role: role,
 			duration: duration,
@@ -98,8 +98,8 @@ internal class WriteHandler(
 			RemoveCredentialProviderSettings( awsConfig[sectionName], out _ );
 			awsConfig[sectionName]["credential_process"] =
 				"bmx print --format json --cache --non-interactive"
-				+ $" --org {oktaApi.Org}"
-				+ $" --user {oktaApi.User}"
+				+ $" --org {oktaContext.Org}"
+				+ $" --user {oktaContext.User}"
 				+ $" --account {awsCredsInfo.Account}"
 				+ $" --role {awsCredsInfo.Role}"
 				+ $" --duration {awsCredsInfo.Duration}";

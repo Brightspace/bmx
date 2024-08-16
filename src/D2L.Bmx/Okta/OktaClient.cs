@@ -1,62 +1,72 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx.Okta;
 
-internal interface IOktaApi {
-	void SetOrganization( string organization );
-	void AddSession( string sessionId );
+internal interface IOktaClientFactory {
+	IOktaAnonymousClient CreateAnonymousClient( string org );
+	IOktaAuthenticatedClient CreateAuthenticatedClient( string org, string sessionId );
+}
+
+internal interface IOktaAnonymousClient {
 	Task<AuthenticateResponse> AuthenticateAsync( string username, string password );
 	Task IssueMfaChallengeAsync( string stateToken, string factorId );
 	Task<AuthenticateResponse> VerifyMfaChallengeResponseAsync(
 		string stateToken,
 		string factorId,
-		string challengeResponse );
+		string challengeResponse
+	);
 	Task<OktaSession> CreateSessionAsync( string sessionToken );
-	Task<OktaApp[]> GetAwsAccountAppsAsync();
-	Task<string> GetPageAsync( string samlLoginUrl );
 }
 
-internal class OktaApi : IOktaApi {
-	private readonly CookieContainer _cookieContainer;
-	private readonly HttpClient _httpClient;
-	private string? _organization;
+internal interface IOktaAuthenticatedClient {
+	Task<OktaApp[]> GetAwsAccountAppsAsync();
+	Task<string> GetPageAsync( string url );
+}
 
-	public OktaApi() {
-		_cookieContainer = new CookieContainer();
-		_httpClient = new HttpClient( new HttpClientHandler { CookieContainer = _cookieContainer } ) {
-			Timeout = TimeSpan.FromSeconds( 30 )
+internal class OktaClientFactory : IOktaClientFactory {
+	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( string org ) {
+		var httpClient = new HttpClient {
+			Timeout = TimeSpan.FromSeconds( 30 ),
+			BaseAddress = GetBaseAddress( org ),
 		};
-		_httpClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
+		return new OktaAnonymousClient( httpClient );
 	}
 
-	void IOktaApi.SetOrganization( string organization ) {
-		_organization = organization;
-		if( !organization.Contains( '.' ) ) {
-			_httpClient.BaseAddress = new Uri( $"https://{organization}.okta.com/api/v1/" );
-		} else {
-			_httpClient.BaseAddress = new Uri( $"https://{organization}/api/v1/" );
-		}
+	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( string org, string sessionId ) {
+		var baseAddress = GetBaseAddress( org );
+
+		var cookieContainer = new CookieContainer();
+		cookieContainer.Add( new Cookie( "sid", sessionId, "/", baseAddress.Host ) );
+
+		var httpClient = new HttpClient( new SocketsHttpHandler {
+			CookieContainer = cookieContainer,
+		} ) {
+			Timeout = TimeSpan.FromSeconds( 30 ),
+			BaseAddress = baseAddress,
+		};
+
+		return new OktaAuthenticatedClient( httpClient );
 	}
 
-	void IOktaApi.AddSession( string sessionId ) {
-		if( _httpClient.BaseAddress is not null ) {
-			_cookieContainer.Add( new Cookie( "sid", sessionId, "/", _httpClient.BaseAddress.Host ) );
-		} else {
-			throw new InvalidOperationException( "Error adding session: http client base address is not defined" );
-		}
+	private static Uri GetBaseAddress( string org ) {
+		return org.Contains( '.' )
+			? new Uri( $"https://{org}/api/v1/" )
+			: new Uri( $"https://{org}.okta.com/api/v1/" );
 	}
+}
 
-	async Task<AuthenticateResponse> IOktaApi.AuthenticateAsync( string username, string password ) {
+internal class OktaAnonymousClient( HttpClient httpClient ) : IOktaAnonymousClient {
+	async Task<AuthenticateResponse> IOktaAnonymousClient.AuthenticateAsync( string username, string password ) {
 		HttpResponseMessage resp;
 		try {
-			resp = await _httpClient.PostAsJsonAsync(
+			resp = await httpClient.PostAsJsonAsync(
 				"authn",
 				new AuthenticateRequest( username, password ),
-				JsonCamelCaseContext.Default.AuthenticateRequest );
+				JsonCamelCaseContext.Default.AuthenticateRequest
+			);
 		} catch( Exception ex ) {
 			throw new BmxException( "Okta authentication request failed.", ex );
 		}
@@ -65,7 +75,8 @@ internal class OktaApi : IOktaApi {
 		try {
 			authnResponse = await JsonSerializer.DeserializeAsync(
 				await resp.Content.ReadAsStreamAsync(),
-				JsonCamelCaseContext.Default.AuthenticateResponseRaw );
+				JsonCamelCaseContext.Default.AuthenticateResponseRaw
+			);
 		} catch( Exception ex ) {
 			throw new BmxException( "Okta authentication failed. Okta returned an invalid response", ex );
 		}
@@ -87,16 +98,12 @@ internal class OktaApi : IOktaApi {
 			);
 		}
 
-		string org = _organization ?? "unknown";
-		throw new BmxException( $"""
-			Okta authentication for user '{username}' in org '{org}' failed.
-			Check if org, user, and password is correct.
-			""" );
+		return new AuthenticateResponse.Failure( resp.StatusCode );
 	}
 
-	async Task IOktaApi.IssueMfaChallengeAsync( string stateToken, string factorId ) {
+	async Task IOktaAnonymousClient.IssueMfaChallengeAsync( string stateToken, string factorId ) {
 		try {
-			var response = await _httpClient.PostAsJsonAsync(
+			var response = await httpClient.PostAsJsonAsync(
 			$"authn/factors/{factorId}/verify",
 			new IssueMfaChallengeRequest( stateToken ),
 			JsonCamelCaseContext.Default.IssueMfaChallengeRequest );
@@ -107,7 +114,7 @@ internal class OktaApi : IOktaApi {
 		}
 	}
 
-	async Task<AuthenticateResponse> IOktaApi.VerifyMfaChallengeResponseAsync(
+	async Task<AuthenticateResponse> IOktaAnonymousClient.VerifyMfaChallengeResponseAsync(
 		string stateToken,
 		string factorId,
 		string challengeResponse
@@ -117,7 +124,7 @@ internal class OktaApi : IOktaApi {
 			PassCode: challengeResponse );
 		HttpResponseMessage resp;
 		try {
-			resp = await _httpClient.PostAsJsonAsync(
+			resp = await httpClient.PostAsJsonAsync(
 				$"authn/factors/{factorId}/verify",
 				request,
 				JsonCamelCaseContext.Default.VerifyMfaChallengeResponseRequest );
@@ -137,13 +144,13 @@ internal class OktaApi : IOktaApi {
 		if( authnResponse?.SessionToken is not null ) {
 			return new AuthenticateResponse.Success( authnResponse.SessionToken );
 		}
-		throw new BmxException( "Error verifying MFA with Okta." );
+		return new AuthenticateResponse.Failure( resp.StatusCode );
 	}
 
-	async Task<OktaSession> IOktaApi.CreateSessionAsync( string sessionToken ) {
+	async Task<OktaSession> IOktaAnonymousClient.CreateSessionAsync( string sessionToken ) {
 		HttpResponseMessage resp;
 		try {
-			resp = await _httpClient.PostAsJsonAsync(
+			resp = await httpClient.PostAsJsonAsync(
 				"sessions",
 				new CreateSessionRequest( sessionToken ),
 				JsonCamelCaseContext.Default.CreateSessionRequest );
@@ -163,11 +170,13 @@ internal class OktaApi : IOktaApi {
 
 		return session ?? throw new BmxException( "Error creating Okta Session." );
 	}
+}
 
-	async Task<OktaApp[]> IOktaApi.GetAwsAccountAppsAsync() {
+internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthenticatedClient {
+	async Task<OktaApp[]> IOktaAuthenticatedClient.GetAwsAccountAppsAsync() {
 		OktaApp[]? apps;
 		try {
-			apps = await _httpClient.GetFromJsonAsync(
+			apps = await httpClient.GetFromJsonAsync(
 				"users/me/appLinks",
 				JsonCamelCaseContext.Default.OktaAppArray );
 		} catch( Exception ex ) {
@@ -178,7 +187,7 @@ internal class OktaApi : IOktaApi {
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
 	}
 
-	async Task<string> IOktaApi.GetPageAsync( string samlLoginUrl ) {
-		return await _httpClient.GetStringAsync( samlLoginUrl );
+	async Task<string> IOktaAuthenticatedClient.GetPageAsync( string url ) {
+		return await httpClient.GetStringAsync( url );
 	}
 }

@@ -18,7 +18,7 @@ internal class AwsCredsCreator(
 	BmxConfig config
 ) {
 	public async Task<AwsCredentialsInfo> CreateAwsCredsAsync(
-		AuthenticatedOktaApi oktaApi,
+		OktaAuthenticatedContext okta,
 		string? account,
 		string? role,
 		int? duration,
@@ -66,8 +66,8 @@ internal class AwsCredsCreator(
 		// if using cache, avoid calling Okta at all if possible
 		if( cache && !string.IsNullOrEmpty( account ) && !string.IsNullOrEmpty( role ) ) {
 			var cachedCredentials = awsCredentialCache.GetCredentials(
-				org: oktaApi.Org,
-				user: oktaApi.User,
+				org: okta.Org,
+				user: okta.User,
 				accountName: account,
 				roleName: role,
 				duration: duration.Value
@@ -82,7 +82,7 @@ internal class AwsCredsCreator(
 			}
 		}
 
-		OktaApp[] awsApps = await oktaApi.Api.GetAwsAccountAppsAsync();
+		OktaApp[] awsApps = await okta.Client.GetAwsAccountAppsAsync();
 
 		if( string.IsNullOrEmpty( account ) ) {
 			if( nonInteractive ) {
@@ -97,7 +97,7 @@ internal class AwsCredsCreator(
 			app => app.Label.Equals( account, StringComparison.OrdinalIgnoreCase )
 		) ?? throw new BmxException( $"Account {account} could not be found" );
 
-		string loginHtml = await oktaApi.Api.GetPageAsync( selectedAwsApp.LinkUrl );
+		string loginHtml = await okta.Client.GetPageAsync( selectedAwsApp.LinkUrl );
 		string samlResponse = HtmlXmlHelper.GetSamlResponseFromLoginPage( loginHtml );
 		AwsRole[] rolesData = HtmlXmlHelper.GetRolesFromSamlResponse( samlResponse );
 
@@ -112,8 +112,8 @@ internal class AwsCredsCreator(
 		// try getting from cache again even if calling Okta is inevitable (we still avoid the AWS call)
 		if( cache ) {
 			var cachedCredentials = awsCredentialCache.GetCredentials(
-				org: oktaApi.Org,
-				user: oktaApi.User,
+				org: okta.Org,
+				user: okta.User,
 				accountName: account,
 				roleName: role,
 				duration: duration.Value
@@ -141,8 +141,8 @@ internal class AwsCredsCreator(
 
 		if( cache ) {
 			awsCredentialCache.SetCredentials(
-				org: oktaApi.Org,
-				user: oktaApi.User,
+				org: okta.Org,
+				user: okta.User,
 				accountName: selectedAwsApp.Label,
 				roleName: selectedRoleData.RoleName,
 				credentials: credentials

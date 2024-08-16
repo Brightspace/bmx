@@ -1,22 +1,24 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx;
 
-internal record AuthenticatedOktaApi(
+internal record OktaAuthenticatedContext(
 	string Org,
 	string User,
-	IOktaApi Api
+	IOktaAuthenticatedClient Client
 );
 
 internal class OktaAuthenticator(
-	IOktaApi oktaApi,
+	IOktaClientFactory oktaClientFactory,
 	IOktaSessionStorage sessionStorage,
 	IConsolePrompter consolePrompter,
 	IConsoleWriter consoleWriter,
 	BmxConfig config
 ) {
-	public async Task<AuthenticatedOktaApi> AuthenticateAsync(
+	public async Task<OktaAuthenticatedContext> AuthenticateAsync(
 		string? org,
 		string? user,
 		bool nonInteractive,
@@ -50,10 +52,10 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
-		oktaApi.SetOrganization( org );
+		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( org );
 
-		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaApi ) ) {
-			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
+		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
@@ -61,7 +63,14 @@ internal class OktaAuthenticator(
 
 		string password = consolePrompter.PromptPassword();
 
-		var authnResponse = await oktaApi.AuthenticateAsync( user, password );
+		var authnResponse = await oktaAnonymous.AuthenticateAsync( user, password );
+
+		if( authnResponse is AuthenticateResponse.Failure failure ) {
+			throw new BmxException( $"""
+				Okta authentication for user '{user}' in org '{org}' failed ({failure.StatusCode}).
+				Check if org, user, and password is correct.
+				""" );
+		}
 
 		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
 			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
@@ -72,7 +81,7 @@ internal class OktaAuthenticator(
 
 			// TODO: Handle retry
 			if( mfaFactor.RequireChallengeIssue ) {
-				await oktaApi.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
+				await oktaAnonymous.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
 			}
 
 			string mfaResponse = consolePrompter.GetMfaResponse(
@@ -80,14 +89,13 @@ internal class OktaAuthenticator(
 				mfaFactor is OktaMfaQuestionFactor // Security question factor is a static value
 			);
 
-			authnResponse = await oktaApi.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
+			authnResponse = await oktaAnonymous.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
 		}
 
 		if( authnResponse is AuthenticateResponse.Success successInfo ) {
-			var sessionResp = await oktaApi.CreateSessionAsync( successInfo.SessionToken );
+			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
 
-			// TODO: Consider making OktaAPI stateless as well (?)
-			oktaApi.AddSession( sessionResp.Id );
+			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionResp.Id );
 			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			} else {
@@ -96,23 +104,29 @@ internal class OktaAuthenticator(
 					Consider running `bmx configure` if you own this machine.
 					""" );
 			}
-			return new AuthenticatedOktaApi( Org: org, User: user, Api: oktaApi );
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
-		throw new BmxException( "Okta authentication failed" );
+		if( authnResponse is AuthenticateResponse.Failure failure2 ) {
+			throw new BmxException( $"Error verifying MFA with Okta ({failure2.StatusCode})." );
+		}
+
+		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
 	}
 
 	private bool TryAuthenticateFromCache(
 		string org,
 		string user,
-		IOktaApi oktaApi
+		IOktaClientFactory oktaClientFactory,
+		[NotNullWhen( true )] out IOktaAuthenticatedClient? oktaAuthenticated
 	) {
 		string? sessionId = GetCachedOktaSessionId( user, org );
 		if( string.IsNullOrEmpty( sessionId ) ) {
+			oktaAuthenticated = null;
 			return false;
 		}
 
-		oktaApi.AddSession( sessionId );
+		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
 		return true;
 	}
 
