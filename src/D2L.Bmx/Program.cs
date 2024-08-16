@@ -27,7 +27,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	var consoleWriter = new ConsoleWriter();
 	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new LoginHandler( new OktaAuthenticator(
-		new OktaApi(),
+		new OktaClientFactory(),
 		new OktaSessionStorage(),
 		new ConsolePrompter(),
 		consoleWriter,
@@ -127,7 +127,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
-			new OktaApi(),
+			new OktaClientFactory(),
 			new OktaSessionStorage(),
 			consolePrompter,
 			consoleWriter,
@@ -181,7 +181,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
-			new OktaApi(),
+			new OktaClientFactory(),
 			new OktaSessionStorage(),
 			consolePrompter,
 			consoleWriter,

@@ -16,14 +16,14 @@ internal class PrintHandler(
 		string? format,
 		bool cacheAwsCredentials
 	) {
-		var oktaApi = await oktaAuth.AuthenticateAsync(
+		var oktaContext = await oktaAuth.AuthenticateAsync(
 			org: org,
 			user: user,
 			nonInteractive: nonInteractive,
 			ignoreCache: false
 		);
 		var awsCreds = ( await awsCredsCreator.CreateAwsCredsAsync(
-			oktaApi: oktaApi,
+			okta: oktaContext,
 			account: account,
 			role: role,
 			duration: duration,

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Serialization;
 
 namespace D2L.Bmx.Okta.Models;
@@ -5,6 +6,7 @@ namespace D2L.Bmx.Okta.Models;
 internal abstract record AuthenticateResponse {
 	public record MfaRequired( string StateToken, OktaMfaFactor[] Factors ) : AuthenticateResponse;
 	public record Success( string SessionToken ) : AuthenticateResponse;
+	public record Failure( HttpStatusCode StatusCode ) : AuthenticateResponse;
 }
 
 internal record AuthenticateResponseRaw(
