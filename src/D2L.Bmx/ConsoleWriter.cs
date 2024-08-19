@@ -35,7 +35,9 @@ internal class ConsoleWriter : IConsoleWriter {
 			Console.Error.WriteLine();
 			return;
 		}
-		string[] lines = text.Split( '\n' );
+		// Trim entries so we don't have extra `\r` characters on Windows.
+		// Splitting on `Environment.NewLine` isn't as safe, because we might also use `\n` on Windows.
+		string[] lines = text.Split( '\n', StringSplitOptions.TrimEntries );
 		int maxLineLength = lines.Max( l => l.Length );
 		foreach( string line in lines ) {
 			string paddedLine = line.PadRight( maxLineLength );
