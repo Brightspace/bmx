@@ -18,10 +18,16 @@ var userOption = new Option<string>(
 	name: "--user",
 	description: ParameterDescriptions.User );
 
+// allow no-sandbox argument for DSSO and future experimental features
+var experimentalOption = new Option<bool>(
+	name: "--experimental",
+	description: ParameterDescriptions.Experimental );
+
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
 	orgOption,
 	userOption,
+	experimentalOption,
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
 	var consoleWriter = new ConsoleWriter();
@@ -35,7 +41,8 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	) );
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption )
+		user: context.ParseResult.GetValueForOption( userOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalOption )
 	);
 } );
 
@@ -119,6 +126,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 	userOption,
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
+	experimentalOption,
 };
 
 printCommand.SetHandler( ( InvocationContext context ) => {
@@ -147,7 +155,8 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
-		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption )
+		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalOption )
 	);
 } );
 
@@ -173,6 +182,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
 	useCredentialProcessOption,
+	experimentalOption
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
@@ -207,8 +217,9 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
-		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption )
-	);
+		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalOption )
+		);
 } );
 
 var updateCommand = new Command( "update", "Updates BMX to the latest version" );

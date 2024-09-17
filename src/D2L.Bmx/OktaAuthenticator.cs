@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
+using PuppeteerSharp;
 
 namespace D2L.Bmx;
 
@@ -22,7 +24,8 @@ internal class OktaAuthenticator(
 		string? org,
 		string? user,
 		bool nonInteractive,
-		bool ignoreCache
+		bool ignoreCache,
+		bool experimental
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -56,6 +59,9 @@ internal class OktaAuthenticator(
 
 		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
+		}
+		if( await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } dssoclient ) {
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: dssoclient );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
@@ -128,6 +134,109 @@ internal class OktaAuthenticator(
 
 		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
 		return true;
+	}
+
+	private async Task<IOktaAuthenticatedClient?> TryAuthenticateWithDSSOAsync(
+		string org,
+		string user,
+		IOktaClientFactory oktaClientFactory,
+		bool experimental
+	) {
+		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimental );
+		if( browser is null ) {
+			return null;
+		}
+
+		Console.WriteLine( "Attempting to automatically login using DSSO." );
+		var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 10 ) );
+		var sessionIdTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		var userEmailTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		string? sessionId;
+		string? userEmail;
+
+		try {
+			var page = await browser.NewPageAsync();
+			string baseAddress = $"https://{org}.okta.com/";
+			int attempt = 1;
+
+			page.Load += ( _, _ ) => _ = GetSessionCookieAsync( cancellationTokenSource.Token );
+			page.Response += ( _, responseCreatedEventArgs ) => _ = GetOktaUserEmailAsync(
+				responseCreatedEventArgs.Response
+			);
+			await page.GoToAsync( baseAddress, timeout: 10000 );
+			sessionId = await sessionIdTaskProducer.Task.WaitAsync( cancellationTokenSource.Token );
+			userEmail = await userEmailTaskProducer.Task.WaitAsync( cancellationTokenSource.Token );
+
+			async Task GetSessionCookieAsync( CancellationToken cancellationToken ) {
+				var url = new Uri( page.Url );
+				if( url.Host == $"{org}.okta.com" ) {
+					string title = await page.GetTitleAsync();
+					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
+						if( attempt < 3 && url.AbsolutePath != "/" ) {
+							attempt++;
+							await page.GoToAsync( baseAddress );
+						} else {
+							sessionIdTaskProducer.SetResult( null );
+						}
+						return;
+					}
+				}
+				var cookies = await page.GetCookiesAsync( baseAddress );
+				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
+					sessionIdTaskProducer.SetResult( sid );
+				}
+			}
+
+			async Task GetOktaUserEmailAsync(
+				IResponse response
+			) {
+				if( response.Url.Contains( $"{baseAddress}enduser/api/v1/home" ) ) {
+					string content = await response.TextAsync();
+					var home = JsonSerializer.Deserialize( content, JsonCamelCaseContext.Default.OktaHomeResponse );
+					if( home is not null ) {
+						userEmailTaskProducer.SetResult( home.Login );
+					}
+				}
+			}
+
+		} catch( TaskCanceledException ) {
+			consoleWriter.WriteWarning(
+				$"WARNING: Failed to create {org} Okta session through DSSO. Check if org is correct."
+			);
+			return null;
+		} catch( TargetClosedException ) {
+			consoleWriter.WriteWarning(
+				"WARNING: Failed to create Okta session through DSSO. If running BMX with admin privileges, rerun the command with the '--experimental' flag."
+			);
+			return null;
+		} catch( Exception e ) {
+			consoleWriter.WriteWarning( "Error while trying to authenticate with Okta using DSSO." );
+			consoleWriter.WriteError( e.GetType().ToString() );
+			consoleWriter.WriteError( e.Message );
+			return null;
+		}
+
+		if( sessionId is null || userEmail is null ) {
+			return null;
+		} else if( !OktaUserMatchesProvided( userEmail, user ) ) {
+			consoleWriter.WriteWarning(
+				"WARNING: Could not create Okta session using DSSO as "
+				+ $"provided Okta user '{user}' does not match user '{userEmail}'." );
+			return null;
+		}
+
+		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
+		var sessionExpiry = await oktaAuthenticatedClient.GetSessionExpiryAsync();
+		CacheOktaSession( user, org, sessionId, sessionExpiry );
+		return oktaAuthenticatedClient;
+	}
+
+	private static bool OktaUserMatchesProvided( string oktaLogin, string providedUser ) {
+		string adName = oktaLogin.Split( '@' )[0];
+		string normalizedUser = providedUser.Contains( '@' )
+			? providedUser.Split( '@' )[0]
+			: providedUser;
+		return adName.Equals( normalizedUser, StringComparison.OrdinalIgnoreCase );
 	}
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {

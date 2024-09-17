@@ -20,6 +20,7 @@ namespace D2L.Bmx;
 [JsonSerializable( typeof( List<OktaSessionCache> ) )]
 [JsonSerializable( typeof( UpdateCheckCache ) )]
 [JsonSerializable( typeof( List<AwsCacheModel> ) )]
+[JsonSerializable( typeof( OktaHomeResponse ) )]
 internal partial class JsonCamelCaseContext : JsonSerializerContext {
 }
 
