@@ -178,12 +178,15 @@ internal class OktaAuthenticator(
 				var url = new Uri( page.Url );
 				if( url.Host == $"{org}.okta.com" ) {
 					string title = await page.GetTitleAsync();
-					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) && url.AbsolutePath != "/" ) {
-						if( attempt < 3 ) {
+					// DSSO can sometimes takes more than one attempt.
+					// If the path is '/', it means DSSO is not available and we should stop retrying.
+					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
+						if( attempt < 3 && url.AbsolutePath != "/" ) {
 							attempt++;
 							await page.GoToAsync( baseAddress );
 						} else {
 							sessionIdTaskProducer.SetResult( null );
+							userEmailTaskProducer.SetResult( null );
 						}
 						return;
 					}
