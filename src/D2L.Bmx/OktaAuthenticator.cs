@@ -159,20 +159,20 @@ internal class OktaAuthenticator(
 			string baseAddress = $"https://{org}.okta.com/";
 			int attempt = 1;
 
-			page.Load += ( _, _ ) => _ = GetSessionCookieAsync( cancellationTokenSource.Token );
+			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
 			page.Response += ( _, responseCreatedEventArgs ) => _ = GetOktaUserEmailAsync(
 				responseCreatedEventArgs.Response
 			);
-			await page.GoToAsync( baseAddress, timeout: 10000 );
+			await page.GoToAsync( baseAddress );
 			sessionId = await sessionIdTaskProducer.Task.WaitAsync( cancellationTokenSource.Token );
 			userEmail = await userEmailTaskProducer.Task.WaitAsync( cancellationTokenSource.Token );
 
-			async Task GetSessionCookieAsync( CancellationToken cancellationToken ) {
+			async Task GetSessionCookieAsync() {
 				var url = new Uri( page.Url );
 				if( url.Host == $"{org}.okta.com" ) {
 					string title = await page.GetTitleAsync();
 					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
-						if( attempt < 3 && url.AbsolutePath != "/" ) {
+						if( attempt < 3 && url.AbsolutePath == "/" ) {
 							attempt++;
 							await page.GoToAsync( baseAddress );
 						} else {
