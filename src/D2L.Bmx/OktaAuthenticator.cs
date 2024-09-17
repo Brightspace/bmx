@@ -178,7 +178,7 @@ internal class OktaAuthenticator(
 				var url = new Uri( page.Url );
 				if( url.Host == $"{org}.okta.com" ) {
 					string title = await page.GetTitleAsync();
-					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
+					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) && url.AbsolutePath != "/" ) {
 						if( attempt < 3 ) {
 							attempt++;
 							await page.GoToAsync( baseAddress );
