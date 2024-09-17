@@ -13,8 +13,8 @@ public class Browser {
 
 	// https://github.com/microsoft/playwright/blob/6763d5ab6bd20f1f0fc879537855a26c7644a496/packages/playwright-core/src/server/registry/index.ts#L457-L459
 	private static readonly string[] WindowsPartialPaths = [
-		"\\Google\\Chrome\\Application\\chrome.exe",
-		"\\Microsoft\\Edge\\Application\\msedge.exe"
+		"\\Microsoft\\Edge\\Application\\msedge.exe",
+		"\\Google\\Chrome\\Application\\chrome.exe"
 	];
 	private static readonly string[] MacPaths = [
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
