@@ -208,7 +208,7 @@ internal class OktaAuthenticator(
 
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning(
-				$"WARNING: Failed to create {org} Okta session through DSSO. Check if org is correct."
+				$"WARNING: Timed out when trying to create {org} Okta session through DSSO. Check if org is correct."
 					+ " If running BMX with admin privileges, rerun the command with the '--experimental' flag."
 			);
 			return null;
