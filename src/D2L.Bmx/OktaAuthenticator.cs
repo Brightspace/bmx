@@ -60,8 +60,8 @@ internal class OktaAuthenticator(
 		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
-		if( await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } dssoclient ) {
-			return new OktaAuthenticatedContext( Org: org, User: user, Client: dssoclient );
+		if( await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } oktaAuthenticated ) {
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
