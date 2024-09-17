@@ -202,17 +202,17 @@ internal class OktaAuthenticator(
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning(
 				$"WARNING: Failed to create {org} Okta session through DSSO. Check if org is correct."
+					+ " If running BMX with admin privileges, rerun the command with the '--experimental' flag."
 			);
 			return null;
 		} catch( TargetClosedException ) {
 			consoleWriter.WriteWarning(
-				"WARNING: Failed to create Okta session through DSSO. If running BMX with admin privileges, rerun the command with the '--experimental' flag."
+				$"WARNING: Failed to create {org} Okta session through DSSO as BMX is likely being run with elevated privilieges." +
+					" Rerun the command with the '--experimental' flag."
 			);
 			return null;
-		} catch( Exception e ) {
-			consoleWriter.WriteWarning( "Error while trying to authenticate with Okta using DSSO." );
-			consoleWriter.WriteError( e.GetType().ToString() );
-			consoleWriter.WriteError( e.Message );
+		} catch( Exception ) {
+			consoleWriter.WriteWarning( "WARNING: Unknown error while trying to authenticate with Okta using DSSO." );
 			return null;
 		} finally {
 			cancellationTokenSource.Dispose();
