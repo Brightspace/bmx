@@ -17,6 +17,10 @@ var orgOption = new Option<string>(
 var userOption = new Option<string>(
 	name: "--user",
 	description: ParameterDescriptions.User );
+var passwordlessOption = new Option<bool?>(
+	name: "--passwordless",
+	description: ParameterDescriptions.Passwordless
+);
 
 // allow no-sandbox argument for DSSO and future experimental features
 var experimentalOption = new Option<bool>(
@@ -28,6 +32,7 @@ var loginCommand = new Command( "login", "Log into Okta and save an Okta session
 	orgOption,
 	userOption,
 	experimentalOption,
+	passwordlessOption
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
 	var consoleWriter = new ConsoleWriter();
@@ -42,7 +47,8 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption )
+		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 	);
 } );
 
@@ -71,6 +77,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 	userOption,
 	durationOption,
 	nonInteractiveOption,
+	passwordlessOption,
 };
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
@@ -81,7 +88,8 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
-		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption )
+		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
+		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 	);
 	return Task.CompletedTask;
 } );
@@ -127,6 +135,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
 	experimentalOption,
+	passwordlessOption,
 };
 
 printCommand.SetHandler( ( InvocationContext context ) => {
@@ -156,7 +165,8 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption )
+		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 	);
 } );
 
@@ -182,7 +192,8 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
 	useCredentialProcessOption,
-	experimentalOption
+	experimentalOption,
+	passwordlessOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
@@ -218,7 +229,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		profile: context.ParseResult.GetValueForOption( profileOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
 		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption )
+		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 		);
 } );
 

@@ -20,4 +20,5 @@ internal static class ParameterDescriptions {
 		""";
 
 	public const string Experimental = "Enables experimental features";
+	public const string Passwordless = "Use Okta DSSO to attempt to authenticate without providing a password";
 }

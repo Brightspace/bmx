@@ -32,7 +32,7 @@ public class Browser {
 		}
 
 		var launchOptions = new LaunchOptions {
-			Headless = true,
+			Headless = false,
 			ExecutablePath = browserPath,
 			Args = noSandbox ? ["--no-sandbox"] : []
 		};

@@ -25,7 +25,8 @@ internal class OktaAuthenticator(
 		string? user,
 		bool nonInteractive,
 		bool ignoreCache,
-		bool experimental
+		bool experimental,
+		bool? passwordless
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -55,12 +56,18 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
+		if( passwordless is null && config.Passwordless is not null ) {
+			passwordless = config.Passwordless;
+		}
+
 		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( org );
 
 		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
-		if( await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } oktaDSSOAuthenticated ) {
+		if( passwordless == true
+			&& await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } oktaDSSOAuthenticated
+		) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDSSOAuthenticated );
 		}
 		if( nonInteractive ) {
@@ -230,7 +237,14 @@ internal class OktaAuthenticator(
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
 		var sessionExpiry = await oktaAuthenticatedClient.GetSessionExpiryAsync();
-		CacheOktaSession( user, org, sessionId, sessionExpiry );
+		if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
+			CacheOktaSession( user, org, sessionId, sessionExpiry );
+		} else {
+			consoleWriter.WriteWarning( """
+					No config file found. Your Okta session will not be cached.
+					Consider running `bmx configure` if you own this machine.
+					""" );
+		}
 		return oktaAuthenticatedClient;
 	}
 

@@ -13,6 +13,7 @@ internal interface IConsolePrompter {
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
 	string GetMfaResponse( string mfaInputPrompt, bool maskInput );
+	bool PromptPasswordless();
 }
 
 internal class ConsolePrompter : IConsolePrompter {
@@ -105,6 +106,15 @@ internal class ConsolePrompter : IConsolePrompter {
 		}
 
 		return roles[index - 1];
+	}
+
+	bool IConsolePrompter.PromptPasswordless() {
+		Console.Error.Write( $"{ParameterDescriptions.Passwordless} (y/n): " );
+		string? input = Console.ReadLine();
+		if( input is null || input.Length != 1 || ( input[0] != 'y' && input[0] != 'n' ) ) {
+			throw new BmxException( "Invalid passwordless input" );
+		}
+		return input[0] == 'y';
 	}
 
 	OktaMfaFactor IConsolePrompter.SelectMfa( OktaMfaFactor[] mfaOptions ) {
