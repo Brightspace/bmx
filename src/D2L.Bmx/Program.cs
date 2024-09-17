@@ -22,16 +22,16 @@ var passwordlessOption = new Option<bool?>(
 	description: ParameterDescriptions.Passwordless
 );
 
-// allow no-sandbox argument for DSSO and future experimental features
-var experimentalOption = new Option<bool>(
-	name: "--experimental",
-	description: ParameterDescriptions.Experimental );
+// allow no-sandbox argument for chromium to for passwordless auth with elevated permissions
+var experimentalBypassBrowserSecurityOption = new Option<bool>(
+	name: "--experimental-bypass-browser-security",
+	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
 
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
 	orgOption,
 	userOption,
-	experimentalOption,
+	experimentalBypassBrowserSecurityOption,
 	passwordlessOption
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
@@ -47,7 +47,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption ),
 		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 	);
 } );
@@ -134,7 +134,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 	userOption,
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
-	experimentalOption,
+	experimentalBypassBrowserSecurityOption,
 	passwordlessOption,
 };
 
@@ -165,7 +165,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption ),
 		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 	);
 } );
@@ -192,7 +192,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
 	useCredentialProcessOption,
-	experimentalOption,
+	experimentalBypassBrowserSecurityOption,
 	passwordlessOption,
 };
 
@@ -229,7 +229,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		profile: context.ParseResult.GetValueForOption( profileOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
 		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalOption ),
+		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption ),
 		passwordless: context.ParseResult.GetValueForOption( passwordlessOption )
 		);
 } );
