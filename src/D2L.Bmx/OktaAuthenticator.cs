@@ -155,7 +155,7 @@ internal class OktaAuthenticator(
 		}
 
 		Console.WriteLine( "Attempting to automatically login using DSSO." );
-		var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 10 ) );
+		var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 		var userEmailTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 		string? sessionId;
@@ -179,7 +179,7 @@ internal class OktaAuthenticator(
 				if( url.Host == $"{org}.okta.com" ) {
 					string title = await page.GetTitleAsync();
 					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
-						if( attempt < 3 && url.AbsolutePath == "/" ) {
+						if( attempt < 3 ) {
 							attempt++;
 							await page.GoToAsync( baseAddress );
 						} else {

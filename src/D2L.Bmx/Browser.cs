@@ -32,7 +32,7 @@ public class Browser {
 		}
 
 		var launchOptions = new LaunchOptions {
-			Headless = false,
+			Headless = Environment.GetEnvironmentVariable( "BMX_DEBUG" ) != "1",
 			ExecutablePath = browserPath,
 			Args = noSandbox ? ["--no-sandbox"] : []
 		};
