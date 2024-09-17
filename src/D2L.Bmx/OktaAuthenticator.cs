@@ -155,7 +155,7 @@ internal class OktaAuthenticator(
 		string? userEmail;
 
 		try {
-			var page = await browser.NewPageAsync();
+			var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
 			string baseAddress = $"https://{org}.okta.com/";
 			int attempt = 1;
 
@@ -214,6 +214,9 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteError( e.GetType().ToString() );
 			consoleWriter.WriteError( e.Message );
 			return null;
+		} finally {
+			cancellationTokenSource.Dispose();
+			browser.Dispose();
 		}
 
 		if( sessionId is null || userEmail is null ) {
