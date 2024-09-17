@@ -47,7 +47,7 @@ internal class BmxConfigProvider(
 		bool? passwordless = null;
 		if( !string.IsNullOrEmpty( data.Global["passwordless"] ) ) {
 			if( !bool.TryParse( data.Global["passwordless"], out bool configPasswordless ) ) {
-				throw new BmxException( "Invalid passwordless in config" );
+				throw new BmxException( "Invalid passwordless value in config" );
 			}
 			passwordless = configPasswordless;
 		}
