@@ -23,7 +23,7 @@ internal interface IOktaAnonymousClient {
 
 internal interface IOktaAuthenticatedClient {
 	Task<OktaApp[]> GetAwsAccountAppsAsync();
-	Task<DateTimeOffset> GetSessionExpiryAsync();
+	Task<OktaSession> GetSessionExpiryAsync();
 	Task<string> GetPageAsync( string url );
 }
 
@@ -188,7 +188,7 @@ internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthentic
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
 	}
 
-	async Task<DateTimeOffset> IOktaAuthenticatedClient.GetSessionExpiryAsync() {
+	async Task<OktaSession> IOktaAuthenticatedClient.GetSessionExpiryAsync() {
 		OktaSession? session;
 		try {
 			session = await httpClient.GetFromJsonAsync(
@@ -198,7 +198,7 @@ internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthentic
 			throw new BmxException( "Request to retrieve session expiry from Okta failed.", ex );
 		}
 
-		return session?.ExpiresAt ?? throw new BmxException( "Error retrieving session expiry from Okta." );
+		return session ?? throw new BmxException( "Error retrieving session expiry from Okta." );
 	}
 
 	async Task<string> IOktaAuthenticatedClient.GetPageAsync( string url ) {
