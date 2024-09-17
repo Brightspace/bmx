@@ -42,7 +42,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
+		experimentalBypassBrowserSecurity: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
 	);
 } );
 
@@ -156,7 +156,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
+		experimentalBypassBrowserSecurity: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
 	);
 } );
 
@@ -218,7 +218,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		profile: context.ParseResult.GetValueForOption( profileOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
 		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption ),
-		experimental: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
+		experimentalBypassBrowserSecurity: context.ParseResult.GetValueForOption( experimentalBypassBrowserSecurityOption )
 		);
 } );
 
