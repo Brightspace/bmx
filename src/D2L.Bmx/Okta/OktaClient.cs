@@ -23,7 +23,7 @@ internal interface IOktaAnonymousClient {
 
 internal interface IOktaAuthenticatedClient {
 	Task<OktaApp[]> GetAwsAccountAppsAsync();
-	Task<OktaSession> GetSessionExpiryAsync();
+	Task<OktaSession> GetCurrentOktaSessionAsync();
 	Task<string> GetPageAsync( string url );
 }
 
@@ -188,7 +188,7 @@ internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthentic
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
 	}
 
-	async Task<OktaSession> IOktaAuthenticatedClient.GetSessionExpiryAsync() {
+	async Task<OktaSession> IOktaAuthenticatedClient.GetCurrentOktaSessionAsync() {
 		OktaSession? session;
 		try {
 			session = await httpClient.GetFromJsonAsync(

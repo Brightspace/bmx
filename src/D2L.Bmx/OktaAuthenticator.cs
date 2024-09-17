@@ -215,7 +215,7 @@ internal class OktaAuthenticator(
 		}
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
-		var sessionExpiry = ( await oktaAuthenticatedClient.GetSessionExpiryAsync() ).ExpiresAt;
+		var sessionExpiry = ( await oktaAuthenticatedClient.GetCurrentOktaSessionAsync() ).ExpiresAt;
 		// We can expect a 404 if the session does not belong to the user which will throw an exception
 		try {
 			string userResponse = await oktaAuthenticatedClient.GetPageAsync( $"users/{user}" );
