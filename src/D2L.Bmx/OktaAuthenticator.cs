@@ -24,8 +24,7 @@ internal class OktaAuthenticator(
 		string? user,
 		bool nonInteractive,
 		bool ignoreCache,
-		bool experimental,
-		bool? passwordless
+		bool experimentalBypassBrowserSecurity
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -55,17 +54,16 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
-		if( passwordless is null && config.Passwordless is not null ) {
-			passwordless = config.Passwordless;
-		}
-
 		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( org );
 
 		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
-		if( passwordless == true
-			&& await TryAuthenticateWithDSSOAsync( org, user, oktaClientFactory, experimental ) is { } oktaDSSOAuthenticated
+		if( await TryAuthenticateWithDSSOAsync(
+			org,
+			user,
+			oktaClientFactory,
+			experimentalBypassBrowserSecurity ) is { } oktaDSSOAuthenticated
 		) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDSSOAuthenticated );
 		}
@@ -146,9 +144,9 @@ internal class OktaAuthenticator(
 		string org,
 		string user,
 		IOktaClientFactory oktaClientFactory,
-		bool experimental
+		bool experimentalBypassBrowserSecurity
 	) {
-		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimental );
+		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimentalBypassBrowserSecurity );
 		if( browser is null ) {
 			return null;
 		}

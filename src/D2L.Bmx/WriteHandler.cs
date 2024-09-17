@@ -28,8 +28,7 @@ internal class WriteHandler(
 		string? profile,
 		bool cacheAwsCredentials,
 		bool useCredentialProcess,
-		bool experimental,
-		bool? passwordless
+		bool experimental
 	) {
 		cacheAwsCredentials = cacheAwsCredentials || useCredentialProcess;
 
@@ -38,8 +37,7 @@ internal class WriteHandler(
 			user: user,
 			nonInteractive: nonInteractive,
 			ignoreCache: false,
-			experimental: experimental,
-			passwordless: passwordless
+			experimentalBypassBrowserSecurity: experimental
 		);
 		var awsCredsInfo = await awsCredsCreator.CreateAwsCredsAsync(
 			okta: oktaContext,

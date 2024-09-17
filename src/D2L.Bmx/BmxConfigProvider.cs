@@ -44,22 +44,13 @@ internal class BmxConfigProvider(
 			duration = configDuration;
 		}
 
-		bool? passwordless = null;
-		if( !string.IsNullOrEmpty( data.Global["passwordless"] ) ) {
-			if( !bool.TryParse( data.Global["passwordless"], out bool configPasswordless ) ) {
-				throw new BmxException( "Invalid passwordless value in config" );
-			}
-			passwordless = configPasswordless;
-		}
-
 		return new BmxConfig(
 			Org: data.Global["org"],
 			User: data.Global["user"],
 			Account: data.Global["account"],
 			Role: data.Global["role"],
 			Profile: data.Global["profile"],
-			Duration: duration,
-			Passwordless: passwordless
+			Duration: duration
 		);
 	}
 
@@ -83,9 +74,6 @@ internal class BmxConfigProvider(
 		}
 		if( config.Duration.HasValue ) {
 			data.Global["duration"] = $"{config.Duration}";
-		}
-		if( config.Passwordless.HasValue ) {
-			data.Global["passwordless"] = $"{config.Passwordless}";
 		}
 
 		fs.Position = 0;
