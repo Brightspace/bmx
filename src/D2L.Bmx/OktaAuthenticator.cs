@@ -224,7 +224,7 @@ internal class OktaAuthenticator(
 		} else if( !OktaUserMatchesProvided( userEmail, user ) ) {
 			consoleWriter.WriteWarning(
 				"WARNING: Could not create Okta session using DSSO as "
-				+ $"provided Okta user '{user}' does not match user '{userEmail}'." );
+				+ $"provided Okta user '{StripLoginDomain( user )}' does not match user '{StripLoginDomain( userEmail )}'." );
 			return null;
 		}
 
@@ -234,11 +234,13 @@ internal class OktaAuthenticator(
 		return oktaAuthenticatedClient;
 	}
 
+	private static string StripLoginDomain( string email ) {
+		return email.Contains( '@' ) ? email.Split( '@' )[0] : email;
+	}
+
 	private static bool OktaUserMatchesProvided( string oktaLogin, string providedUser ) {
-		string adName = oktaLogin.Split( '@' )[0];
-		string normalizedUser = providedUser.Contains( '@' )
-			? providedUser.Split( '@' )[0]
-			: providedUser;
+		string adName = StripLoginDomain( oktaLogin );
+		string normalizedUser = StripLoginDomain( providedUser );
 		return adName.Equals( normalizedUser, StringComparison.OrdinalIgnoreCase );
 	}
 
