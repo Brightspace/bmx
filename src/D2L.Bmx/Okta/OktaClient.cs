@@ -195,10 +195,10 @@ internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthentic
 				"sessions/me",
 				JsonCamelCaseContext.Default.OktaSession );
 		} catch( Exception ex ) {
-			throw new BmxException( "Request to retrieve session expiry from Okta failed.", ex );
+			throw new BmxException( "Request to retrieve session from Okta failed.", ex );
 		}
 
-		return session ?? throw new BmxException( "Error retrieving session expiry from Okta." );
+		return session ?? throw new BmxException( "Error retrieving session from Okta." );
 	}
 
 	async Task<string> IOktaAuthenticatedClient.GetPageAsync( string url ) {

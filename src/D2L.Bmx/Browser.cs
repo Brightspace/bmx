@@ -14,15 +14,15 @@ public static class Browser {
 	// https://github.com/microsoft/playwright/blob/6763d5ab6bd20f1f0fc879537855a26c7644a496/packages/playwright-core/src/server/registry/index.ts#L457-L459
 	private static readonly string[] WindowsPartialPaths = [
 		"\\Microsoft\\Edge\\Application\\msedge.exe",
-		"\\Google\\Chrome\\Application\\chrome.exe"
+		"\\Google\\Chrome\\Application\\chrome.exe",
 	];
 	private static readonly string[] MacPaths = [
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"
+		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 	];
 	private static readonly string[] LinuxPaths = [
 		"/opt/google/chrome/chrome",
-		"/opt/microsoft/msedge/msedge"
+		"/opt/microsoft/msedge/msedge",
 	];
 
 	public static async Task<IBrowser?> LaunchBrowserAsync( bool noSandbox = false ) {
@@ -32,7 +32,6 @@ public static class Browser {
 		}
 
 		var launchOptions = new LaunchOptions {
-			Headless = true,
 			ExecutablePath = browserPath,
 			Args = noSandbox ? ["--no-sandbox"] : []
 		};
@@ -41,7 +40,6 @@ public static class Browser {
 	}
 
 	private static string? GetPathToBrowser() {
-		string? browser = null;
 		if( OperatingSystem.IsWindows() ) {
 			foreach( string windowsPartialPath in WindowsPartialPaths ) {
 				foreach( string environmentVariable in WindowsEnvironmentVariables ) {
@@ -59,6 +57,6 @@ public static class Browser {
 		} else if( OperatingSystem.IsLinux() ) {
 			return LinuxPaths.First( File.Exists );
 		}
-		return browser;
+		return null;
 	}
 }

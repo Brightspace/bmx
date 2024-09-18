@@ -24,7 +24,7 @@ internal class OktaAuthenticator(
 		string? user,
 		bool nonInteractive,
 		bool ignoreCache,
-		bool experimentalBypassBrowserSecurity
+		bool bypassBrowserSecurity
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -63,7 +63,7 @@ internal class OktaAuthenticator(
 			org,
 			user,
 			oktaClientFactory,
-			experimentalBypassBrowserSecurity ) is { } oktaDSSOAuthenticated
+			bypassBrowserSecurity ) is { } oktaDSSOAuthenticated
 		) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDSSOAuthenticated );
 		}
