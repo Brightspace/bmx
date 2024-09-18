@@ -2,7 +2,7 @@ using PuppeteerSharp;
 
 namespace D2L.Bmx;
 
-public class Browser {
+public static class Browser {
 
 	// https://github.com/microsoft/playwright/blob/6763d5ab6bd20f1f0fc879537855a26c7644a496/packages/playwright-core/src/server/registry/index.ts#L630
 	private static readonly string[] WindowsEnvironmentVariables = [
