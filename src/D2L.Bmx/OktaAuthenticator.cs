@@ -152,14 +152,16 @@ internal class OktaAuthenticator(
 		}
 
 		Console.WriteLine( "Attempting to automatically login using DSSO." );
-		string normalizedOrg = org.Replace( ".okta.com", "" );
 		var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 		string? sessionId;
 
 		try {
 			var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
-			string baseAddress = $"https://{normalizedOrg}.okta.com/";
+			string baseAddress = org.Contains( '.' )
+				? $"https://{org}/"
+				: $"https://{org}.okta.com/";
+			var baseUrl = new Uri( baseAddress );
 			int attempt = 1;
 
 			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
@@ -168,7 +170,7 @@ internal class OktaAuthenticator(
 
 			async Task GetSessionCookieAsync() {
 				var url = new Uri( page.Url );
-				if( url.Host == $"{normalizedOrg}.okta.com" ) {
+				if( url.Host == baseUrl.Host ) {
 					string title = await page.GetTitleAsync();
 					// DSSO can sometimes takes more than one attempt.
 					// If the path is '/', it means DSSO is not available and we should stop retrying.
@@ -189,15 +191,15 @@ internal class OktaAuthenticator(
 			}
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning( $"""
-				WARNING: Timed out when trying to create {normalizedOrg} Okta session through DSSO.
-				Check if the org is correct. If running BMX with elevated privileges,
+				WARNING: Timed out when trying to create Okta session through DSSO.
+				Check if the org '{org}' is correct. If running BMX with elevated privileges,
 				rerun the command with the '--experimental-bypass-browser-security' flag
 				"""
 			);
 			return null;
 		} catch( TargetClosedException ) {
-			consoleWriter.WriteWarning( $"""
-				WARNING: Failed to create {normalizedOrg} Okta session through DSSO as BMX is likely being run
+			consoleWriter.WriteWarning( """
+				WARNING: Failed to create Okta session through DSSO as BMX is likely being run
 				with elevated privileges. Rerun the command with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
@@ -221,7 +223,7 @@ internal class OktaAuthenticator(
 			string userResponse = await oktaAuthenticatedClient.GetPageAsync( $"users/{user}" );
 		} catch( Exception ) {
 			consoleWriter.WriteWarning(
-				$"WARNING: Failed to create {org} Okta session through DSSO as created session does not belong to {user}." );
+				$"WARNING: Failed to create Okta session through DSSO as created session does not belong to {user}." );
 			return null;
 		}
 		if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
