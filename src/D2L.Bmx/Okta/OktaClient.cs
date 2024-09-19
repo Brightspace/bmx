@@ -6,8 +6,8 @@ using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
 internal interface IOktaClientFactory {
-	IOktaAnonymousClient CreateAnonymousClient( string org );
-	IOktaAuthenticatedClient CreateAuthenticatedClient( string org, string sessionId );
+	IOktaAnonymousClient CreateAnonymousClient( Uri orgUrl );
+	IOktaAuthenticatedClient CreateAuthenticatedClient( Uri orgUrl, string sessionId );
 }
 
 internal interface IOktaAnonymousClient {
@@ -28,16 +28,16 @@ internal interface IOktaAuthenticatedClient {
 }
 
 internal class OktaClientFactory : IOktaClientFactory {
-	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( string org ) {
+	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( Uri orgUrl ) {
 		var httpClient = new HttpClient {
 			Timeout = TimeSpan.FromSeconds( 30 ),
-			BaseAddress = GetApiBaseAddress( org ),
+			BaseAddress = GetApiBaseAddress( orgUrl ),
 		};
 		return new OktaAnonymousClient( httpClient );
 	}
 
-	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( string org, string sessionId ) {
-		var baseAddress = GetApiBaseAddress( org );
+	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( Uri orgUrl, string sessionId ) {
+		var baseAddress = GetApiBaseAddress( orgUrl );
 
 		var cookieContainer = new CookieContainer();
 		cookieContainer.Add( new Cookie( "sid", sessionId, "/", baseAddress.Host ) );
@@ -52,8 +52,8 @@ internal class OktaClientFactory : IOktaClientFactory {
 		return new OktaAuthenticatedClient( httpClient );
 	}
 
-	private static Uri GetApiBaseAddress( string org ) {
-		return new Uri( $"{org}api/v1/" );
+	private static Uri GetApiBaseAddress( Uri orgBaseAddresss ) {
+		return new Uri( orgBaseAddresss, "api/v1/" );
 	}
 }
 
