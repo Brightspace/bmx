@@ -1,10 +1,9 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
+using System.Text.Json;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 using PuppeteerSharp;
-using PuppeteerSharp.Helpers;
 
 namespace D2L.Bmx;
 
@@ -157,21 +156,27 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
+		Console.WriteLine( DateTimeOffset.Now );
 		if( !nonInteractive ) {
 			Console.Error.WriteLine( "Attempting to automatically login using Okta Desktop Single Sign-On." );
 		}
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		var userEmailTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 		string? sessionId;
+		string? userEmail;
 
 		try {
 			using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
 			var baseUrl = new Uri( orgBaseAddress );
 			int attempt = 1;
 
-			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
+			page.Load += ( _, _ ) => _ = GetSessionCookieAsync().WaitAsync( cancellationTokenSource.Token );
+			page.Response += ( _, response ) => _ = GetOktaUserEmailAsync( response.Response ).WaitAsync(
+				cancellationTokenSource.Token );
 			await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 			sessionId = await sessionIdTcs.Task;
+			userEmail = await userEmailTcs.Task;
 
 			async Task GetSessionCookieAsync() {
 				var url = new Uri( page.Url );
@@ -182,7 +187,7 @@ internal class OktaAuthenticator(
 					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
 						if( attempt < 3 && url.AbsolutePath != "/" ) {
 							attempt++;
-							await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
+							await page.GoToAsync( orgBaseAddress );
 						} else {
 							consoleWriter.WriteWarning(
 								"WARNING: Could not authenticate with Okta using Desktop Single Sign-On." );
@@ -191,9 +196,18 @@ internal class OktaAuthenticator(
 						return;
 					}
 				}
-				var cookies = await page.GetCookiesAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
+				var cookies = await page.GetCookiesAsync( orgBaseAddress );
 				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
 					sessionIdTcs.SetResult( sid );
+				}
+			}
+			async Task GetOktaUserEmailAsync( IResponse response ) {
+				if( response.Url.Contains( $"{orgBaseAddress}enduser/api/v1/home" ) ) {
+					string content = await response.TextAsync();
+					var home = JsonSerializer.Deserialize( content, JsonCamelCaseContext.Default.OktaHomeResponse );
+					if( home is not null ) {
+						userEmailTcs.SetResult( home.Login );
+					}
 				}
 			}
 		} catch( TaskCanceledException ) {
@@ -217,23 +231,29 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
-		if( sessionId is null ) {
+		if( sessionId is null || userEmail is null ) {
+			return null;
+		} else if( !OktaUserMatchesProvided( userEmail, user ) ) {
+			consoleWriter.WriteWarning(
+				"WARNING: Could not create Okta session using Desktop Single Sign-On as "
+				+ $"provided Okta user '{StripLoginDomain( user )}' does not match user '{StripLoginDomain( userEmail )}'." );
 			return null;
 		}
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgBaseAddress, sessionId );
 		var expiresAt = ( await oktaAuthenticatedClient.GetCurrentOktaSessionAsync() ).ExpiresAt;
-		// We can expect a 404 if the session does not belong to the user which will throw an exception
-		try {
-			string userResponse = await oktaAuthenticatedClient.GetPageAsync( $"users/{user}" );
-		} catch( Exception ) {
-			consoleWriter.WriteWarning(
-				"WARNING: Failed to create Okta session with Desktop Single Sign-On"
-					+ $" as created session does not belong to {user}." );
-			return null;
-		}
 		TryCacheOktaSession( user, org, sessionId, expiresAt );
 		return oktaAuthenticatedClient;
+	}
+
+	private static string StripLoginDomain( string email ) {
+		return email.Contains( '@' ) ? email.Split( '@' )[0] : email;
+	}
+
+	private static bool OktaUserMatchesProvided( string oktaLogin, string providedUser ) {
+		string adName = StripLoginDomain( oktaLogin );
+		string normalizedUser = StripLoginDomain( providedUser );
+		return adName.Equals( normalizedUser, StringComparison.OrdinalIgnoreCase );
 	}
 
 	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
