@@ -19,6 +19,6 @@ internal static class ParameterDescriptions {
 		See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html.
 		""";
 
-	public const string ExperimentalBypassBrowserSecurity = "Enables experimental features";
-	public const string Passwordless = "Use Okta DSSO to attempt to authenticate without providing a password";
+	public const string ExperimentalBypassBrowserSecurity
+		= "Disable chromium sandbox when running with elevated permissions for Okta Desktop Single Sign-On";
 }

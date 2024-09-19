@@ -31,13 +31,13 @@ internal class OktaClientFactory : IOktaClientFactory {
 	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( string org ) {
 		var httpClient = new HttpClient {
 			Timeout = TimeSpan.FromSeconds( 30 ),
-			BaseAddress = GetBaseAddress( org ),
+			BaseAddress = GetApiBaseAddress( org ),
 		};
 		return new OktaAnonymousClient( httpClient );
 	}
 
 	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( string org, string sessionId ) {
-		var baseAddress = GetBaseAddress( org );
+		var baseAddress = GetApiBaseAddress( org );
 
 		var cookieContainer = new CookieContainer();
 		cookieContainer.Add( new Cookie( "sid", sessionId, "/", baseAddress.Host ) );
@@ -52,10 +52,8 @@ internal class OktaClientFactory : IOktaClientFactory {
 		return new OktaAuthenticatedClient( httpClient );
 	}
 
-	private static Uri GetBaseAddress( string org ) {
-		return org.Contains( '.' )
-			? new Uri( $"https://{org}/api/v1/" )
-			: new Uri( $"https://{org}.okta.com/api/v1/" );
+	private static Uri GetApiBaseAddress( string org ) {
+		return new Uri( $"{org}api/v1/" );
 	}
 }
 

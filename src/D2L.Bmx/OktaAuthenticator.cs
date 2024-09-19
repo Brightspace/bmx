@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
 using PuppeteerSharp;
+using PuppeteerSharp.Helpers;
 
 namespace D2L.Bmx;
 
@@ -54,18 +56,21 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
-		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( org );
+		string orgBaseAddress = GetOrgBaseAddress( org );
+		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgBaseAddress );
 
 		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
-		if( await TryAuthenticateWithDSSOAsync(
+		if( await GetDssoAuthenticatedClientAsync(
+			orgBaseAddress,
 			org,
 			user,
 			oktaClientFactory,
-			bypassBrowserSecurity ) is { } oktaDSSOAuthenticated
+			nonInteractive,
+			bypassBrowserSecurity ) is { } oktaDssoAuthenticated
 		) {
-			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDSSOAuthenticated );
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDssoAuthenticated );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
@@ -106,14 +111,7 @@ internal class OktaAuthenticator(
 			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
 
 			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionResp.Id );
-			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
-				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
-			} else {
-				consoleWriter.WriteWarning( """
-					No config file found. Your Okta session will not be cached.
-					Consider running `bmx configure` if you own this machine.
-					""" );
-			}
+			TryCacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
@@ -122,6 +120,12 @@ internal class OktaAuthenticator(
 		}
 
 		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
+	}
+
+	private static string GetOrgBaseAddress( string org ) {
+		return org.Contains( '.' )
+			? $"https://{org}/"
+			: $"https://{org}.okta.com/";
 	}
 
 	private bool TryAuthenticateFromCache(
@@ -140,10 +144,12 @@ internal class OktaAuthenticator(
 		return true;
 	}
 
-	private async Task<IOktaAuthenticatedClient?> TryAuthenticateWithDSSOAsync(
+	private async Task<IOktaAuthenticatedClient?> GetDssoAuthenticatedClientAsync(
+		string orgBaseAddress,
 		string org,
 		string user,
 		IOktaClientFactory oktaClientFactory,
+		bool nonInteractive,
 		bool experimentalBypassBrowserSecurity
 	) {
 		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimentalBypassBrowserSecurity );
@@ -151,90 +157,95 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
-		Console.WriteLine( "Attempting to automatically login using DSSO." );
-		var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
-		var sessionIdTaskProducer = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		if( !nonInteractive ) {
+			Console.Error.WriteLine( "Attempting to automatically login using Okta Desktop Single Sign-On." );
+		}
+		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
+		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 		string? sessionId;
 
 		try {
-			var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
-			string baseAddress = org.Contains( '.' )
-				? $"https://{org}/"
-				: $"https://{org}.okta.com/";
-			var baseUrl = new Uri( baseAddress );
+			using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
+			var baseUrl = new Uri( orgBaseAddress );
 			int attempt = 1;
 
 			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
-			await page.GoToAsync( baseAddress );
-			sessionId = await sessionIdTaskProducer.Task.WaitAsync( cancellationTokenSource.Token );
+			await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
+			sessionId = await sessionIdTcs.Task;
 
 			async Task GetSessionCookieAsync() {
 				var url = new Uri( page.Url );
 				if( url.Host == baseUrl.Host ) {
 					string title = await page.GetTitleAsync();
 					// DSSO can sometimes takes more than one attempt.
-					// If the path is '/', it means DSSO is not available and we should stop retrying.
+					// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
 					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
 						if( attempt < 3 && url.AbsolutePath != "/" ) {
 							attempt++;
-							await page.GoToAsync( baseAddress );
+							await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 						} else {
-							sessionIdTaskProducer.SetResult( null );
+							consoleWriter.WriteWarning(
+								"WARNING: Could not authenticate with Okta using Desktop Single Sign-On." );
+							sessionIdTcs.SetResult( null );
 						}
 						return;
 					}
 				}
-				var cookies = await page.GetCookiesAsync( baseAddress );
+				var cookies = await page.GetCookiesAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
-					sessionIdTaskProducer.SetResult( sid );
+					sessionIdTcs.SetResult( sid );
 				}
 			}
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning( $"""
-				WARNING: Timed out when trying to create Okta session through DSSO.
-				Check if the org '{org}' is correct. If running BMX with elevated privileges,
+				WARNING: Timed out when trying to create Okta session through Desktop Single Sign-On.
+				Check if the org '{orgBaseAddress}' is correct. If running BMX with elevated privileges,
 				rerun the command with the '--experimental-bypass-browser-security' flag
 				"""
 			);
 			return null;
 		} catch( TargetClosedException ) {
 			consoleWriter.WriteWarning( """
-				WARNING: Failed to create Okta session through DSSO as BMX is likely being run
+				WARNING: Failed to create Okta session through Desktop Single Sign-On as BMX is likely being run
 				with elevated privileges. Rerun the command with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
 			return null;
 		} catch( Exception ) {
-			consoleWriter.WriteWarning( "WARNING: Unknown error while trying to authenticate with Okta using DSSO." );
+			consoleWriter.WriteWarning(
+				"WARNING: Unknown error while trying to authenticate with Okta using Desktop Single Sign-On." );
 			return null;
-		} finally {
-			cancellationTokenSource.Dispose();
-			browser.Dispose();
 		}
 
 		if( sessionId is null ) {
 			return null;
 		}
 
-		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
-		var sessionExpiry = ( await oktaAuthenticatedClient.GetCurrentOktaSessionAsync() ).ExpiresAt;
+		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgBaseAddress, sessionId );
+		var expiresAt = ( await oktaAuthenticatedClient.GetCurrentOktaSessionAsync() ).ExpiresAt;
 		// We can expect a 404 if the session does not belong to the user which will throw an exception
 		try {
 			string userResponse = await oktaAuthenticatedClient.GetPageAsync( $"users/{user}" );
 		} catch( Exception ) {
 			consoleWriter.WriteWarning(
-				$"WARNING: Failed to create Okta session through DSSO as created session does not belong to {user}." );
+				"WARNING: Failed to create Okta session with Desktop Single Sign-On"
+					+ $" as created session does not belong to {user}." );
 			return null;
 		}
+		TryCacheOktaSession( user, org, sessionId, expiresAt );
+		return oktaAuthenticatedClient;
+	}
+
+	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
-			CacheOktaSession( user, org, sessionId, sessionExpiry );
-		} else {
-			consoleWriter.WriteWarning( """
+			CacheOktaSession( userId, org, sessionId, expiresAt );
+			return true;
+		}
+		consoleWriter.WriteWarning( """
 					No config file found. Your Okta session will not be cached.
 					Consider running `bmx configure` if you own this machine.
 					""" );
-		}
-		return oktaAuthenticatedClient;
+		return false;
 	}
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
