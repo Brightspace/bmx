@@ -54,14 +54,14 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
-		var orgBaseAddress = GetOrgBaseAddress( org );
-		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgBaseAddress );
+		var orgUrl = GetOrgBaseAddress( org );
+		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgUrl );
 
-		if( !ignoreCache && TryAuthenticateFromCache( orgBaseAddress, user, oktaClientFactory, out var oktaAuthenticated ) ) {
+		if( !ignoreCache && TryAuthenticateFromCache( orgUrl, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 		if( await GetDssoAuthenticatedClientAsync(
-			orgBaseAddress,
+			orgUrl,
 			user,
 			oktaClientFactory,
 			nonInteractive,
@@ -107,8 +107,8 @@ internal class OktaAuthenticator(
 		if( authnResponse is AuthenticateResponse.Success successInfo ) {
 			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
 
-			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgBaseAddress, sessionResp.Id );
-			TryCacheOktaSession( user, orgBaseAddress.Host, sessionResp.Id, sessionResp.ExpiresAt );
+			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionResp.Id );
+			TryCacheOktaSession( user, orgUrl.Host, sessionResp.Id, sessionResp.ExpiresAt );
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
