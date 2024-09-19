@@ -156,7 +156,6 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
-		Console.WriteLine( DateTimeOffset.Now );
 		if( !nonInteractive ) {
 			Console.Error.WriteLine( "Attempting to automatically login using Okta Desktop Single Sign-On." );
 		}
@@ -171,9 +170,8 @@ internal class OktaAuthenticator(
 			var baseUrl = new Uri( orgBaseAddress );
 			int attempt = 1;
 
-			page.Load += ( _, _ ) => _ = GetSessionCookieAsync().WaitAsync( cancellationTokenSource.Token );
-			page.Response += ( _, response ) => _ = GetOktaUserEmailAsync( response.Response ).WaitAsync(
-				cancellationTokenSource.Token );
+			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
+			page.Response += ( _, response ) => _ = GetOktaUserEmailAsync( response.Response );
 			await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 			sessionId = await sessionIdTcs.Task;
 			userEmail = await userEmailTcs.Task;
@@ -181,13 +179,13 @@ internal class OktaAuthenticator(
 			async Task GetSessionCookieAsync() {
 				var url = new Uri( page.Url );
 				if( url.Host == baseUrl.Host ) {
-					string title = await page.GetTitleAsync();
+					string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
 					// DSSO can sometimes takes more than one attempt.
 					// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
 					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
 						if( attempt < 3 && url.AbsolutePath != "/" ) {
 							attempt++;
-							await page.GoToAsync( orgBaseAddress );
+							await page.GoToAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 						} else {
 							consoleWriter.WriteWarning(
 								"WARNING: Could not authenticate with Okta using Desktop Single Sign-On." );
@@ -196,14 +194,14 @@ internal class OktaAuthenticator(
 						return;
 					}
 				}
-				var cookies = await page.GetCookiesAsync( orgBaseAddress );
+				var cookies = await page.GetCookiesAsync( orgBaseAddress ).WaitAsync( cancellationTokenSource.Token );
 				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
 					sessionIdTcs.SetResult( sid );
 				}
 			}
 			async Task GetOktaUserEmailAsync( IResponse response ) {
 				if( response.Url.Contains( $"{orgBaseAddress}enduser/api/v1/home" ) ) {
-					string content = await response.TextAsync();
+					string content = await response.TextAsync().WaitAsync( cancellationTokenSource.Token );
 					var home = JsonSerializer.Deserialize( content, JsonCamelCaseContext.Default.OktaHomeResponse );
 					if( home is not null ) {
 						userEmailTcs.SetResult( home.Login );

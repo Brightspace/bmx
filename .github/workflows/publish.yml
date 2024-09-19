@@ -62,9 +62,15 @@ jobs:
         include:
           - machine: windows-latest
             platform: win
+            architecture: x64
+            file_name: bmx.exe
+          - machine: windows-latest
+            platform: win
+            architecture: x64
             file_name: bmx.exe
           - machine: macos-latest
             platform: osx
+            architecture: x64
             file_name: bmx
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
