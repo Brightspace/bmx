@@ -154,11 +154,11 @@ internal class OktaAuthenticator(
 		}
 
 		if( !nonInteractive ) {
-			Console.Error.WriteLine( "Attempting to automatically login using Okta Desktop Single Sign-On." );
+			Console.Error.WriteLine( "Attempting to automatically sign in to Okta." );
 		}
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
-		string? sessionId;
+		string? sessionId = null;
 
 		try {
 			using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
@@ -180,7 +180,7 @@ internal class OktaAuthenticator(
 							await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 						} else {
 							consoleWriter.WriteWarning(
-								"WARNING: Could not authenticate with Okta using Desktop Single Sign-On." );
+								"WARNING: Failed to authenticate with Okta when trying to automatically sign in" );
 							sessionIdTcs.SetResult( null );
 						}
 						return;
@@ -193,23 +193,22 @@ internal class OktaAuthenticator(
 			}
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning( $"""
-				WARNING: Timed out when trying to create Okta session through Desktop Single Sign-On.
-				Check if the org '{orgUrl}' is correct. If running BMX with elevated privileges,
-				rerun the command with the '--experimental-bypass-browser-security' flag
+				WARNING: Timed out when trying to automatically sign in to Okta. Check if the org '{orgUrl}' is correct.
+				if you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				consider running the command again with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
-			return null;
 		} catch( TargetClosedException ) {
 			consoleWriter.WriteWarning( """
-				WARNING: Failed to create Okta session through Desktop Single Sign-On as BMX is likely being run
-				with elevated privileges. Rerun the command with the '--experimental-bypass-browser-security' flag.
+				WARNING: Failed to automatically sign in to Okta as BMX is likely being run with elevated privileges.
+				if you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				consider running the command again with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
 			return null;
 		} catch( Exception ) {
 			consoleWriter.WriteWarning(
-				"WARNING: Unknown error while trying to authenticate with Okta using Desktop Single Sign-On." );
-			return null;
+				"WARNING: Unknown error occurred while trying to automatically sign in with Okta." );
 		}
 
 		if( sessionId is null ) {
@@ -220,7 +219,7 @@ internal class OktaAuthenticator(
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
 		if( !OktaUserMatchesProvided( oktaSession.Login, user ) ) {
 			consoleWriter.WriteWarning(
-				"WARNING: Could not create Okta session using Desktop Single Sign-On as provided Okta user "
+				"WARNING: Could not automatically sign in to Okta as provided Okta user "
 				+ $"'{StripLoginDomain( user )}' does not match user '{StripLoginDomain( oktaSession.Login )}'." );
 			return null;
 		}
