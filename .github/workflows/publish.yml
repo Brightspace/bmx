@@ -54,6 +54,15 @@ jobs:
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
           "release_id=$releaseId" >> $env:GITHUB_OUTPUT
 
+  arm:
+    needs: create_release
+    if: ${{ !failure() }}
+    runs-on: [ubuntu-latest, arm64]
+    steps:
+      - name: test
+        shell: pwsh
+        run: echo "Hello, world!"
+
   build:
     needs: create_release
     if: ${{ !failure() }}
