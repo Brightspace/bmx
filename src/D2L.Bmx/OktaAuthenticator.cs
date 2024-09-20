@@ -217,25 +217,17 @@ internal class OktaAuthenticator(
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionId );
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
-		if( !OktaUserMatchesProvided( oktaSession.Login, user ) ) {
+		string sessionLogin = oktaSession.Login.Split( "@" )[0];
+		string providedLogin = user.Split( "@" )[0];
+		if( !sessionLogin.Equals( providedLogin, StringComparison.OrdinalIgnoreCase ) ) {
 			consoleWriter.WriteWarning(
 				"WARNING: Could not automatically sign in to Okta as provided Okta user "
-				+ $"'{StripLoginDomain( user )}' does not match user '{StripLoginDomain( oktaSession.Login )}'." );
+				+ $"'{sessionLogin}' does not match user '{providedLogin}'." );
 			return null;
 		}
 
 		TryCacheOktaSession( user, orgUrl.Host, sessionId, oktaSession.ExpiresAt );
 		return oktaAuthenticatedClient;
-	}
-
-	private static string StripLoginDomain( string email ) {
-		return email.Contains( '@' ) ? email.Split( '@' )[0] : email;
-	}
-
-	private static bool OktaUserMatchesProvided( string oktaLogin, string providedUser ) {
-		string adName = StripLoginDomain( oktaLogin );
-		string normalizedUser = StripLoginDomain( providedUser );
-		return adName.Equals( normalizedUser, StringComparison.OrdinalIgnoreCase );
 	}
 
 	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
