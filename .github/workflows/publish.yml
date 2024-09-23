@@ -187,7 +187,7 @@ jobs:
         working-directory: build
         run: |
           chmod +x "bmx"
-          tar -czvf "bmx-$PLATFORM-x64.tar.gz" "bmx"
+          tar -czvf "bmx-$PLATFORM-$ARCHITECTURE.tar.gz" "bmx"
           gh release upload "$RELEASE_ID" "bmx-$PLATFORM-$ARCHITECTURE.tar.gz"
 
   publish_release:
