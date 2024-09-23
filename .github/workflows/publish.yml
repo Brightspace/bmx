@@ -106,7 +106,9 @@ jobs:
       - name: check size
         shell: pwsh
         working-directory: src/D2L.Bmx
-        run: Get-ChildItem build
+        run: |
+          Get-ChildItem build/x64
+          Get-ChildItem build/arm64
 
       - name: upload build
         if: github.event_name == 'workflow_dispatch'
@@ -122,11 +124,12 @@ jobs:
             Compress-Archive -Path "./x64/bmx.exe" -DestinationPath "bmx-win-x64.zip"
             Compress-Archive -Path "./arm64/bmx.exe" -DestinationPath "bmx-win-arm64.zip"
             gh release upload "$env:RELEASE_ID" "bmx-win-x64.zip"
+            gh release upload "$env:RELEASE_ID" "bmx-win-arm64.zip"
           } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
             tar -czvf "bmx-osx-x64.tar.gz" "/x64/bmx"
-            gh release upload "$env:RELEASE_ID" "bmx-osx-x64.tar.gz"
             tar -czvf "bmx-osx-arm64.tar.gz" "/arm64/bmx"
+            gh release upload "$env:RELEASE_ID" "bmx-osx-x64.tar.gz"
             gh release upload "$env:RELEASE_ID" "bmx-osx-arm64.tar.gz"
           }
 
@@ -138,8 +141,13 @@ jobs:
         include:
           - file: Dockerfile.al2
             platform: linux
+            architecture: x64
           - file: Dockerfile.alpine
             platform: linux.alpine
+            architecture: x64
+          - file: Dockerfile.ubuntu-arm64
+            platform: linux
+            architecture: arm64
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -173,13 +181,14 @@ jobs:
         shell: bash
         env:
           RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
+          ARCHITECTURE: ${{ matrix.architecture }}
           PLATFORM: ${{ matrix.platform }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
         run: |
           chmod +x "bmx"
           tar -czvf "bmx-$PLATFORM-x64.tar.gz" "bmx"
-          gh release upload "$RELEASE_ID" "bmx-$PLATFORM-x64.tar.gz"
+          gh release upload "$RELEASE_ID" "bmx-$PLATFORM-$ARCHITECTURE.tar.gz"
 
   publish_release:
     needs: [create_release, build, build_docker]

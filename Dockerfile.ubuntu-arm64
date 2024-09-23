@@ -19,7 +19,6 @@ RUN apt-get update && apt-get install -y \
     tar \
     gzip \
     libicu-dev \
-    dpkg \
     binutils-aarch64-linux-gnu \
     gcc-aarch64-linux-gnu \
     zlib1g-dev:arm64 \
