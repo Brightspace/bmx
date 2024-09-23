@@ -94,14 +94,14 @@ jobs:
             /p:InformationalVersion="$version" `
             /p:IncludeSourceRevisionInInformationalVersion=false `
             -r $env:PLATFORM-x64 `
-            -o build
+            -o build/x64
 
           dotnet publish `
             /p:Version="$versionWithoutv" `
             /p:InformationalVersion="$version" `
             /p:IncludeSourceRevisionInInformationalVersion=false `
             -r $env:PLATFORM-arm64 `
-            -o build
+            -o build/arm64
 
       - name: check size
         shell: pwsh
@@ -119,12 +119,15 @@ jobs:
         working-directory: src/D2L.Bmx/build
         run: |
           if ($env:PLATFORM -eq 'win') {
-            Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win-x64.zip"
+            Compress-Archive -Path "./x64/bmx.exe" -DestinationPath "bmx-win-x64.zip"
+            Compress-Archive -Path "./arm64/bmx.exe" -DestinationPath "bmx-win-arm64.zip"
             gh release upload "$env:RELEASE_ID" "bmx-win-x64.zip"
           } elseif ($env:PLATFORM -eq 'osx') {
             chmod +x "bmx"
-            tar -czvf "bmx-osx-x64.tar.gz" "bmx"
+            tar -czvf "bmx-osx-x64.tar.gz" "/x64/bmx"
             gh release upload "$env:RELEASE_ID" "bmx-osx-x64.tar.gz"
+            tar -czvf "bmx-osx-arm64.tar.gz" "/arm64/bmx"
+            gh release upload "$env:RELEASE_ID" "bmx-osx-arm64.tar.gz"
           }
 
   build_docker:
