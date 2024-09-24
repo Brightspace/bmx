@@ -147,8 +147,8 @@ internal class OktaAuthenticator(
 		bool bypassBrowserSecurity
 	) {
 
-		bool isAdmin = UserPrivileges.HasElevatedPermissions();
-		if( isAdmin && !bypassBrowserSecurity ) {
+		bool hasElevatedPermissions = UserPrivileges.HasElevatedPermissions();
+		if( hasElevatedPermissions && !bypassBrowserSecurity ) {
 			consoleWriter.WriteWarning( $"""
 				BMX is being run with elevated privileges and is unable to automatically sign in to Okta.
 				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
@@ -156,7 +156,7 @@ internal class OktaAuthenticator(
 				"""
 			);
 			return null;
-		} else if( !isAdmin && bypassBrowserSecurity ) {
+		} else if( !hasElevatedPermissions && bypassBrowserSecurity ) {
 			// We want to avoid providing '--no-sandbox' to chromium unless absolutely neccessary.
 			bypassBrowserSecurity = false;
 		}
