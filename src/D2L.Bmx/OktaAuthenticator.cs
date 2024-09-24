@@ -205,7 +205,6 @@ internal class OktaAuthenticator(
 				consider running the command again with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
-			return null;
 		} catch( Exception ) {
 			consoleWriter.WriteWarning(
 				"WARNING: Unknown error occurred while trying to automatically sign in with Okta." );
