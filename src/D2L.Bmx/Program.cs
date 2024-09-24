@@ -305,7 +305,7 @@ return await new CommandLineBuilder( rootCommand )
 	.Build()
 	.InvokeAsync( args );
 
-static partial class NativeMethods {
-	[LibraryImport("libc", EntryPoint = "geteuid")]
+internal static partial class NativeMethods {
+	[LibraryImport( "libc", EntryPoint = "geteuid" )]
 	public static partial uint GetPosixEuid();
 }
