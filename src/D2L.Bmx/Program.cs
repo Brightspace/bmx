@@ -38,8 +38,10 @@ bypassBrowserSecurityOption.AddValidator( result => {
 		isElevated = GetPosixEuid() == 0;
 	}
 	if( isElevated && !bypass ) {
-		result.ErrorMessage
-			= "When running BMX with elevated permissions, --experimental-bypass-browser-security must be set to true";
+		result.ErrorMessage = """
+			Running BMX with elevated permissions is only allowed with the '--experimental-bypass-browser-security' flag.
+			Only include this if you aren't concerned with the security of the host for your Okta organization.
+			""";
 	} else if( !isElevated && bypass ) {
 		result.ErrorMessage
 			= "BMX is not running with elevated permissions, so --experimental-bypass-browser-security must be set to false";
