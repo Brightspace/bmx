@@ -194,7 +194,7 @@ internal class OktaAuthenticator(
 		} catch( TaskCanceledException ) {
 			consoleWriter.WriteWarning( $"""
 				WARNING: Timed out when trying to automatically sign in to Okta. Check if the org '{orgUrl}' is correct.
-				if you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
 				consider running the command again with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
