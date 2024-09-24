@@ -201,7 +201,7 @@ internal class OktaAuthenticator(
 		} catch( TargetClosedException ) {
 			consoleWriter.WriteWarning( """
 				WARNING: Failed to automatically sign in to Okta as BMX is likely being run with elevated privileges.
-				if you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
 				consider running the command again with the '--experimental-bypass-browser-security' flag.
 				"""
 			);
