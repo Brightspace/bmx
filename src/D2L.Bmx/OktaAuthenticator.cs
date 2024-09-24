@@ -63,7 +63,6 @@ internal class OktaAuthenticator(
 		if( await GetDssoAuthenticatedClientAsync(
 			orgUrl,
 			user,
-			oktaClientFactory,
 			nonInteractive,
 			bypassBrowserSecurity ) is { } oktaDssoAuthenticated
 		) {
@@ -144,7 +143,6 @@ internal class OktaAuthenticator(
 	private async Task<IOktaAuthenticatedClient?> GetDssoAuthenticatedClientAsync(
 		Uri orgUrl,
 		string user,
-		IOktaClientFactory oktaClientFactory,
 		bool nonInteractive,
 		bool experimentalBypassBrowserSecurity
 	) {
