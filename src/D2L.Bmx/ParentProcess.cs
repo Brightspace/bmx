@@ -25,6 +25,7 @@ internal partial class ParentProcess {
 	[LibraryImport( "libc", EntryPoint = "getppid" )]
 	private static partial int GetPosixParentProcessId();
 
+
 	// Uses the same approach of calling NtQueryInformationProcess as in the PowerShell library
 	// https://github.com/PowerShell/PowerShell/blob/26f621952910e33840efb0c539fbef1e2a467a0d/src/System.Management.Automation/engine/ProcessCodeMethods.cs
 	private static int GetWindowsParentProcessId() {
