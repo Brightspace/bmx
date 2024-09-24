@@ -41,7 +41,7 @@ bypassBrowserSecurityOption.AddValidator( result => {
 			""";
 	} else if( !isElevated && bypass ) {
 		result.ErrorMessage
-			= "BMX is not running with elevated permissions, so --experimental-bypass-browser-security must be set to false";
+			= "BMX is not running with elevated permissions, so don't provide the '--experimental-bypass-browser-security' flag";
 	}
 } );
 
