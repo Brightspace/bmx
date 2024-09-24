@@ -236,9 +236,9 @@ internal class OktaAuthenticator(
 			return true;
 		}
 		consoleWriter.WriteWarning( """
-					No config file found. Your Okta session will not be cached.
-					Consider running `bmx configure` if you own this machine.
-					""" );
+			No config file found. Your Okta session will not be cached.
+			Consider running `bmx configure` if you own this machine.
+			""" );
 		return false;
 	}
 
