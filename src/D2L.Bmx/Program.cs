@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
 using D2L.Bmx;
@@ -21,7 +23,28 @@ var userOption = new Option<string>(
 // allow no-sandbox argument for chromium to for passwordless auth with elevated permissions
 var bypassBrowserSecurityOption = new Option<bool>(
 	name: "--experimental-bypass-browser-security",
+	getDefaultValue: () => false,
 	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
+
+[LibraryImport( "libc", EntryPoint = "geteuid" )]
+static extern uint GetPosixEuid();
+
+bypassBrowserSecurityOption.AddValidator( result => {
+	bool bypass = result.GetValueForOption( bypassBrowserSecurityOption );
+	bool isElevated = false;
+	if( OperatingSystem.IsWindows() ) {
+		isElevated = new WindowsPrincipal( WindowsIdentity.GetCurrent() ).IsInRole( WindowsBuiltInRole.Administrator );
+	} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
+		isElevated = GetPosixEuid() == 0;
+	}
+	if( isElevated && !bypass ) {
+		result.ErrorMessage
+			= "When running BMX with elevated permissions, --experimental-bypass-browser-security must be set to true";
+	} else if( !isElevated && bypass ) {
+		result.ErrorMessage
+			= "BMX is not running with elevated permissions, so --experimental-bypass-browser-security must be set to false";
+	}
+} );
 
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
