@@ -26,16 +26,13 @@ var bypassBrowserSecurityOption = new Option<bool>(
 	getDefaultValue: () => false,
 	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
 
-[LibraryImport( "libc", EntryPoint = "geteuid" )]
-static extern uint GetPosixEuid();
-
 bypassBrowserSecurityOption.AddValidator( result => {
 	bool bypass = result.GetValueForOption( bypassBrowserSecurityOption );
 	bool isElevated = false;
 	if( OperatingSystem.IsWindows() ) {
 		isElevated = new WindowsPrincipal( WindowsIdentity.GetCurrent() ).IsInRole( WindowsBuiltInRole.Administrator );
 	} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
-		isElevated = GetPosixEuid() == 0;
+		isElevated = NativeMethods.GetPosixEuid() == 0;
 	}
 	if( isElevated && !bypass ) {
 		result.ErrorMessage = """
@@ -307,3 +304,8 @@ return await new CommandLineBuilder( rootCommand )
 	} )
 	.Build()
 	.InvokeAsync( args );
+
+static partial class NativeMethods {
+	[LibraryImport("libc", EntryPoint = "geteuid")]
+	public static partial uint GetPosixEuid();
+}
