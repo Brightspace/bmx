@@ -13,8 +13,8 @@ public static class Browser {
 
 	// https://github.com/microsoft/playwright/blob/6763d5ab6bd20f1f0fc879537855a26c7644a496/packages/playwright-core/src/server/registry/index.ts#L457-L459
 	private static readonly string[] WindowsPartialPaths = [
-		"\\Microsoft\\Edge\\Application\\msedge.exe",
-		"\\Google\\Chrome\\Application\\chrome.exe",
+		"Microsoft\\Edge\\Application\\msedge.exe",
+		"Google\\Chrome\\Application\\chrome.exe",
 	];
 	private static readonly string[] MacPaths = [
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -45,7 +45,7 @@ public static class Browser {
 				foreach( string environmentVariable in WindowsEnvironmentVariables ) {
 					string? prefix = Environment.GetEnvironmentVariable( environmentVariable );
 					if( prefix is not null ) {
-						string path = prefix + windowsPartialPath;
+						string path = Path.Join( prefix, windowsPartialPath );
 						if( File.Exists( path ) ) {
 							return path;
 						}
@@ -53,9 +53,9 @@ public static class Browser {
 				}
 			}
 		} else if( OperatingSystem.IsMacOS() ) {
-			return MacPaths.First( File.Exists );
+			return Array.Find( MacPaths, File.Exists );
 		} else if( OperatingSystem.IsLinux() ) {
-			return LinuxPaths.First( File.Exists );
+			return Array.Find( LinuxPaths, File.Exists );
 		}
 		return null;
 	}
