@@ -18,4 +18,7 @@ internal static class ParameterDescriptions {
 		Write BMX command to AWS profile, so that AWS tools & SDKs using the profile will source credentials from BMX.
 		See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html.
 		""";
+
+	public const string ExperimentalBypassBrowserSecurity
+		= "Disable Chromium sandbox when automatically signing into Okta";
 }

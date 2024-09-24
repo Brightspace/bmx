@@ -6,8 +6,8 @@ using D2L.Bmx.Okta.Models;
 namespace D2L.Bmx.Okta;
 
 internal interface IOktaClientFactory {
-	IOktaAnonymousClient CreateAnonymousClient( string org );
-	IOktaAuthenticatedClient CreateAuthenticatedClient( string org, string sessionId );
+	IOktaAnonymousClient CreateAnonymousClient( Uri orgUrl );
+	IOktaAuthenticatedClient CreateAuthenticatedClient( Uri orgUrl, string sessionId );
 }
 
 internal interface IOktaAnonymousClient {
@@ -23,20 +23,21 @@ internal interface IOktaAnonymousClient {
 
 internal interface IOktaAuthenticatedClient {
 	Task<OktaApp[]> GetAwsAccountAppsAsync();
+	Task<OktaSession> GetCurrentOktaSessionAsync();
 	Task<string> GetPageAsync( string url );
 }
 
 internal class OktaClientFactory : IOktaClientFactory {
-	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( string org ) {
+	IOktaAnonymousClient IOktaClientFactory.CreateAnonymousClient( Uri orgUrl ) {
 		var httpClient = new HttpClient {
 			Timeout = TimeSpan.FromSeconds( 30 ),
-			BaseAddress = GetBaseAddress( org ),
+			BaseAddress = GetApiBaseAddress( orgUrl ),
 		};
 		return new OktaAnonymousClient( httpClient );
 	}
 
-	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( string org, string sessionId ) {
-		var baseAddress = GetBaseAddress( org );
+	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( Uri orgUrl, string sessionId ) {
+		var baseAddress = GetApiBaseAddress( orgUrl );
 
 		var cookieContainer = new CookieContainer();
 		cookieContainer.Add( new Cookie( "sid", sessionId, "/", baseAddress.Host ) );
@@ -51,10 +52,8 @@ internal class OktaClientFactory : IOktaClientFactory {
 		return new OktaAuthenticatedClient( httpClient );
 	}
 
-	private static Uri GetBaseAddress( string org ) {
-		return org.Contains( '.' )
-			? new Uri( $"https://{org}/api/v1/" )
-			: new Uri( $"https://{org}.okta.com/api/v1/" );
+	private static Uri GetApiBaseAddress( Uri orgBaseAddresss ) {
+		return new Uri( orgBaseAddresss, "api/v1/" );
 	}
 }
 
@@ -185,6 +184,19 @@ internal class OktaAuthenticatedClient( HttpClient httpClient ) : IOktaAuthentic
 
 		return apps?.Where( app => app.AppName == "amazon_aws" ).ToArray()
 				?? throw new BmxException( "Error retrieving AWS accounts from Okta." );
+	}
+
+	async Task<OktaSession> IOktaAuthenticatedClient.GetCurrentOktaSessionAsync() {
+		OktaSession? session;
+		try {
+			session = await httpClient.GetFromJsonAsync(
+				"sessions/me",
+				JsonCamelCaseContext.Default.OktaSession );
+		} catch( Exception ex ) {
+			throw new BmxException( "Request to retrieve session from Okta failed.", ex );
+		}
+
+		return session ?? throw new BmxException( "Error retrieving session from Okta." );
 	}
 
 	async Task<string> IOktaAuthenticatedClient.GetPageAsync( string url ) {

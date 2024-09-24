@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using D2L.Bmx.Okta;
 using D2L.Bmx.Okta.Models;
+using PuppeteerSharp;
 
 namespace D2L.Bmx;
 
@@ -22,7 +23,8 @@ internal class OktaAuthenticator(
 		string? org,
 		string? user,
 		bool nonInteractive,
-		bool ignoreCache
+		bool ignoreCache,
+		bool bypassBrowserSecurity
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -52,10 +54,19 @@ internal class OktaAuthenticator(
 			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
-		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( org );
+		var orgUrl = GetOrgBaseAddress( org );
+		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgUrl );
 
-		if( !ignoreCache && TryAuthenticateFromCache( org, user, oktaClientFactory, out var oktaAuthenticated ) ) {
+		if( !ignoreCache && TryAuthenticateFromCache( orgUrl, user, oktaClientFactory, out var oktaAuthenticated ) ) {
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
+		}
+		if( await GetDssoAuthenticatedClientAsync(
+			orgUrl,
+			user,
+			nonInteractive,
+			bypassBrowserSecurity ) is { } oktaDssoAuthenticated
+		) {
+			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDssoAuthenticated );
 		}
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
@@ -95,15 +106,8 @@ internal class OktaAuthenticator(
 		if( authnResponse is AuthenticateResponse.Success successInfo ) {
 			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
 
-			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionResp.Id );
-			if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
-				CacheOktaSession( user, org, sessionResp.Id, sessionResp.ExpiresAt );
-			} else {
-				consoleWriter.WriteWarning( """
-					No config file found. Your Okta session will not be cached.
-					Consider running `bmx configure` if you own this machine.
-					""" );
-			}
+			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionResp.Id );
+			TryCacheOktaSession( user, orgUrl.Host, sessionResp.Id, sessionResp.ExpiresAt );
 			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
@@ -114,26 +118,131 @@ internal class OktaAuthenticator(
 		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
 	}
 
+	private static Uri GetOrgBaseAddress( string org ) {
+		return org.Contains( '.' )
+			? new Uri( $"https://{org}/" )
+			: new Uri( $"https://{org}.okta.com/" );
+	}
+
 	private bool TryAuthenticateFromCache(
-		string org,
+		Uri orgBaseAddress,
 		string user,
 		IOktaClientFactory oktaClientFactory,
 		[NotNullWhen( true )] out IOktaAuthenticatedClient? oktaAuthenticated
 	) {
-		string? sessionId = GetCachedOktaSessionId( user, org );
+		string? sessionId = GetCachedOktaSessionId( user, orgBaseAddress.Host );
 		if( string.IsNullOrEmpty( sessionId ) ) {
 			oktaAuthenticated = null;
 			return false;
 		}
 
-		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( org, sessionId );
+		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgBaseAddress, sessionId );
 		return true;
+	}
+
+	private async Task<IOktaAuthenticatedClient?> GetDssoAuthenticatedClientAsync(
+		Uri orgUrl,
+		string user,
+		bool nonInteractive,
+		bool experimentalBypassBrowserSecurity
+	) {
+		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimentalBypassBrowserSecurity );
+		if( browser is null ) {
+			return null;
+		}
+
+		if( !nonInteractive ) {
+			Console.Error.WriteLine( "Attempting to automatically sign in to Okta." );
+		}
+		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
+		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		string? sessionId = null;
+
+		try {
+			using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
+			int attempt = 1;
+
+			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
+			await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+			sessionId = await sessionIdTcs.Task;
+
+			async Task GetSessionCookieAsync() {
+				var url = new Uri( page.Url );
+				if( url.Host == orgUrl.Host ) {
+					string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
+					// DSSO can sometimes takes more than one attempt.
+					// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
+					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
+						if( attempt < 3 && url.AbsolutePath != "/" ) {
+							attempt++;
+							await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+						} else {
+							consoleWriter.WriteWarning(
+								"WARNING: Failed to authenticate with Okta when trying to automatically sign in" );
+							sessionIdTcs.SetResult( null );
+						}
+						return;
+					}
+				}
+				var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
+					sessionIdTcs.SetResult( sid );
+				}
+			}
+		} catch( TaskCanceledException ) {
+			consoleWriter.WriteWarning( $"""
+				WARNING: Timed out when trying to automatically sign in to Okta. Check if the org '{orgUrl}' is correct.
+				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				consider running the command again with the '--experimental-bypass-browser-security' flag.
+				"""
+			);
+		} catch( TargetClosedException ) {
+			consoleWriter.WriteWarning( """
+				WARNING: Failed to automatically sign in to Okta as BMX is likely being run with elevated privileges.
+				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				consider running the command again with the '--experimental-bypass-browser-security' flag.
+				"""
+			);
+		} catch( Exception ) {
+			consoleWriter.WriteWarning(
+				"WARNING: Unknown error occurred while trying to automatically sign in with Okta." );
+		}
+
+		if( sessionId is null ) {
+			return null;
+		}
+
+		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionId );
+		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
+		string sessionLogin = oktaSession.Login.Split( "@" )[0];
+		string providedLogin = user.Split( "@" )[0];
+		if( !sessionLogin.Equals( providedLogin, StringComparison.OrdinalIgnoreCase ) ) {
+			consoleWriter.WriteWarning(
+				"WARNING: Could not automatically sign in to Okta as provided Okta user "
+				+ $"'{sessionLogin}' does not match user '{providedLogin}'." );
+			return null;
+		}
+
+		TryCacheOktaSession( user, orgUrl.Host, sessionId, oktaSession.ExpiresAt );
+		return oktaAuthenticatedClient;
+	}
+
+	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
+		if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
+			CacheOktaSession( userId, org, sessionId, expiresAt );
+			return true;
+		}
+		consoleWriter.WriteWarning( """
+			No config file found. Your Okta session will not be cached.
+			Consider running `bmx configure` if you own this machine.
+			""" );
+		return false;
 	}
 
 	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
 		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
 		var sessionsToCache = ReadOktaSessionCacheFile();
-		sessionsToCache = sessionsToCache.Where( session => session.UserId != userId && session.Org != org )
+		sessionsToCache = sessionsToCache.Where( session => session.UserId != userId || session.Org != org )
 			.ToList();
 		sessionsToCache.Add( session );
 
