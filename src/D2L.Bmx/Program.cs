@@ -21,7 +21,6 @@ var userOption = new Option<string>(
 // allow no-sandbox argument for chromium to for passwordless auth with elevated permissions
 var bypassBrowserSecurityOption = new Option<bool>(
 	name: "--experimental-bypass-browser-security",
-	getDefaultValue: () => false,
 	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
 
 // bmx login
