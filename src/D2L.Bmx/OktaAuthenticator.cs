@@ -144,9 +144,24 @@ internal class OktaAuthenticator(
 		Uri orgUrl,
 		string user,
 		bool nonInteractive,
-		bool experimentalBypassBrowserSecurity
+		bool bypassBrowserSecurity
 	) {
-		await using IBrowser? browser = await Browser.LaunchBrowserAsync( experimentalBypassBrowserSecurity );
+
+		bool isAdmin = UserPrivileges.HasElevatedPermissions();
+		if( isAdmin && !bypassBrowserSecurity ) {
+			consoleWriter.WriteWarning( $"""
+				BMX is being run with elevated privileges and is unable to automatically sign in to Okta.
+				If you have to run BMX with elevated privileges, and aren't concerned with the security of {orgUrl.Host},
+				consider running the command again with the '--experimental-bypass-browser-security' flag.
+				"""
+			);
+			return null;
+		} else if( !isAdmin && bypassBrowserSecurity ) {
+			// We want to avoid providing '--no-sandbox' to chromium unless absolutely neccessary.
+			bypassBrowserSecurity = false;
+		}
+
+		await using IBrowser? browser = await Browser.LaunchBrowserAsync( bypassBrowserSecurity );
 		if( browser is null ) {
 			return null;
 		}

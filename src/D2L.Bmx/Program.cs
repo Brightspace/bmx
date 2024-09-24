@@ -2,8 +2,6 @@ using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
 using D2L.Bmx;
@@ -25,25 +23,6 @@ var bypassBrowserSecurityOption = new Option<bool>(
 	name: "--experimental-bypass-browser-security",
 	getDefaultValue: () => false,
 	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
-
-bypassBrowserSecurityOption.AddValidator( result => {
-	bool bypass = result.GetValueForOption( bypassBrowserSecurityOption );
-	bool isElevated = false;
-	if( OperatingSystem.IsWindows() ) {
-		isElevated = new WindowsPrincipal( WindowsIdentity.GetCurrent() ).IsInRole( WindowsBuiltInRole.Administrator );
-	} else if( OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() ) {
-		isElevated = NativeMethods.GetPosixEuid() == 0;
-	}
-	if( isElevated && !bypass ) {
-		result.ErrorMessage = """
-			Running BMX with elevated permissions is only allowed with the '--experimental-bypass-browser-security' flag.
-			Only include this if you aren't concerned with the security of the host for your Okta organization.
-			""";
-	} else if( !isElevated && bypass ) {
-		result.ErrorMessage
-			= "BMX is not running with elevated permissions, so don't provide the '--experimental-bypass-browser-security' flag";
-	}
-} );
 
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ){
@@ -304,8 +283,3 @@ return await new CommandLineBuilder( rootCommand )
 	} )
 	.Build()
 	.InvokeAsync( args );
-
-internal static partial class NativeMethods {
-	[LibraryImport( "libc", EntryPoint = "geteuid" )]
-	public static partial uint GetPosixEuid();
-}
