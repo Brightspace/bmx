@@ -20,5 +20,5 @@ internal static class ParameterDescriptions {
 		""";
 
 	public const string ExperimentalBypassBrowserSecurity
-		= "Disable Chromium sandbox when automatically signing into Okta";
+		= "Disable Chromium sandbox when using Okta passwordless authentication";
 }

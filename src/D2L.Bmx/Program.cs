@@ -18,7 +18,7 @@ var userOption = new Option<string>(
 	name: "--user",
 	description: ParameterDescriptions.User );
 
-// allow no-sandbox argument for chromium to for passwordless auth with elevated permissions
+// allow no-sandbox argument for Chromium to for passwordless auth with elevated permissions
 var bypassBrowserSecurityOption = new Option<bool>(
 	name: "--experimental-bypass-browser-security",
 	description: ParameterDescriptions.ExperimentalBypassBrowserSecurity );
