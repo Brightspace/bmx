@@ -55,67 +55,27 @@ internal class OktaAuthenticator(
 		}
 
 		var orgUrl = GetOrgBaseAddress( org );
-		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgUrl );
 
-		if( !ignoreCache && TryAuthenticateFromCache( orgUrl, user, oktaClientFactory, out var oktaAuthenticated ) ) {
-			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
+		if( !ignoreCache && TryAuthenticateFromCache( orgUrl, user, out var oktaAuthenticated ) ) {
+			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
-		if( await GetDssoAuthenticatedClientAsync(
+
+		oktaAuthenticated = await GetDssoAuthenticatedClientAsync(
 			orgUrl,
 			user,
 			nonInteractive,
-			bypassBrowserSecurity ) is { } oktaDssoAuthenticated
-		) {
-			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaDssoAuthenticated );
+			bypassBrowserSecurity
+		);
+		if( oktaAuthenticated is not null ) {
+			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
+
 		if( nonInteractive ) {
 			throw new BmxException( "Okta authentication failed. Please run `bmx login` first." );
 		}
 
-		string password = consolePrompter.PromptPassword();
-
-		var authnResponse = await oktaAnonymous.AuthenticateAsync( user, password );
-
-		if( authnResponse is AuthenticateResponse.Failure failure ) {
-			throw new BmxException( $"""
-				Okta authentication for user '{user}' in org '{org}' failed ({failure.StatusCode}).
-				Check if org, user, and password is correct.
-				""" );
-		}
-
-		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
-			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
-
-			if( mfaFactor.FactorName == OktaMfaFactor.UnsupportedMfaFactor ) {
-				throw new BmxException( "Selected MFA not supported by BMX" );
-			}
-
-			// TODO: Handle retry
-			if( mfaFactor.RequireChallengeIssue ) {
-				await oktaAnonymous.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
-			}
-
-			string mfaResponse = consolePrompter.GetMfaResponse(
-				mfaFactor is OktaMfaQuestionFactor questionFactor ? questionFactor.Profile.QuestionText : "PassCode",
-				mfaFactor is OktaMfaQuestionFactor // Security question factor is a static value
-			);
-
-			authnResponse = await oktaAnonymous.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
-		}
-
-		if( authnResponse is AuthenticateResponse.Success successInfo ) {
-			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
-
-			oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionResp.Id );
-			TryCacheOktaSession( user, orgUrl.Host, sessionResp.Id, sessionResp.ExpiresAt );
-			return new OktaAuthenticatedContext( Org: org, User: user, Client: oktaAuthenticated );
-		}
-
-		if( authnResponse is AuthenticateResponse.Failure failure2 ) {
-			throw new BmxException( $"Error verifying MFA with Okta ({failure2.StatusCode})." );
-		}
-
-		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
+		oktaAuthenticated = await GetPasswordAuthenticatedClientAsync( orgUrl, user );
+		return new( Org: org, User: user, Client: oktaAuthenticated );
 	}
 
 	private static Uri GetOrgBaseAddress( string org ) {
@@ -127,7 +87,6 @@ internal class OktaAuthenticator(
 	private bool TryAuthenticateFromCache(
 		Uri orgBaseAddress,
 		string user,
-		IOktaClientFactory oktaClientFactory,
 		[NotNullWhen( true )] out IOktaAuthenticatedClient? oktaAuthenticated
 	) {
 		string? sessionId = GetCachedOktaSessionId( user, orgBaseAddress.Host );
@@ -228,6 +187,52 @@ internal class OktaAuthenticator(
 
 		TryCacheOktaSession( user, orgUrl.Host, sessionId, oktaSession.ExpiresAt );
 		return oktaAuthenticatedClient;
+	}
+
+	private async Task<IOktaAuthenticatedClient> GetPasswordAuthenticatedClientAsync( Uri orgUrl, string user ) {
+		string password = consolePrompter.PromptPassword();
+
+		var oktaAnonymous = oktaClientFactory.CreateAnonymousClient( orgUrl );
+		var authnResponse = await oktaAnonymous.AuthenticateAsync( user, password );
+
+		if( authnResponse is AuthenticateResponse.Failure failure ) {
+			throw new BmxException( $"""
+				Okta authentication for user '{user}' in org '{orgUrl.Host}' failed ({failure.StatusCode}).
+				Check if org, user, and password is correct.
+				""" );
+		}
+
+		if( authnResponse is AuthenticateResponse.MfaRequired mfaInfo ) {
+			OktaMfaFactor mfaFactor = consolePrompter.SelectMfa( mfaInfo.Factors );
+
+			if( mfaFactor.FactorName == OktaMfaFactor.UnsupportedMfaFactor ) {
+				throw new BmxException( "Selected MFA not supported by BMX" );
+			}
+
+			// TODO: Handle retry
+			if( mfaFactor.RequireChallengeIssue ) {
+				await oktaAnonymous.IssueMfaChallengeAsync( mfaInfo.StateToken, mfaFactor.Id );
+			}
+
+			string mfaResponse = consolePrompter.GetMfaResponse(
+				mfaFactor is OktaMfaQuestionFactor questionFactor ? questionFactor.Profile.QuestionText : "PassCode",
+				mfaFactor is OktaMfaQuestionFactor // Security question factor is a static value
+			);
+
+			authnResponse = await oktaAnonymous.VerifyMfaChallengeResponseAsync( mfaInfo.StateToken, mfaFactor.Id, mfaResponse );
+		}
+
+		if( authnResponse is AuthenticateResponse.Success successInfo ) {
+			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
+			TryCacheOktaSession( user, orgUrl.Host, sessionResp.Id, sessionResp.ExpiresAt );
+			return oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionResp.Id );
+		}
+
+		if( authnResponse is AuthenticateResponse.Failure failure2 ) {
+			throw new BmxException( $"Error verifying MFA with Okta ({failure2.StatusCode})." );
+		}
+
+		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
 	}
 
 	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
