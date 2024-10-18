@@ -276,7 +276,7 @@ return await new CommandLineBuilder( rootCommand )
 		} else {
 			consoleWriter.WriteError( "BMX exited with unexpected internal error" );
 		}
-		if( Environment.GetEnvironmentVariable( "BMX_DEBUG" ) == "1" ) {
+		if( BmxEnvironment.IsDebug ) {
 			consoleWriter.WriteError( exception.ToString() );
 		}
 	} )

@@ -25,12 +25,7 @@ public static class Browser {
 		"/opt/microsoft/msedge/msedge",
 	];
 
-	public static async Task<IBrowser?> LaunchBrowserAsync( bool noSandbox = false ) {
-		string? browserPath = GetPathToBrowser();
-		if( browserPath is null ) {
-			return null;
-		}
-
+	public static async Task<IBrowser> LaunchBrowserAsync( string browserPath, bool noSandbox = false ) {
 		var launchOptions = new LaunchOptions {
 			ExecutablePath = browserPath,
 			Args = noSandbox ? ["--no-sandbox"] : []
@@ -39,7 +34,7 @@ public static class Browser {
 		return await Puppeteer.LaunchAsync( launchOptions );
 	}
 
-	private static string? GetPathToBrowser() {
+	public static string? GetPathToBrowser() {
 		if( OperatingSystem.IsWindows() ) {
 			foreach( string windowsPartialPath in WindowsPartialPaths ) {
 				foreach( string environmentVariable in WindowsEnvironmentVariables ) {
