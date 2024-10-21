@@ -14,15 +14,13 @@ internal class PrintHandler(
 		int? duration,
 		bool nonInteractive,
 		string? format,
-		bool cacheAwsCredentials,
-		bool bypassBrowserSecurity
+		bool cacheAwsCredentials
 	) {
 		var oktaContext = await oktaAuth.AuthenticateAsync(
 			org: org,
 			user: user,
 			nonInteractive: nonInteractive,
-			ignoreCache: false,
-			bypassBrowserSecurity: bypassBrowserSecurity
+			ignoreCache: false
 		);
 		var awsCreds = ( await awsCredsCreator.CreateAwsCredsAsync(
 			okta: oktaContext,

@@ -22,8 +22,7 @@ internal class OktaAuthenticator(
 		string? org,
 		string? user,
 		bool nonInteractive,
-		bool ignoreCache,
-		bool bypassBrowserSecurity
+		bool ignoreCache
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -59,14 +58,14 @@ internal class OktaAuthenticator(
 			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
-		if( TryGetDssoAuthOptions( nonInteractive, bypassBrowserSecurity, out var dssoAuthOptions ) ) {
+		if( Browser.TryGetPathToBrowser( out string? browserPath ) ) {
 			if( !nonInteractive ) {
 				Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
 			}
 			oktaAuthenticated = await GetDssoAuthenticatedClientAsync(
 				orgUrl,
 				user,
-				dssoAuthOptions
+				browserPath
 			);
 			if( oktaAuthenticated is not null ) {
 				return new( Org: org, User: user, Client: oktaAuthenticated );
@@ -74,6 +73,10 @@ internal class OktaAuthenticator(
 			if( !nonInteractive ) {
 				Console.Error.WriteLine( "Falling back to Okta password authentication..." );
 			}
+		} else if( BmxEnvironment.IsDebug ) {
+			consoleWriter.WriteWarning(
+				"No suitable browser found for Okta passwordless authentication"
+			);
 		}
 
 		if( nonInteractive ) {
@@ -105,63 +108,12 @@ internal class OktaAuthenticator(
 		return true;
 	}
 
-	private record DssoAuthOptions( string BrowserPath, bool BypassBrowserSecurity, bool PrintDebugMessage );
-
-	private bool TryGetDssoAuthOptions(
-		bool nonInteractive,
-		bool bypassBrowserSecurity,
-		[NotNullWhen( returnValue: true )] out DssoAuthOptions? options
-	) {
-		options = null;
-
-		bool printDebugMessage =
-			BmxEnvironment.IsDebug
-			|| (
-				// if the user passed --experimental-bypass-browser-security, they've explicitly expressed interest in the browser/DSSO process
-				bypassBrowserSecurity
-				// but we still shouldn't print messages in non-interactive mode (it may break credential process)
-				&& !nonInteractive
-			);
-
-		bool hasElevatedPermissions = UserPrivileges.HasElevatedPermissions();
-		if( hasElevatedPermissions && !bypassBrowserSecurity ) {
-			if( printDebugMessage ) {
-				consoleWriter.WriteWarning(
-					"BMX is being run with elevated privileges and is unable to use Okta passwordless authentication."
-				);
-			}
-			return false;
-		}
-		if( !hasElevatedPermissions && bypassBrowserSecurity ) {
-			// We want to avoid providing '--no-sandbox' to chromium unless absolutely necessary.
-			bypassBrowserSecurity = false;
-			if( printDebugMessage ) {
-				consoleWriter.WriteWarning(
-					"Ignoring '--experimental-bypass-browser-security', "
-					+ "as it's only needed when BMX is run with elevated privileges."
-				);
-			}
-		}
-
-		if( !Browser.TryGetPathToBrowser( out string? browserPath ) ) {
-			if( printDebugMessage ) {
-				consoleWriter.WriteWarning(
-					"No suitable browser found for Okta passwordless authentication"
-				);
-			}
-			return false;
-		}
-
-		options = new( browserPath, bypassBrowserSecurity, printDebugMessage );
-		return true;
-	}
-
 	private async Task<IOktaAuthenticatedClient?> GetDssoAuthenticatedClientAsync(
 		Uri orgUrl,
 		string user,
-		DssoAuthOptions options
+		string browserPath
 	) {
-		await using var browser = await Browser.LaunchBrowserAsync( options.BrowserPath, options.BypassBrowserSecurity );
+		await using var browser = await Browser.LaunchBrowserAsync( browserPath );
 
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
@@ -186,7 +138,7 @@ internal class OktaAuthenticator(
 							attempt++;
 							await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 						} else {
-							if( options.PrintDebugMessage ) {
+							if( BmxEnvironment.IsDebug ) {
 								if( url.AbsolutePath == "/" ) {
 									consoleWriter.WriteWarning(
 										"Okta passwordless authentication is not available."
@@ -206,11 +158,11 @@ internal class OktaAuthenticator(
 				}
 			}
 		} catch( TaskCanceledException ) {
-			if( options.PrintDebugMessage ) {
+			if( BmxEnvironment.IsDebug ) {
 				consoleWriter.WriteWarning( "Okta passwordless authentication timed out." );
 			}
 		} catch( Exception ) {
-			if( options.PrintDebugMessage ) {
+			if( BmxEnvironment.IsDebug ) {
 				consoleWriter.WriteWarning( "Unknown error occurred while trying Okta passwordless authentication." );
 			}
 		}

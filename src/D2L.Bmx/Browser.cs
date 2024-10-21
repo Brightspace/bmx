@@ -26,10 +26,12 @@ public static class Browser {
 		"/opt/microsoft/msedge/msedge",
 	];
 
-	public static async Task<IBrowser> LaunchBrowserAsync( string browserPath, bool noSandbox = false ) {
+	public static async Task<IBrowser> LaunchBrowserAsync( string browserPath ) {
 		var launchOptions = new LaunchOptions {
 			ExecutablePath = browserPath,
-			Args = noSandbox ? ["--no-sandbox"] : []
+			// For whatever reason, with an elevated user, Chromium cannot launch in headless mode without --no-sandbox.
+			// This isn't a big concern for BMX, because it only visits the org Okta homepage, which should be trusted.
+			Args = UserPrivileges.HasElevatedPermissions() ? ["--no-sandbox"] : []
 		};
 
 		return await Puppeteer.LaunchAsync( launchOptions );
