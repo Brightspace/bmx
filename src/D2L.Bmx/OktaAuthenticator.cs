@@ -14,6 +14,7 @@ internal record OktaAuthenticatedContext(
 internal class OktaAuthenticator(
 	IOktaClientFactory oktaClientFactory,
 	IOktaSessionStorage sessionStorage,
+	IBrowserLauncher browserLauncher,
 	IConsolePrompter consolePrompter,
 	IConsoleWriter consoleWriter,
 	BmxConfig config
@@ -58,7 +59,7 @@ internal class OktaAuthenticator(
 			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
-		if( Browser.TryGetPathToBrowser( out string? browserPath ) ) {
+		if( browserLauncher.TryGetPathToBrowser( out string? browserPath ) ) {
 			if( !nonInteractive ) {
 				Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
 			}
@@ -113,7 +114,7 @@ internal class OktaAuthenticator(
 		string user,
 		string browserPath
 	) {
-		await using var browser = await Browser.LaunchBrowserAsync( browserPath );
+		await using var browser = await browserLauncher.LaunchAsync( browserPath );
 
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );

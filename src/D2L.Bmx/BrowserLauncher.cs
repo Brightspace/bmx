@@ -3,7 +3,12 @@ using PuppeteerSharp;
 
 namespace D2L.Bmx;
 
-public static class Browser {
+internal interface IBrowserLauncher {
+	Task<IBrowser> LaunchAsync( string browserPath );
+	bool TryGetPathToBrowser( [NotNullWhen( returnValue: true )] out string? path );
+}
+
+internal class BrowserLauncher : IBrowserLauncher {
 
 	// https://github.com/microsoft/playwright/blob/6763d5ab6bd20f1f0fc879537855a26c7644a496/packages/playwright-core/src/server/registry/index.ts#L630
 	private static readonly string[] WindowsEnvironmentVariables = [
@@ -26,7 +31,7 @@ public static class Browser {
 		"/opt/microsoft/msedge/msedge",
 	];
 
-	public static async Task<IBrowser> LaunchBrowserAsync( string browserPath ) {
+	async Task<IBrowser> IBrowserLauncher.LaunchAsync( string browserPath ) {
 		var launchOptions = new LaunchOptions {
 			ExecutablePath = browserPath,
 			// For whatever reason, with an elevated user, Chromium cannot launch in headless mode without --no-sandbox.
@@ -37,7 +42,7 @@ public static class Browser {
 		return await Puppeteer.LaunchAsync( launchOptions );
 	}
 
-	public static bool TryGetPathToBrowser( [NotNullWhen( returnValue: true )] out string? path ) {
+	bool IBrowserLauncher.TryGetPathToBrowser( [NotNullWhen( returnValue: true )] out string? path ) {
 		path = null;
 		if( OperatingSystem.IsWindows() ) {
 			foreach( string windowsPartialPath in WindowsPartialPaths ) {
