@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using PuppeteerSharp;
 
 namespace D2L.Bmx;
@@ -25,12 +26,7 @@ public static class Browser {
 		"/opt/microsoft/msedge/msedge",
 	];
 
-	public static async Task<IBrowser?> LaunchBrowserAsync( bool noSandbox = false ) {
-		string? browserPath = GetPathToBrowser();
-		if( browserPath is null ) {
-			return null;
-		}
-
+	public static async Task<IBrowser> LaunchBrowserAsync( string browserPath, bool noSandbox = false ) {
 		var launchOptions = new LaunchOptions {
 			ExecutablePath = browserPath,
 			Args = noSandbox ? ["--no-sandbox"] : []
@@ -39,24 +35,27 @@ public static class Browser {
 		return await Puppeteer.LaunchAsync( launchOptions );
 	}
 
-	private static string? GetPathToBrowser() {
+	public static bool TryGetPathToBrowser( [NotNullWhen( returnValue: true )] out string? path ) {
+		path = null;
 		if( OperatingSystem.IsWindows() ) {
 			foreach( string windowsPartialPath in WindowsPartialPaths ) {
 				foreach( string environmentVariable in WindowsEnvironmentVariables ) {
 					string? prefix = Environment.GetEnvironmentVariable( environmentVariable );
 					if( prefix is not null ) {
-						string path = Path.Join( prefix, windowsPartialPath );
+						path = Path.Join( prefix, windowsPartialPath );
 						if( File.Exists( path ) ) {
-							return path;
+							return true;
 						}
 					}
 				}
 			}
 		} else if( OperatingSystem.IsMacOS() ) {
-			return Array.Find( MacPaths, File.Exists );
+			path = Array.Find( MacPaths, File.Exists );
+			return path is not null;
 		} else if( OperatingSystem.IsLinux() ) {
-			return Array.Find( LinuxPaths, File.Exists );
+			path = Array.Find( LinuxPaths, File.Exists );
+			return path is not null;
 		}
-		return null;
+		return false;
 	}
 }
