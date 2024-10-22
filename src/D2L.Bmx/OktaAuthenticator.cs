@@ -114,51 +114,10 @@ internal class OktaAuthenticator(
 		string user,
 		string browserPath
 	) {
-		await using var browser = await browserLauncher.LaunchAsync( browserPath );
-
-		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
-		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
-		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
 		string? sessionId = null;
 
 		try {
-			using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
-			int attempt = 1;
-
-			page.Load += ( _, _ ) => _ = GetSessionCookieAsync();
-			await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-			sessionId = await sessionIdTcs.Task;
-
-			async Task GetSessionCookieAsync() {
-				var url = new Uri( page.Url );
-				if( url.Host == orgUrl.Host ) {
-					string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
-					// DSSO can sometimes takes more than one attempt.
-					// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
-					if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
-						if( attempt < 3 && url.AbsolutePath != "/" ) {
-							attempt++;
-							await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-						} else {
-							if( BmxEnvironment.IsDebug ) {
-								if( url.AbsolutePath == "/" ) {
-									consoleWriter.WriteWarning(
-										"Okta passwordless authentication is not available."
-									);
-								} else {
-									consoleWriter.WriteWarning( "Okta passwordless authentication failed" );
-								}
-							}
-							sessionIdTcs.SetResult( null );
-						}
-						return;
-					}
-				}
-				var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-				if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
-					sessionIdTcs.SetResult( sid );
-				}
-			}
+			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl );
 		} catch( TaskCanceledException ) {
 			if( BmxEnvironment.IsDebug ) {
 				consoleWriter.WriteWarning( "Okta passwordless authentication timed out." );
@@ -187,6 +146,52 @@ internal class OktaAuthenticator(
 
 		TryCacheOktaSession( user, orgUrl.Host, sessionId, oktaSession.ExpiresAt );
 		return oktaAuthenticatedClient;
+	}
+
+	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl ) {
+		await using var browser = await browserLauncher.LaunchAsync( browserPath );
+
+		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
+		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
+
+		using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
+		int attempt = 1;
+
+		page.Load += ( _, _ ) => _ = OnPageLoadAsync();
+		await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+		return await sessionIdTcs.Task;
+
+		async Task OnPageLoadAsync() {
+			var url = new Uri( page.Url );
+			if( url.Host == orgUrl.Host ) {
+				string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
+				// DSSO can sometimes takes more than one attempt.
+				// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
+				if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
+					if( attempt < 3 && url.AbsolutePath != "/" ) {
+						attempt++;
+						await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+					} else {
+						if( BmxEnvironment.IsDebug ) {
+							if( url.AbsolutePath == "/" ) {
+								consoleWriter.WriteWarning(
+									"Okta passwordless authentication is not available."
+								);
+							} else {
+								consoleWriter.WriteWarning( "Okta passwordless authentication failed" );
+							}
+						}
+						sessionIdTcs.SetResult( null );
+					}
+					return;
+				}
+			}
+			var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
+			if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
+				sessionIdTcs.SetResult( sid );
+			}
+		}
 	}
 
 	private async Task<IOktaAuthenticatedClient> GetPasswordAuthenticatedClientAsync( Uri orgUrl, string user ) {
