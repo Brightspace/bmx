@@ -165,6 +165,7 @@ internal class OktaAuthenticator(
 
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
 		string? sessionId = null;
 
 		try {
