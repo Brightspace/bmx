@@ -17,11 +17,11 @@ on:
       - ".github/workflows/publish.yml"
   workflow_dispatch:
     inputs:
-      release_tag:
+      version_number:
         required: true
-        description: "Tag for the new release"
+        description: "The version number (dot-separated numbers only)"
       prerelease:
-        description: "If true, the release will be set as a prerelease and not impact the latest tag"
+        description: "If true, the release will be set as a prerelease"
         type: boolean
         required: true
         default: false
@@ -31,25 +31,30 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.prerelease == 'true')
     runs-on: ubuntu-latest
     outputs:
+      release_tag: ${{ steps.create.outputs.release_tag }}
       release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - name: Create release
         id: create
         env:
-          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
           PRERELEASE: ${{ github.event.inputs.prerelease }}
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          if ( -Not ( $env:RELEASE_TAG -match '^v3\.[0-9]+\.[0-9]+(-preview)*' ) ){
-            Throw "Tag name format incorrect"
+          if ( -Not ( $env:VERSION_NUMBER -match '^3\.[0-9]+\.[0-9]+$' ) ){
+            Throw "Invalid version format"
           }
+          $releaseTag = "v$($env:VERSION_NUMBER)"
           if ($env:PRERELEASE -eq 'true') {
-              $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $env:RELEASE_TAG" --target $env:GITHUB_SHA
+            $releaseTag = "${releaseTag}-preview-$(Get-Date -AsUTC -Format 'yyyyMMddHHmmss')"
+            $releaseUrl = gh release create "$releaseTag" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $releaseTag" --target $env:GITHUB_SHA
           } else {
-              $releaseUrl = gh release create "$env:RELEASE_TAG" --repo Brightspace/bmx --draft --generate-notes --title "Release $env:RELEASE_TAG" --target $env:GITHUB_SHA
+            $releaseUrl = gh release create "$releaseTag" --repo Brightspace/bmx --draft --generate-notes --title "Release $releaseTag" --target $env:GITHUB_SHA
           }
           if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
+
+          "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
 
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
           "release_id=$releaseId" >> $env:GITHUB_OUTPUT
@@ -81,11 +86,11 @@ jobs:
       - name: publish
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
         working-directory: src/D2L.Bmx
         run: |
           $version = "$env:RELEASE_TAG"
-          if ( -not $version ){
+          if ( -not $version ) {
             $version = "v3.0.0"
           }
           $versionWithoutv = "$version".TrimStart("v")
@@ -169,10 +174,10 @@ jobs:
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
-          RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
         run: |
           $version = "$env:RELEASE_TAG"
-          if ( -not $version ){
+          if ( -not $version ) {
             $version = "v3.0.0"
           }
           $versionWithoutv = "$version".TrimStart("v")
@@ -199,8 +204,10 @@ jobs:
           tar -czvf "bmx-$PLATFORM-$ARCHITECTURE.tar.gz" "bmx"
           gh release upload "$RELEASE_ID" "bmx-$PLATFORM-$ARCHITECTURE.tar.gz"
 
-  publish_release:
+  # We only auto publish prereleases and not real releases. The latter should stay as draft and only be published manually after review.
+  publish_prerelease:
     needs: [create_release, build, build_docker]
+    if: github.event.inputs.prerelease == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
