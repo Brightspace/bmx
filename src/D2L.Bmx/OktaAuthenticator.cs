@@ -151,9 +151,16 @@ internal class OktaAuthenticator(
 	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl ) {
 		await using var browser = await browserLauncher.LaunchAsync( browserPath );
 
-		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+
+		// cancel if the total time exceeds 15 seconds, including all page loads and retries
+		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
+
+		// cancel if we're stuck on a single page for 3 seconds
+		using var pageTimer = new System.Timers.Timer( TimeSpan.FromSeconds( 3 ) ) { AutoReset = false };
+		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
+		pageTimer.Start();
 
 		using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
 		int attempt = 1;
@@ -163,6 +170,12 @@ internal class OktaAuthenticator(
 		return await sessionIdTcs.Task;
 
 		async Task OnPageLoadAsync() {
+			// reset the 3-sec per-page timer on every page load
+			lock( pageTimer ) {
+				pageTimer.Stop();
+				pageTimer.Start();
+			}
+
 			var url = new Uri( page.Url );
 			if( url.Host == orgUrl.Host ) {
 				string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
