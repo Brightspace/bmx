@@ -29,6 +29,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new LoginHandler( new OktaAuthenticator(
 		new OktaClientFactory(),
 		new OktaSessionStorage(),
+		new BrowserLauncher(),
 		new ConsolePrompter(),
 		consoleWriter,
 		config
@@ -129,6 +130,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaAuthenticator(
 			new OktaClientFactory(),
 			new OktaSessionStorage(),
+			new BrowserLauncher(),
 			consolePrompter,
 			consoleWriter,
 			config ),
@@ -183,6 +185,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaAuthenticator(
 			new OktaClientFactory(),
 			new OktaSessionStorage(),
+			new BrowserLauncher(),
 			consolePrompter,
 			consoleWriter,
 			config ),
