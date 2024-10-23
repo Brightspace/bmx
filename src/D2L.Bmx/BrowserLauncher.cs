@@ -26,10 +26,6 @@ internal class BrowserLauncher : IBrowserLauncher {
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
 	];
-	private static readonly string[] LinuxPaths = [
-		"/opt/google/chrome/chrome",
-		"/opt/microsoft/msedge/msedge",
-	];
 
 	async Task<IBrowser> IBrowserLauncher.LaunchAsync( string browserPath ) {
 		var launchOptions = new LaunchOptions {
@@ -59,10 +55,9 @@ internal class BrowserLauncher : IBrowserLauncher {
 		} else if( OperatingSystem.IsMacOS() ) {
 			path = Array.Find( MacPaths, File.Exists );
 			return path is not null;
-		} else if( OperatingSystem.IsLinux() ) {
-			path = Array.Find( LinuxPaths, File.Exists );
-			return path is not null;
 		}
+		// Okta DSSO is only supported for Windows and Mac. There's no point for us to support Linux.
+		// Chromium is finicky on Linux anyway.
 		return false;
 	}
 }
