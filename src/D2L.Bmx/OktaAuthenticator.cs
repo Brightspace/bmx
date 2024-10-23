@@ -59,7 +59,12 @@ internal class OktaAuthenticator(
 			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
-		if( browserLauncher.TryGetPathToBrowser( out string? browserPath ) ) {
+		if(
+			// `TryGetPathToBrowser` does return `false` for Linux, but excluding Linux earlier here helps
+			// the compiler trim more unused code (e.g. all of PuppeteerSharp)
+			!OperatingSystem.IsLinux()
+			&& browserLauncher.TryGetPathToBrowser( out string? browserPath )
+		) {
 			if( !nonInteractive ) {
 				Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
 			}
