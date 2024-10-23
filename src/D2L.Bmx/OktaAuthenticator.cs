@@ -59,7 +59,7 @@ internal class OktaAuthenticator(
 			return new( Org: org, User: user, Client: oktaAuthenticated );
 		}
 
-		if( browserLauncher.TryGetPathToBrowser( out string? browserPath ) ) {
+		if( !OperatingSystem.IsLinux() && browserLauncher.TryGetPathToBrowser( out string? browserPath ) ) {
 			if( !nonInteractive ) {
 				Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
 			}
