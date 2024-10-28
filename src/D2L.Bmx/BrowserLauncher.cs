@@ -22,10 +22,6 @@ internal class BrowserLauncher : IBrowserLauncher {
 		"Microsoft\\Edge\\Application\\msedge.exe",
 		"Google\\Chrome\\Application\\chrome.exe",
 	];
-	private static readonly string[] MacPaths = [
-		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-	];
 
 	async Task<IBrowser> IBrowserLauncher.LaunchAsync( string browserPath ) {
 		var launchOptions = new LaunchOptions {
@@ -40,24 +36,27 @@ internal class BrowserLauncher : IBrowserLauncher {
 
 	bool IBrowserLauncher.TryGetPathToBrowser( [NotNullWhen( returnValue: true )] out string? path ) {
 		path = null;
-		if( OperatingSystem.IsWindows() ) {
-			foreach( string windowsPartialPath in WindowsPartialPaths ) {
-				foreach( string environmentVariable in WindowsEnvironmentVariables ) {
-					string? prefix = Environment.GetEnvironmentVariable( environmentVariable );
-					if( prefix is not null ) {
-						path = Path.Join( prefix, windowsPartialPath );
-						if( File.Exists( path ) ) {
-							return true;
-						}
+		if( !OperatingSystem.IsWindows() ) {
+			return false;
+		}
+
+		foreach( string windowsPartialPath in WindowsPartialPaths ) {
+			foreach( string environmentVariable in WindowsEnvironmentVariables ) {
+				string? prefix = Environment.GetEnvironmentVariable( environmentVariable );
+				if( prefix is not null ) {
+					path = Path.Join( prefix, windowsPartialPath );
+					if( File.Exists( path ) ) {
+						return true;
 					}
 				}
 			}
-		} else if( OperatingSystem.IsMacOS() ) {
-			path = Array.Find( MacPaths, File.Exists );
-			return path is not null;
 		}
-		// Okta DSSO is only supported for Windows and Mac. There's no point for us to support Linux.
-		// Chromium is finicky on Linux anyway.
+
+		/* We only support passwordless auth on Windows at this point, because
+		- Okta only supports DSSO on Windows and Mac, so Linux is out.
+		- D2L hasn't configured DSSO for Mac, so we can't test it on macOS either.
+		*/
+		path = null;
 		return false;
 	}
 }
