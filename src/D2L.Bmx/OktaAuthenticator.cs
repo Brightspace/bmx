@@ -60,9 +60,9 @@ internal class OktaAuthenticator(
 		}
 
 		if(
-			// `TryGetPathToBrowser` does return `false` for Linux, but excluding Linux earlier here helps
+			// `TryGetPathToBrowser` only returns `true` for Windows, but restricting to Windows earlier here helps
 			// the compiler trim more unused code (e.g. all of PuppeteerSharp)
-			!OperatingSystem.IsLinux()
+			OperatingSystem.IsWindows()
 			&& browserLauncher.TryGetPathToBrowser( out string? browserPath )
 		) {
 			if( !nonInteractive ) {
