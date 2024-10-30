@@ -76,6 +76,14 @@ To force refresh your Okta session, run
 bmx login
 ```
 
+### Passwordless authentication
+
+If your Okta organization is configured for [Desktop Single Sign-on](https://help.okta.com/en-us/content/topics/directory/ad-desktop-sso-main.htm)
+and your computer is connected and signed in to the Active Directory network,
+BMX will authenticate you to Okta without prompting for password input.
+
+This is currently only supported on Windows. Support for macOS is pending.
+
 ### Local configuration
 
 You can create local configuration files named `.bmx`, where you can define default values for most BMX flags.
