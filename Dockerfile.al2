@@ -1,7 +1,7 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 AS build
 
-ARG version="3.0.0"
-ARG information_version="v3.0.0"
+ARG version=""
+ENV Version=${version}
 
 RUN yum update -y && yum install -y clang openssl-devel wget tar gzip libicu
 
@@ -21,9 +21,6 @@ RUN dotnet restore src/D2L.Bmx -r linux-x64
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx \
-    -p:Version="$version" \
-    -p:InformationVersion="$information_version" \
-    -p:IncludeSourceRevisionInInformationalVersion=false \
     --no-restore \
     -r linux-x64 \
     -o app

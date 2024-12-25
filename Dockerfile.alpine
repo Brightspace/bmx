@@ -1,7 +1,7 @@
 FROM amd64/alpine:3.15 AS build
 
-ARG version="3.0.0"
-ARG information_version="v3.0.0"
+ARG version=""
+ENV Version=${version}
 
 RUN apk update \
     && apk add clang build-base bash zlib-dev icu-libs
@@ -22,9 +22,6 @@ RUN dotnet restore src/D2L.Bmx -r linux-musl-x64
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx \
-    -p:Version="$version" \
-    -p:InformationVersion="$information_version" \
-    -p:IncludeSourceRevisionInInformationalVersion=false \
     --no-restore \
     -r linux-musl-x64 \
     -o app
