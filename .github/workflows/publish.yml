@@ -31,7 +31,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.event.inputs.prerelease == 'true')
     runs-on: ubuntu-latest
     outputs:
-      release_tag: ${{ steps.create.outputs.release_tag }}
+      version: ${{ steps.create.outputs.version }}
       release_id: ${{ steps.create.outputs.release_id }}
     steps:
       - name: Create release
@@ -45,16 +45,16 @@ jobs:
           if ( -Not ( $env:VERSION_NUMBER -match '^3\.[0-9]+\.[0-9]+$' ) ){
             Throw "Invalid version format"
           }
-          $releaseTag = "v$($env:VERSION_NUMBER)"
+          $version = $env:VERSION_NUMBER
           if ($env:PRERELEASE -eq 'true') {
-            $releaseTag = "${releaseTag}-preview-$(Get-Date -AsUTC -Format 'yyyyMMddHHmmss')"
-            $releaseUrl = gh release create "$releaseTag" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release $releaseTag" --target $env:GITHUB_SHA
+            $version = "${version}-preview-$(Get-Date -AsUTC -Format 'yyyyMMddHHmmss')"
+            $releaseUrl = gh release create "v${version}" --repo Brightspace/bmx --draft --prerelease --generate-notes --title "Release v${version}" --target $env:GITHUB_SHA
           } else {
-            $releaseUrl = gh release create "$releaseTag" --repo Brightspace/bmx --draft --generate-notes --title "Release $releaseTag" --target $env:GITHUB_SHA
+            $releaseUrl = gh release create "v${version}" --repo Brightspace/bmx --draft --generate-notes --title "Release v${version}" --target $env:GITHUB_SHA
           }
           if ( $LASTEXITCODE -ne 0 ) { throw "Failed to create draft release" }
 
-          "release_tag=$releaseTag" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
 
           $releaseId = $releaseUrl -split '/' | Select-Object -Last 1
           "release_id=$releaseId" >> $env:GITHUB_OUTPUT
@@ -86,27 +86,11 @@ jobs:
       - name: publish
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
+          Version: ${{ needs.create_release.outputs.version }}
         working-directory: src/D2L.Bmx
         run: |
-          $version = "$env:RELEASE_TAG"
-          if ( -not $version ) {
-            $version = "v3.0.0"
-          }
-          $versionWithoutv = "$version".TrimStart("v")
-          dotnet publish `
-            /p:Version="$versionWithoutv" `
-            /p:InformationalVersion="$version" `
-            /p:IncludeSourceRevisionInInformationalVersion=false `
-            -r $env:PLATFORM-x64 `
-            -o build/x64
-
-          dotnet publish `
-            /p:Version="$versionWithoutv" `
-            /p:InformationalVersion="$version" `
-            /p:IncludeSourceRevisionInInformationalVersion=false `
-            -r $env:PLATFORM-arm64 `
-            -o build/arm64
+          dotnet publish -r $env:PLATFORM-x64 -o build/x64
+          dotnet publish -r $env:PLATFORM-arm64 -o build/arm64
 
       - name: check size
         shell: pwsh
@@ -174,17 +158,11 @@ jobs:
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
-          RELEASE_TAG: ${{ needs.create_release.outputs.release_tag }}
+          Version: ${{ needs.create_release.outputs.version }}
         run: |
-          $version = "$env:RELEASE_TAG"
-          if ( -not $version ) {
-            $version = "v3.0.0"
-          }
-          $versionWithoutv = "$version".TrimStart("v")
           docker buildx build `
             -f $env:DOCKERFILE `
-            --build-arg version=$versionWithoutv `
-            --build-arg information_version=$version `
+            --build-arg version=$env:Version `
             -o build .
 
       - name: check size

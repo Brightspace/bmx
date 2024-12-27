@@ -8,6 +8,15 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <RootNamespace>D2L.Bmx</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!--
+    Non-release builds ("Version" not explicitly specified) will have git hash included to help us keep track,
+    e.g. "v3.0.0-scratch+9a2cd942ce07a1f8abccfd889d45aa55e1692d60".
+    Release builds (preview or real release) won't have git hash so they look cleaner.
+    -->
+    <IncludeSourceRevisionInInformationalVersion Condition="'$(Version)' != ''">false</IncludeSourceRevisionInInformationalVersion>
+    <Version Condition="'$(Version)' == ''">3.0.0-scratch</Version>
+    <InformationalVersion>v$(Version)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
