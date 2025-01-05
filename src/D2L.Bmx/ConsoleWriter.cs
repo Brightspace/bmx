@@ -18,11 +18,14 @@ internal class ConsoleWriter : IConsoleWriter {
 	// https://github.com/dotnet/runtime/blob/v9.0.0-preview.6.24327.7/src/libraries/Common/src/System/Console/ConsoleUtils.cs#L32-L34
 	private readonly bool _noColor
 		= Environment.GetEnvironmentVariable( "NO_COLOR" ) == "1" || !VirtualTerminal.TryEnableOnStderr();
+	private readonly IAnsiConsole _ansiConsole = AnsiConsole.Create( new() {
+		Out = new AnsiConsoleOutput( Console.Error ),
+	} );
 
 	void IConsoleWriter.WriteParameter( string description, string value, ParameterSource source ) {
 		string valueColor = _noColor ? "default" : "cyan2";
 		string sourceColor = _noColor ? "default" : "grey";
-		AnsiConsole.MarkupLine( $"[default]{description}:[/] [{valueColor}]{value}[/] [{sourceColor}](from {source})[/]" );
+		_ansiConsole.MarkupLine( $"[default]{description}:[/] [{valueColor}]{value}[/] [{sourceColor}](from {source})[/]" );
 	}
 
 	void IConsoleWriter.WriteUpdateMessage( string text ) {
@@ -33,18 +36,18 @@ internal class ConsoleWriter : IConsoleWriter {
 		string color = _noColor ? "default" : "black on white";
 		foreach( string line in lines ) {
 			string paddedLine = line.PadRight( maxLineLength );
-			AnsiConsole.MarkupLine( $"[{color}]{paddedLine}[/]" );
+			_ansiConsole.MarkupLine( $"[{color}]{paddedLine}[/]" );
 		}
 		Console.Error.WriteLine();
 	}
 
 	void IConsoleWriter.WriteWarning( string text ) {
 		string color = _noColor ? "default" : "yellow";
-		AnsiConsole.MarkupLine( $"[{color}]{text}[/]" );
+		_ansiConsole.MarkupLine( $"[{color}]{text}[/]" );
 	}
 
 	void IConsoleWriter.WriteError( string text ) {
 		string color = _noColor ? "default" : "red";
-		AnsiConsole.MarkupLine( $"[{color}]{text}[/]" );
+		_ansiConsole.MarkupLine( $"[{color}]{text}[/]" );
 	}
 }
