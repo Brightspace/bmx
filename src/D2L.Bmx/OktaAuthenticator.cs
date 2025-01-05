@@ -123,13 +123,13 @@ internal class OktaAuthenticator(
 
 		try {
 			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl );
-		} catch( TaskCanceledException ) {
+		} catch( TaskCanceledException ex ) {
 			if( BmxEnvironment.IsDebug ) {
-				consoleWriter.WriteWarning( "Okta passwordless authentication timed out." );
+				consoleWriter.WriteWarning( $"Okta passwordless authentication timed out.\n{ex}" );
 			}
-		} catch( Exception ) {
+		} catch( Exception ex ) {
 			if( BmxEnvironment.IsDebug ) {
-				consoleWriter.WriteWarning( "Unknown error occurred while trying Okta passwordless authentication." );
+				consoleWriter.WriteWarning( $"Unknown error occurred while trying Okta passwordless authentication.\n{ex}" );
 			}
 		}
 
@@ -154,6 +154,9 @@ internal class OktaAuthenticator(
 	}
 
 	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl ) {
+		if( BmxEnvironment.IsDebug ) {
+			consoleWriter.WriteWarning( $"Launching browser: {browserPath}" );
+		}
 		await using var browser = await browserLauncher.LaunchAsync( browserPath );
 
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
@@ -167,10 +170,17 @@ internal class OktaAuthenticator(
 		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
 		pageTimer.Start();
 
+		if( BmxEnvironment.IsDebug ) {
+			consoleWriter.WriteWarning( "Creating new browser tab" );
+		}
 		using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
 		int attempt = 1;
 
 		page.Load += ( _, _ ) => _ = OnPageLoadAsync();
+
+		if( BmxEnvironment.IsDebug ) {
+			consoleWriter.WriteWarning( $"Navigating to {orgUrl}" );
+		}
 		await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 		return await sessionIdTcs.Task;
 
@@ -181,6 +191,10 @@ internal class OktaAuthenticator(
 				pageTimer.Start();
 			}
 
+			if( BmxEnvironment.IsDebug ) {
+				consoleWriter.WriteWarning( $"Browser loaded {page.Url}" );
+			}
+
 			var url = new Uri( page.Url );
 			if( url.Host == orgUrl.Host ) {
 				string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
@@ -188,6 +202,9 @@ internal class OktaAuthenticator(
 				// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
 				if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
 					if( attempt < 3 && url.AbsolutePath != "/" ) {
+						if( BmxEnvironment.IsDebug ) {
+							consoleWriter.WriteWarning( $"Attempt {attempt} failed. Retry..." );
+						}
 						attempt++;
 						await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 					} else {
