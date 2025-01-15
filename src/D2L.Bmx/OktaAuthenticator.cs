@@ -162,8 +162,8 @@ internal class OktaAuthenticator(
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
 		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
 
-		// cancel if we're stuck on a single page for 3 seconds
-		using var pageTimer = new System.Timers.Timer( TimeSpan.FromSeconds( 3 ) ) { AutoReset = false };
+		// cancel if we can't load the first page for 6 seconds
+		using var pageTimer = new System.Timers.Timer( TimeSpan.FromSeconds( 6 ) ) { AutoReset = false };
 		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
 		pageTimer.Start();
 
@@ -175,9 +175,11 @@ internal class OktaAuthenticator(
 		return await sessionIdTcs.Task;
 
 		async Task OnPageLoadAsync() {
-			// reset the 3-sec per-page timer on every page load
+			// reset the per-page timer on every page load
 			lock( pageTimer ) {
 				pageTimer.Stop();
+				// we give the first page 6 sec to load, but 3 sec is probably enough for subsequent pages
+				pageTimer.Interval = 3000;
 				pageTimer.Start();
 			}
 
