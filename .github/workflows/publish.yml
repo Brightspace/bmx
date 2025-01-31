@@ -63,18 +63,20 @@ jobs:
     needs: create_release
     if: ${{ !failure() }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - machine: windows-latest
-            platform: win
+            os: win
             file_name: bmx.exe
           - machine: macos-latest
-            platform: osx
+            os: osx
             file_name: bmx
     runs-on: ${{ matrix.machine }}
     timeout-minutes: 10
     env:
-      PLATFORM: ${{ matrix.platform }}
+      # can't use "OS" because it's a built-in environment variable on Windows
+      OPERATING_SYSTEM: ${{ matrix.os }}
     steps:
       - name: checkout
         uses: Brightspace/third-party-actions@actions/checkout
@@ -85,12 +87,10 @@ jobs:
 
       - name: publish
         shell: pwsh
-        env:
-          Version: ${{ needs.create_release.outputs.version }}
         working-directory: src/D2L.Bmx
         run: |
-          dotnet publish -r $env:PLATFORM-x64 -o build/x64
-          dotnet publish -r $env:PLATFORM-arm64 -o build/arm64
+          dotnet publish -r $env:OPERATING_SYSTEM-x64 -o build/x64
+          dotnet publish -r $env:OPERATING_SYSTEM-arm64 -o build/arm64
 
       - name: check size
         shell: pwsh
@@ -104,12 +104,11 @@ jobs:
         shell: pwsh
         env:
           RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
-          PLATFORM: ${{ matrix.platform }}
           FILE_NAME: ${{ matrix.file_name }}
           GH_TOKEN: ${{ github.token }}
         working-directory: src/D2L.Bmx/build
         run: |
-          if ($env:PLATFORM -eq 'win') {
+          if ($env:OPERATING_SYSTEM -eq 'win') {
             Push-Location "x64"
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win-x64.zip"
             gh release upload "$env:RELEASE_ID" "bmx-win-x64.zip"
@@ -119,7 +118,7 @@ jobs:
             Compress-Archive -Path "bmx.exe" -DestinationPath "bmx-win-arm64.zip"
             gh release upload "$env:RELEASE_ID" "bmx-win-arm64.zip"
             Pop-Location
-          } elseif ($env:PLATFORM -eq 'osx') {
+          } elseif ($env:OPERATING_SYSTEM -eq 'osx') {
             chmod +x "./x64/bmx"
             chmod +x "./arm64/bmx"
 
@@ -138,15 +137,26 @@ jobs:
     needs: create_release
     if: ${{ !failure() }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - file: Dockerfile.al2
-            platform: linux
+            os: linux
             architecture: x64
+            runner: ubuntu-24.04
+          - file: Dockerfile.al2
+            os: linux
+            architecture: arm64
+            runner: ubuntu-24.04-arm
           - file: Dockerfile.alpine
-            platform: linux.alpine
+            os: linux.alpine
             architecture: x64
-    runs-on: ubuntu-latest
+            runner: ubuntu-24.04
+          - file: Dockerfile.alpine
+            os: linux.alpine
+            architecture: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     steps:
       - name: checkout
@@ -158,10 +168,12 @@ jobs:
         shell: pwsh
         env:
           DOCKERFILE: ${{ matrix.file }}
+          ARCHITECTURE: ${{ matrix.architecture }}
           Version: ${{ needs.create_release.outputs.version }}
         run: |
           docker buildx build `
             -f $env:DOCKERFILE `
+            --build-arg arch=$env:ARCHITECTURE `
             --build-arg version=$env:Version `
             -o build .
 
@@ -174,13 +186,13 @@ jobs:
         env:
           RELEASE_ID: ${{ needs.create_release.outputs.release_id }}
           ARCHITECTURE: ${{ matrix.architecture }}
-          PLATFORM: ${{ matrix.platform }}
+          OPERATING_SYSTEM: ${{ matrix.os }}
           GH_TOKEN: ${{ github.token }}
         working-directory: build
         run: |
           chmod +x "bmx"
-          tar -czvf "bmx-$PLATFORM-$ARCHITECTURE.tar.gz" "bmx"
-          gh release upload "$RELEASE_ID" "bmx-$PLATFORM-$ARCHITECTURE.tar.gz"
+          tar -czvf "bmx-$OPERATING_SYSTEM-$ARCHITECTURE.tar.gz" "bmx"
+          gh release upload "$RELEASE_ID" "bmx-$OPERATING_SYSTEM-$ARCHITECTURE.tar.gz"
 
   # We only auto publish prereleases and not real releases. The latter should stay as draft and only be published manually after review.
   publish_prerelease:

@@ -1,5 +1,7 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 AS build
 
+ARG arch="x64"
+
 ARG version=""
 ENV Version=${version}
 
@@ -17,13 +19,13 @@ WORKDIR /source
 # Make configs & dependencies a separate layer to improve caching & build time on code change.
 COPY Directory.Build.props Directory.Build.props
 COPY src/D2L.Bmx/D2L.Bmx.csproj src/D2L.Bmx/D2L.Bmx.csproj
-RUN dotnet restore src/D2L.Bmx -r linux-x64
+RUN dotnet restore src/D2L.Bmx -r linux-${arch}
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx \
     --no-restore \
-    -r linux-x64 \
+    -r linux-${arch} \
     -o app
 
-FROM scratch as export
+FROM scratch AS export
 COPY --from=build /source/app /
