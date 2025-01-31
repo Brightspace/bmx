@@ -1,4 +1,6 @@
-FROM amd64/alpine:3.15 AS build
+FROM alpine:3.15 AS build
+
+ARG arch="x64"
 
 ARG version=""
 ENV Version=${version}
@@ -18,13 +20,13 @@ WORKDIR /source
 # Make configs & dependencies a separate layer to improve caching & build time on code change.
 COPY Directory.Build.props Directory.Build.props
 COPY src/D2L.Bmx/D2L.Bmx.csproj src/D2L.Bmx/D2L.Bmx.csproj
-RUN dotnet restore src/D2L.Bmx -r linux-musl-x64
+RUN dotnet restore src/D2L.Bmx -r linux-musl-${arch}
 
 COPY . .
 RUN dotnet publish src/D2L.Bmx \
     --no-restore \
-    -r linux-musl-x64 \
+    -r linux-musl-${arch} \
     -o app
 
-FROM scratch as export
+FROM scratch AS export
 COPY --from=build /source/app /
