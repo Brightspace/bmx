@@ -87,6 +87,8 @@ jobs:
 
       - name: publish
         shell: pwsh
+        env:
+          Version: ${{ needs.create_release.outputs.version }}
         working-directory: src/D2L.Bmx
         run: |
           dotnet publish -r $env:OPERATING_SYSTEM-x64 -o build/x64
