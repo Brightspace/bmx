@@ -41,7 +41,7 @@ eval "$(bmx print --account <aws_account_name> --role <aws_role_name>)"
 
 ### Static AWS credentials in a profile
 
-To set up AWS credentials in a profile, run
+AWS named profiles allow credentials to be stored and referenced easily. To set up AWS credentials in a profile, run
 
 ```Powershell
 bmx write --account <aws_account_name> --role <aws_role_name> --profile <aws_profile>
@@ -51,6 +51,12 @@ You can use your profile by configuring any supporting AWS client. For example, 
 
 ```Powershell
 aws sts get-caller-identity --profile <aws_profile>
+```
+
+Or use the `AWS_PROFILE` environment variable to set the default profile for multiple commands:
+
+```Powershell
+$env:AWS_PROFILE='<aws_profile>'
 ```
 
 ### Provide dynamic AWS credentials to a profile
