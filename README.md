@@ -56,7 +56,7 @@ aws sts get-caller-identity --profile <aws_profile>
 Or use the `AWS_PROFILE` environment variable to set the default profile for multiple commands:
 
 ```Powershell
-$env:AWS_PROFILE='<aws_profile>' 
+$env:AWS_PROFILE='<aws_profile>'
 ```
 
 ### Provide dynamic AWS credentials to a profile
