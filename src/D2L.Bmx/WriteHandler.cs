@@ -73,7 +73,8 @@ internal class WriteHandler(
 			?? throw new BmxException( "Invalid output path" );
 		Directory.CreateDirectory( outputFolder );
 		if( !File.Exists( output ) ) {
-			using( File.Create( output ) ) { };
+			using( File.Create( output ) ) { }
+			;
 		}
 
 		string awsConfigFilePath = useCredentialProcess ? output : SharedCredentialsFile.DefaultConfigFilePath;
