@@ -31,6 +31,7 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 		new OktaSessionStorage(),
 		new BrowserLauncher(),
 		new ConsolePrompter(),
+		new FileLogger(),
 		consoleWriter,
 		config
 	) );
@@ -132,6 +133,7 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 			new OktaSessionStorage(),
 			new BrowserLauncher(),
 			consolePrompter,
+			new FileLogger(),
 			consoleWriter,
 			config ),
 		new AwsCredsCreator(
@@ -187,6 +189,7 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 			new OktaSessionStorage(),
 			new BrowserLauncher(),
 			consolePrompter,
+			new FileLogger(),
 			consoleWriter,
 			config ),
 		new AwsCredsCreator(
@@ -263,13 +266,17 @@ return await new CommandLineBuilder( rootCommand )
 	)
 	.UseExceptionHandler( ( exception, context ) => {
 		IConsoleWriter consoleWriter = new ConsoleWriter();
+		var fileLogger = new FileLogger();
 		if( exception is BmxException ) {
 			consoleWriter.WriteError( exception.Message );
+			fileLogger.Log( $"[ERROR] {exception.Message}" );
 		} else {
 			consoleWriter.WriteError( "BMX exited with unexpected internal error" );
+			fileLogger.Log( $"[ERROR] BMX exited with unexpected internal error: {exception}" );
 		}
 		if( BmxEnvironment.IsDebug ) {
 			consoleWriter.WriteError( exception.ToString() );
+			fileLogger.Log( $"[DEBUG] {exception}" );
 		}
 	} )
 	.Build()
