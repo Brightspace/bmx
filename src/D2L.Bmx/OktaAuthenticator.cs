@@ -16,8 +16,7 @@ internal class OktaAuthenticator(
 	IOktaSessionStorage sessionStorage,
 	IBrowserLauncher browserLauncher,
 	IConsolePrompter consolePrompter,
-	FileLogger fileLogger,
-	IConsoleWriter consoleWriter,
+	IMessageWriter messageWriter,
 	BmxConfig config
 ) {
 	public async Task<OktaAuthenticatedContext> AuthenticateAsync(
@@ -37,7 +36,7 @@ internal class OktaAuthenticator(
 			}
 			org = consolePrompter.PromptOrg( allowEmptyInput: false );
 		} else if( !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.Org, org, orgSource );
+			messageWriter.WriteParameter( ParameterDescriptions.Org, org, orgSource );
 		}
 
 		var userSource = ParameterSource.CliArg;
@@ -51,7 +50,7 @@ internal class OktaAuthenticator(
 			}
 			user = consolePrompter.PromptUser( allowEmptyInput: false );
 		} else if( !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
+			messageWriter.WriteParameter( ParameterDescriptions.User, user, userSource );
 		}
 
 		var orgUrl = GetOrgBaseAddress( org );
@@ -81,9 +80,7 @@ internal class OktaAuthenticator(
 				Console.Error.WriteLine( "Falling back to Okta password authentication..." );
 			}
 		} else if( BmxEnvironment.IsDebug ) {
-			string message = "No suitable browser found for Okta passwordless authentication";
-			consoleWriter.WriteWarning( message );
-			fileLogger.Log( message );
+			messageWriter.WriteWarning( "No suitable browser found for Okta passwordless authentication" );
 		}
 
 		if( nonInteractive ) {
@@ -126,15 +123,11 @@ internal class OktaAuthenticator(
 			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl );
 		} catch( TaskCanceledException ex ) {
 			if( BmxEnvironment.IsDebug ) {
-				string message = $"Okta passwordless authentication timed out. \n{ex}";
-				consoleWriter.WriteWarning( message );
-				fileLogger.Log( message );
+				messageWriter.WriteWarning( $"Okta passwordless authentication timed out. \n{ex}" );
 			}
 		} catch( Exception ex ) {
 			if( BmxEnvironment.IsDebug ) {
-				string message = $"Unknown error occurred while trying Okta passwordless authentication. \n{ex}";
-				consoleWriter.WriteWarning( message );
-				fileLogger.Log( message );
+				messageWriter.WriteWarning( $"Unknown error occurred while trying Okta passwordless authentication. \n{ex}" );
 			}
 		}
 
@@ -147,7 +140,7 @@ internal class OktaAuthenticator(
 		string sessionLogin = oktaSession.Login.Split( "@" )[0];
 		string providedLogin = user.Split( "@" )[0];
 		if( !sessionLogin.Equals( providedLogin, StringComparison.OrdinalIgnoreCase ) ) {
-			consoleWriter.WriteWarning( $"""
+			messageWriter.WriteWarning( $"""
 				Okta passwordless authentication failed.
 				The provided Okta user '{providedLogin}' does not match the system configured passwordless user '{sessionLogin}'.
 				""" );
@@ -160,9 +153,7 @@ internal class OktaAuthenticator(
 
 	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl ) {
 		if( BmxEnvironment.IsDebug ) {
-			string message = $"Launching browser: {browserPath}";
-			consoleWriter.WriteWarning( message );
-			fileLogger.Log( message );
+			messageWriter.WriteWarning( $"Launching browser: {browserPath}" );
 		}
 		await using var browser = await browserLauncher.LaunchAsync( browserPath );
 
@@ -178,9 +169,7 @@ internal class OktaAuthenticator(
 		pageTimer.Start();
 
 		if( BmxEnvironment.IsDebug ) {
-			string message = "Creating new browser tab";
-			consoleWriter.WriteWarning( message );
-			fileLogger.Log( message );
+			messageWriter.WriteWarning( "Creating new browser tab" );
 		}
 		using var page = await browser.NewPageAsync().WaitAsync( cancellationTokenSource.Token );
 		int attempt = 1;
@@ -188,9 +177,7 @@ internal class OktaAuthenticator(
 		page.Load += ( _, _ ) => _ = OnPageLoadAsync();
 
 		if( BmxEnvironment.IsDebug ) {
-			string message = $"Navigating to {orgUrl}";
-			consoleWriter.WriteWarning( message );
-			fileLogger.Log( message );
+			messageWriter.WriteWarning( $"Navigating to {orgUrl}" );
 		}
 		await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 		return await sessionIdTcs.Task;
@@ -205,9 +192,7 @@ internal class OktaAuthenticator(
 			}
 
 			if( BmxEnvironment.IsDebug ) {
-				string message = $"Browser loaded {page.Url}";
-				consoleWriter.WriteWarning( message );
-				fileLogger.Log( message );
+				messageWriter.WriteWarning( $"Browser loaded {page.Url}" );
 			}
 
 			var url = new Uri( page.Url );
@@ -218,22 +203,16 @@ internal class OktaAuthenticator(
 				if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
 					if( attempt < 3 && url.AbsolutePath != "/" ) {
 						if( BmxEnvironment.IsDebug ) {
-							string message = $"Attempt {attempt} failed. Retry...";
-							consoleWriter.WriteWarning( message );
-							fileLogger.Log( message );
+							messageWriter.WriteWarning( $"Attempt {attempt} failed. Retry..." );
 						}
 						attempt++;
 						await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 					} else {
 						if( BmxEnvironment.IsDebug ) {
 							if( url.AbsolutePath == "/" ) {
-								string message = "Okta passwordless authentication is not available.";
-								consoleWriter.WriteWarning( message );
-								fileLogger.Log( message );
+								messageWriter.WriteWarning( "Okta passwordless authentication is not available." );
 							} else {
-								string message = "Okta passwordless authentication failed";
-								consoleWriter.WriteWarning( message );
-								fileLogger.Log( message );
+								messageWriter.WriteWarning( "Okta passwordless authentication failed" );
 							}
 						}
 						sessionIdTcs.SetResult( null );
@@ -299,7 +278,7 @@ internal class OktaAuthenticator(
 			CacheOktaSession( userId, org, sessionId, expiresAt );
 			return true;
 		}
-		consoleWriter.WriteWarning( """
+		messageWriter.WriteWarning( """
 			No config file found. Your Okta session will not be cached.
 			Consider running `bmx configure` if you own this machine.
 			""" );

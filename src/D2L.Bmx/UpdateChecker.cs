@@ -4,7 +4,7 @@ using D2L.Bmx.GitHub;
 
 namespace D2L.Bmx;
 
-internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProvider, IConsoleWriter consoleWriter ) {
+internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProvider, IMessageWriter messageWriter ) {
 	public async Task CheckForUpdatesAsync() {
 		try {
 			var updateCheckCache = GetUpdateCheckCacheOrNull();
@@ -28,7 +28,7 @@ internal class UpdateChecker( IGitHubClient github, IVersionProvider versionProv
 			Version? localVersion = versionProvider.GetAssemblyVersion();
 			if( latestVersion > localVersion ) {
 				string? displayVersion = versionProvider.GetInformationalVersion() ?? localVersion.ToString();
-				consoleWriter.WriteUpdateMessage(
+				messageWriter.WriteUpdateMessage(
 					$"""
 					A new BMX release is available: v{latestVersion} (current: {displayVersion})
 					Run "bmx update" now to upgrade.
