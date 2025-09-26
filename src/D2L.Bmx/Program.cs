@@ -269,7 +269,7 @@ return await new CommandLineBuilder( rootCommand )
 			messageWriter.WriteError( "BMX exited with unexpected internal error" );
 		}
 		if( BmxEnvironment.IsDebug ) {
-			messageWriter.WriteError( exception.ToString() );
+			messageWriter.WriteError( $"[DEBUG] Exception: {exception.GetType().Name} - {exception.Message}" );
 		}
 	} )
 	.Build()
