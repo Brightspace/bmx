@@ -4,7 +4,7 @@ internal class FileLogger {
 	private readonly string _logFilePath = Path.Combine(
 		Environment.GetFolderPath( Environment.SpecialFolder.UserProfile ),
 		".bmx",
-		"bmx.log"
+		"debug.log"
 	);
 
 	public void Log( string message ) {
@@ -14,7 +14,21 @@ internal class FileLogger {
 				Console.WriteLine( "Unable to determine log file directory." );
 				return;
 			}
-			File.AppendAllText( _logFilePath, $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} {message}{Environment.NewLine}" );
+
+			var fileOptions = new FileStreamOptions {
+				Mode = FileMode.Append,
+				Access = FileAccess.Write,
+				Share = FileShare.ReadWrite
+			};
+
+			if( !OperatingSystem.IsWindows() ) {
+				fileOptions.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+			}
+
+			using var stream = new FileStream( _logFilePath, fileOptions );
+			using var writer = new StreamWriter( stream );
+			writer.WriteLine( $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} {message}" );
+			writer.Flush();
 		} catch( Exception ex ) {
 			Console.WriteLine( $"Error writing to log file: {ex.Message}" );
 		}
