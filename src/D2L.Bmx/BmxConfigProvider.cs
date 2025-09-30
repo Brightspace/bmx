@@ -9,7 +9,7 @@ internal interface IBmxConfigProvider {
 
 internal class BmxConfigProvider(
 	FileIniDataParser parser,
-	IConsoleWriter consoleWriter
+	IMessageWriter messageWriter
 ) : IBmxConfigProvider {
 
 	public BmxConfig GetConfiguration() {
@@ -21,7 +21,7 @@ internal class BmxConfigProvider(
 				var tempdata = parser.ReadFile( configFileName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				consoleWriter.WriteWarning( $"WARNING: Failed to load the global config file {configFileName}." );
+				messageWriter.WriteWarning( $"WARNING: Failed to load the global config file {configFileName}." );
 			}
 		}
 		// If set, we recursively look up from CWD (all the way to root) for additional bmx config files (labelled as .bmx)
@@ -32,7 +32,7 @@ internal class BmxConfigProvider(
 				var tempdata = parser.ReadFile( projectConfigInfo.FullName );
 				data.Merge( tempdata );
 			} catch( Exception ) {
-				consoleWriter.WriteWarning( $"WARNING: Failed to load the local config file {projectConfigInfo.FullName}." );
+				messageWriter.WriteWarning( $"WARNING: Failed to load the local config file {projectConfigInfo.FullName}." );
 			}
 		}
 

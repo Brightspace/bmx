@@ -13,7 +13,7 @@ internal record AwsCredentialsInfo(
 internal class AwsCredsCreator(
 	IAwsClient awsClient,
 	IConsolePrompter consolePrompter,
-	IConsoleWriter consoleWriter,
+	IMessageWriter messageWriter,
 	IAwsCredentialCache awsCredentialCache,
 	BmxConfig config
 ) {
@@ -37,7 +37,7 @@ internal class AwsCredsCreator(
 			accountSource = ParameterSource.Config;
 		}
 		if( !string.IsNullOrEmpty( account ) && !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.Account, account, accountSource );
+			messageWriter.WriteParameter( ParameterDescriptions.Account, account, accountSource );
 		}
 
 		var roleSource = ParameterSource.CliArg;
@@ -46,7 +46,7 @@ internal class AwsCredsCreator(
 			roleSource = ParameterSource.Config;
 		}
 		if( !string.IsNullOrEmpty( role ) && !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.Role, role, roleSource );
+			messageWriter.WriteParameter( ParameterDescriptions.Role, role, roleSource );
 		}
 
 		var durationSource = ParameterSource.CliArg;
@@ -60,7 +60,7 @@ internal class AwsCredsCreator(
 			}
 		}
 		if( durationSource != ParameterSource.BuiltInDefault && !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.Duration, duration.Value.ToString(), durationSource );
+			messageWriter.WriteParameter( ParameterDescriptions.Duration, duration.Value.ToString(), durationSource );
 		}
 
 		// if using cache, avoid calling Okta at all if possible

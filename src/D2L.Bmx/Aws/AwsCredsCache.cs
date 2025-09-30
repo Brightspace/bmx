@@ -3,8 +3,8 @@ using System.Text.Json;
 namespace D2L.Bmx.Aws;
 
 internal interface IAwsCredentialCache {
-	public AwsCredentials? GetCredentials( string org, string user, string accountName, string roleName, int duration );
-	public void SetCredentials( string org, string user, string accountName, string roleName, AwsCredentials credentials );
+	AwsCredentials? GetCredentials( string org, string user, string accountName, string roleName, int duration );
+	void SetCredentials( string org, string user, string accountName, string roleName, AwsCredentials credentials );
 }
 
 internal class AwsCredsCache : IAwsCredentialCache {

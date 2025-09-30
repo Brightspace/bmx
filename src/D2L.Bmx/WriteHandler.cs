@@ -10,7 +10,7 @@ internal class WriteHandler(
 	OktaAuthenticator oktaAuth,
 	AwsCredsCreator awsCredsCreator,
 	IConsolePrompter consolePrompter,
-	IConsoleWriter consoleWriter,
+	IMessageWriter messageWriter,
 	BmxConfig config,
 	FileIniDataParser parser
 ) {
@@ -57,7 +57,7 @@ internal class WriteHandler(
 			}
 			profile = consolePrompter.PromptProfile();
 		} else if( !nonInteractive ) {
-			consoleWriter.WriteParameter( ParameterDescriptions.Profile, profile, profileSource );
+			messageWriter.WriteParameter( ParameterDescriptions.Profile, profile, profileSource );
 		}
 
 		if( !string.IsNullOrEmpty( output ) && !Path.IsPathRooted( output ) ) {
@@ -73,7 +73,7 @@ internal class WriteHandler(
 			?? throw new BmxException( "Invalid output path" );
 		Directory.CreateDirectory( outputFolder );
 		if( !File.Exists( output ) ) {
-			using( File.Create( output ) ) { };
+			using( File.Create( output ) ) { }
 		}
 
 		string awsConfigFilePath = useCredentialProcess ? output : SharedCredentialsFile.DefaultConfigFilePath;
@@ -118,7 +118,7 @@ internal class WriteHandler(
 					}
 					parser.WriteFile( awsConfigFilePath, awsConfig, Utf8 );
 					if( foundCredentialProcess ) {
-						consoleWriter.WriteWarning(
+						messageWriter.WriteWarning(
 """
 An existing profile with the same name using the `credential_process` setting was found in the default config file.
 The setting has been removed, and static credentials will be used for the profile.

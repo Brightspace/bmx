@@ -24,14 +24,14 @@ var loginCommand = new Command( "login", "Log into Okta and save an Okta session
 	userOption,
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
-	var consoleWriter = new ConsoleWriter();
-	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
+	var messageWriter = new MessageWriter();
+	var config = new BmxConfigProvider( new FileIniDataParser(), messageWriter ).GetConfiguration();
 	var handler = new LoginHandler( new OktaAuthenticator(
 		new OktaClientFactory(),
 		new OktaSessionStorage(),
 		new BrowserLauncher(),
 		new ConsolePrompter(),
-		consoleWriter,
+		messageWriter,
 		config
 	) );
 	return handler.HandleAsync(
@@ -69,7 +69,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 
 configureCommand.SetHandler( ( InvocationContext context ) => {
 	var handler = new ConfigureHandler(
-		new BmxConfigProvider( new FileIniDataParser(), new ConsoleWriter() ),
+		new BmxConfigProvider( new FileIniDataParser(), new MessageWriter() ),
 		new ConsolePrompter() );
 	handler.Handle(
 		org: context.ParseResult.GetValueForOption( orgOption ),
@@ -124,20 +124,20 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 
 printCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var consoleWriter = new ConsoleWriter();
-	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
+	var messageWriter = new MessageWriter();
+	var config = new BmxConfigProvider( new FileIniDataParser(), messageWriter ).GetConfiguration();
 	var handler = new PrintHandler(
 		new OktaAuthenticator(
 			new OktaClientFactory(),
 			new OktaSessionStorage(),
 			new BrowserLauncher(),
 			consolePrompter,
-			consoleWriter,
+			messageWriter,
 			config ),
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
-			consoleWriter,
+			messageWriter,
 			new AwsCredsCache(),
 			config )
 	);
@@ -179,24 +179,24 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
 	var consolePrompter = new ConsolePrompter();
-	var consoleWriter = new ConsoleWriter();
-	var config = new BmxConfigProvider( new FileIniDataParser(), consoleWriter ).GetConfiguration();
+	var messageWriter = new MessageWriter();
+	var config = new BmxConfigProvider( new FileIniDataParser(), messageWriter ).GetConfiguration();
 	var handler = new WriteHandler(
 		new OktaAuthenticator(
 			new OktaClientFactory(),
 			new OktaSessionStorage(),
 			new BrowserLauncher(),
 			consolePrompter,
-			consoleWriter,
+			messageWriter,
 			config ),
 		new AwsCredsCreator(
 			new AwsClient( new AmazonSecurityTokenServiceClient( new AnonymousAWSCredentials() ) ),
 			consolePrompter,
-			consoleWriter,
+			messageWriter,
 			new AwsCredsCache(),
 			config ),
 		consolePrompter,
-		consoleWriter,
+		messageWriter,
 		config,
 		new FileIniDataParser()
 	);
@@ -250,7 +250,7 @@ return await new CommandLineBuilder( rootCommand )
 			}
 
 			if( context.ParseResult.CommandResult.Command != updateCommand ) {
-				var updateChecker = new UpdateChecker( new GitHubClient(), new VersionProvider(), new ConsoleWriter() );
+				var updateChecker = new UpdateChecker( new GitHubClient(), new VersionProvider(), new MessageWriter() );
 				await updateChecker.CheckForUpdatesAsync();
 			}
 
@@ -262,14 +262,14 @@ return await new CommandLineBuilder( rootCommand )
 		order: MiddlewareOrder.ExceptionHandler + 1
 	)
 	.UseExceptionHandler( ( exception, context ) => {
-		IConsoleWriter consoleWriter = new ConsoleWriter();
+		IMessageWriter messageWriter = new MessageWriter();
 		if( exception is BmxException ) {
-			consoleWriter.WriteError( exception.Message );
+			messageWriter.WriteError( exception.Message );
 		} else {
-			consoleWriter.WriteError( "BMX exited with unexpected internal error" );
+			messageWriter.WriteError( "BMX exited with unexpected internal error" );
 		}
 		if( BmxEnvironment.IsDebug ) {
-			consoleWriter.WriteError( exception.ToString() );
+			messageWriter.WriteError( $"[DEBUG] Exception: {exception.GetType().Name} - {exception.Message}" );
 		}
 	} )
 	.Build()
