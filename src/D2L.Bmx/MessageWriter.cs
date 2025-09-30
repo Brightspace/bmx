@@ -83,7 +83,8 @@ internal class MessageWriter : IMessageWriter {
 			writer.WriteLine( $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} {text}" );
 			writer.Flush();
 		} catch( Exception ex ) {
-			Console.WriteLine( $"Error writing to log file: {ex.Message}" );
+			string color = _noColor ? "default" : "red";
+			_ansiConsole.MarkupLine( $"[{color}] Error writing to log file: {ex.Message}[/]" );
 		}
 	}
 }
