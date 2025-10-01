@@ -7,7 +7,6 @@ internal interface IMessageWriter {
 	void WriteUpdateMessage( string text );
 	void WriteWarning( string text );
 	void WriteError( string text );
-	void WriteToFile( string text );
 }
 
 // We use ANSI escape codes to control colours, because .NET's `Console.ForegroundColor` only targets stdout,
@@ -60,7 +59,7 @@ internal class MessageWriter : IMessageWriter {
 		WriteToFile( $"[ERROR] {text}" );
 	}
 
-	public void WriteToFile( string text ) {
+	private void WriteToFile( string text ) {
 		try {
 			string? directory = Path.GetDirectoryName( _logFilePath );
 			if( string.IsNullOrEmpty( directory ) ) {
