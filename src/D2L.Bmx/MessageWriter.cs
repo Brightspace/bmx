@@ -31,7 +31,10 @@ internal class MessageWriter : IMessageWriter {
 	void IMessageWriter.WriteParameter( string description, string value, ParameterSource source ) {
 		string valueColor = _noColor ? "default" : "cyan2";
 		string sourceColor = _noColor ? "default" : "grey";
-		_ansiConsole.MarkupLine( $"[default]{description}:[/] [{valueColor}]{value}[/] [{sourceColor}](from {source})[/]" );
+		string message = $"[default]{Markup.Escape( description )}:[/] "
+			+ $"[{valueColor}]{Markup.Escape( value )}[/] "
+			+ $"[{sourceColor}](from {Markup.Escape( source.ToString() )})[/]";
+		_ansiConsole.MarkupLine( message );
 	}
 
 	void IMessageWriter.WriteUpdateMessage( string text ) {
@@ -42,20 +45,20 @@ internal class MessageWriter : IMessageWriter {
 		string color = _noColor ? "default" : "black on white";
 		foreach( string line in lines ) {
 			string paddedLine = line.PadRight( maxLineLength );
-			_ansiConsole.MarkupLine( $"[{color}]{paddedLine}[/]" );
+			_ansiConsole.MarkupLine( $"[{color}]{Markup.Escape( paddedLine )}[/]" );
 		}
 		Console.Error.WriteLine();
 	}
 
 	void IMessageWriter.WriteWarning( string text ) {
 		string color = _noColor ? "default" : "yellow";
-		_ansiConsole.MarkupLine( $"[{color}]{text}[/]" );
+		_ansiConsole.MarkupLine( $"[{color}]{Markup.Escape( text )}[/]" );
 		WriteToFile( $"[WARNING] {text}" );
 	}
 
 	void IMessageWriter.WriteError( string text ) {
 		string color = _noColor ? "default" : "red";
-		_ansiConsole.MarkupLine( $"[{color}]{text}[/]" );
+		_ansiConsole.MarkupLine( $"[{color}]{Markup.Escape( text )}[/]" );
 		WriteToFile( $"[ERROR] {text}" );
 	}
 
@@ -83,7 +86,7 @@ internal class MessageWriter : IMessageWriter {
 			writer.Flush();
 		} catch( Exception ex ) {
 			string color = _noColor ? "default" : "red";
-			_ansiConsole.MarkupLine( $"[{color}] Error writing to log file: {ex.Message}[/]" );
+			_ansiConsole.MarkupLine( $"[{color}] Error writing to log file: {Markup.Escape( ex.Message )}[/]" );
 		}
 	}
 }
