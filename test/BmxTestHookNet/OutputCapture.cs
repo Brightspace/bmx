@@ -16,12 +16,10 @@ internal static class OutputCapture {
 
 		if( !string.IsNullOrEmpty( stdoutFile ) ) {
 			s_stdoutWriter = new StreamWriter( stdoutFile, append: false ) { AutoFlush = true };
-			DebugLog.Log( $"Capturing stdout to: {stdoutFile}" );
 		}
 
 		if( !string.IsNullOrEmpty( stderrFile ) ) {
 			s_stderrWriter = new StreamWriter( stderrFile, append: false ) { AutoFlush = true };
-			DebugLog.Log( $"Capturing stderr to: {stderrFile}" );
 		}
 	}
 
@@ -48,7 +46,5 @@ internal static class OutputCapture {
 			s_stderrWriter?.Dispose();
 			s_stderrWriter = null;
 		}
-
-		DebugLog.Log( "Output capture shut down" );
 	}
 }

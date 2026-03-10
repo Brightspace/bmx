@@ -270,7 +270,7 @@ internal static unsafe class IatHook {
 		if( iatSlot is null || originalValue == 0 ) return;
 
 		PatchIatSlot( iatSlot, originalValue );
-		DebugLog.Log( $"Restored IAT: {name}" );
+		//DebugLog.Log( $"Restored IAT: {name}" );
 	}
 
 	private static bool HookWriteConsoleW(
