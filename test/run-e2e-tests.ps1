@@ -28,7 +28,7 @@ if (-not $OktaUser)     { $OktaUser     = Read-Host "Okta username" }
 if (-not $OktaPassword) { $OktaPassword = Read-Host "Okta password" -AsSecureString | ConvertFrom-SecureString -AsPlainText }
 
 if (-not $MfaResponse) { $MfaResponse = $env:BMX_E2E_MFA_RESPONSE }
-if (-not $MfaResponse) { $MfaResponse = Read-Host "MFA passcode for auth pre-check (or press Enter to skip)" }
+if (-not $MfaResponse) { $MfaResponse = Read-Host "MFA passcode for auth pre-check (or press Enter to skip)" -MaskInput }
 
 if (-not $OktaOrg -or -not $OktaUser -or -not $OktaPassword) {
     throw "Okta org, user, and password are required."
@@ -37,10 +37,10 @@ if (-not $OktaOrg -or -not $OktaUser -or -not $OktaPassword) {
 Write-Host ""
 Write-Host "BMX E2E Test Runner" -ForegroundColor Cyan
 Write-Host "===================" -ForegroundColor Cyan
-Write-Host "  Org:     $OktaOrg"
-Write-Host "  User:    $OktaUser"
-Write-Host "  Account: $AwsAccount"
-Write-Host "  Role:    $AwsRole"
+Write-Host "  Org:      $OktaOrg"
+Write-Host "  User:     $OktaUser"
+Write-Host "  Account:  $AwsAccount"
+Write-Host "  Role:     $AwsRole"
 Write-Host ""
 
 if (-not $SkipBuild) {
@@ -184,10 +184,10 @@ for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
         Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
         Write-Host ""
 
-        $newPassword = Read-Host "New Okta password (Enter to keep current)"
+        $newPassword = Read-Host "New Okta password (Enter to keep current)" -MaskInput
         if ($newPassword) { $OktaPassword = $newPassword }
 
-        $newMfa = Read-Host "New MFA passcode (Enter to skip)"
+        $newMfa = Read-Host "New MFA passcode (Enter to skip)" -MaskInput
         if ($newMfa) { $MfaResponse = $newMfa }
     }
 }
@@ -200,7 +200,7 @@ if (-not $authPassed) {
 
 # Prompt for MFA now — right before tests run — to minimize token expiry
 $env:BMX_E2E_MFA_RESPONSE = $null
-$MfaResponse = Read-Host "MFA passcode (or press Enter to skip)"
+$MfaResponse = Read-Host "MFA passcode (or press Enter to skip)" -MaskInput
 
 Write-Host ""
 Write-Host "[Test] Running NUnit E2E tests via dotnet test..." -ForegroundColor Cyan
