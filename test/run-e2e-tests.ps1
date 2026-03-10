@@ -9,6 +9,7 @@ param(
     [string]$AwsAccount,
     [string]$AwsRole,
     [switch]$SkipBuild,
+    [switch]$NoDsso,
     [string]$Filter
 )
 
@@ -254,6 +255,7 @@ $env:BMX_E2E_OKTA_PASSWORD = $OktaPassword
 $env:BMX_E2E_MFA_RESPONSE  = $MfaResponse
 $env:BMX_E2E_AWS_ACCOUNT   = $AwsAccount
 $env:BMX_E2E_AWS_ROLE      = $AwsRole
+$env:BMX_E2E_NO_DSSO       = if ($NoDsso) { "1" } else { "" }
 
 $testProject = Join-Path $repoRoot "test/D2L.Bmx.E2eTests/D2L.Bmx.E2eTests.csproj"
 

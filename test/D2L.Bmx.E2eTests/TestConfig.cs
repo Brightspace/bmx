@@ -32,4 +32,7 @@ internal static class TestConfig {
 	public static string AwsRoleAlt =>
 		Environment.GetEnvironmentVariable( "BMX_E2E_AWS_ROLE_ALT" )
 		?? "Int-Dev-Ace-Readonly";
+
+	public static bool NoDsso =>
+		!string.IsNullOrEmpty( Environment.GetEnvironmentVariable( "BMX_E2E_NO_DSSO" ) );
 }

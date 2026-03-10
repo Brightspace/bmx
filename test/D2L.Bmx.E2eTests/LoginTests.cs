@@ -82,6 +82,10 @@ public class LoginTests {
 
 	[Test, Order( 4 )]
 	public async Task L4_Login_BadPassword_ShouldError() {
+		if( !TestConfig.NoDsso ) {
+			Assert.Ignore( "Skipped — DSSO is active and would bypass password auth. Pass -NoDsso to enable this test." );
+		}
+
 		await BmxRunner.RunAsync(
 			$"configure --org {TestConfig.OktaOrg} --user {TestConfig.OktaUser} --non-interactive"
 		);
