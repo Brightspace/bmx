@@ -73,15 +73,54 @@ if (-not $HookDll -or -not (Test-Path $HookDll)) {
 Write-Host "[Paths] bmx.exe:  $BmxExe" -ForegroundColor Green
 Write-Host "[Paths] hook DLL: $HookDll" -ForegroundColor Green
 
+# --- Microsoft Detours (withdll.exe) ---
+$detoursDir = Join-Path $repoRoot "test/tools/Detours"
 if (-not $WithDll) {
-    $WithDll = Join-Path $repoRoot "test/tools/Detours/bin.X64/withdll.exe"
+    $WithDll = Join-Path $detoursDir "bin.X64/withdll.exe"
 }
 if (-not (Test-Path $WithDll)) {
     $found = Get-Command withdll.exe -ErrorAction SilentlyContinue
     if ($found) { $WithDll = $found.Source }
 }
+if (-not (Test-Path $WithDll) -and -not $SkipBuild) {
+    Write-Host "[Detours] withdll.exe not found — building Microsoft Detours..." -ForegroundColor Cyan
+
+    # Clone if not already present
+    if (-not (Test-Path (Join-Path $detoursDir "Makefile"))) {
+        $toolsDir = Join-Path $repoRoot "test/tools"
+        if (-not (Test-Path $toolsDir)) { New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null }
+        Write-Host "[Detours] Cloning microsoft/Detours..." -ForegroundColor Gray
+        git clone https://github.com/microsoft/Detours.git $detoursDir 2>&1 | Write-Host
+        if ($LASTEXITCODE -ne 0) { throw "Failed to clone Detours" }
+    }
+
+    # Find vcvarsall.bat from Visual Studio
+    $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (-not (Test-Path $vsWhere)) {
+        throw "vswhere.exe not found. Visual Studio (with C++ workload) is required to build Detours."
+    }
+    $vsInstallPath = & $vsWhere -latest -property installationPath -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+    if (-not $vsInstallPath) {
+        throw "Visual Studio with C++ tools not found. Install the 'Desktop development with C++' workload."
+    }
+    $vcvarsall = Join-Path $vsInstallPath "VC\Auxiliary\Build\vcvarsall.bat"
+    if (-not (Test-Path $vcvarsall)) {
+        throw "vcvarsall.bat not found at: $vcvarsall"
+    }
+
+    Write-Host "[Detours] Building with nmake (x64)..." -ForegroundColor Gray
+    $buildCmd = "`"$vcvarsall`" amd64 && cd /d `"$detoursDir`" && nmake"
+    cmd /c $buildCmd 2>&1 | Write-Host
+    if ($LASTEXITCODE -ne 0) { throw "Failed to build Detours" }
+
+    $WithDll = Join-Path $detoursDir "bin.X64/withdll.exe"
+    if (-not (Test-Path $WithDll)) {
+        throw "Detours build succeeded but withdll.exe not found at: $WithDll"
+    }
+    Write-Host "[Detours] Build complete." -ForegroundColor Green
+}
 if (-not $WithDll -or -not (Test-Path $WithDll)) {
-    throw "withdll.exe not found. Expected at test/tools/Detours/bin.X64/withdll.exe"
+    throw "withdll.exe not found. Expected at test/tools/Detours/bin.X64/withdll.exe. Run without -SkipBuild to auto-build."
 }
 Write-Host "[Paths] withdll:  $WithDll" -ForegroundColor Green
 
