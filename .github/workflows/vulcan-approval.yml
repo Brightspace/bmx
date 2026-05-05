@@ -1,0 +1,17 @@
+name: Vulcan Approval
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+  pull_request:
+    types:
+      - synchronize
+
+jobs:
+  vulcan-approval:
+    uses: Brightspace/vulcan-shared-workflows/.github/workflows/team-approval-check.yml@main
+    with:
+      team: vulcan
+    secrets:
+      github-token: ${{ secrets.APPROVAL_CHECK_GITHUB_TOKEN }}
