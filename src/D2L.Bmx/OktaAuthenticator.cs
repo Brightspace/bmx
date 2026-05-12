@@ -137,6 +137,14 @@ internal class OktaAuthenticator(
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionId );
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
+		if( oktaSession.Status != "ACTIVE" ) {
+			messageWriter.WriteWarning( """
+				Okta passwordless authentication failed.
+				An active session ID was not returned from Okta.
+				""" );
+			return null;
+		}
+
 		string sessionLogin = oktaSession.Login.Split( "@" )[0];
 		string providedLogin = user.Split( "@" )[0];
 		if( !sessionLogin.Equals( providedLogin, StringComparison.OrdinalIgnoreCase ) ) {
