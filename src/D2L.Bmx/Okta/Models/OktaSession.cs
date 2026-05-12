@@ -4,6 +4,7 @@ internal record OktaSession(
 	string Id,
 	string Login,
 	string UserId,
+	string Status,
 	DateTimeOffset CreatedAt,
 	DateTimeOffset ExpiresAt
 );
