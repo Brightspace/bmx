@@ -140,7 +140,7 @@ internal class OktaAuthenticator(
 		if( oktaSession.Status != "ACTIVE" ) {
 			messageWriter.WriteWarning( """
 				Okta passwordless authentication failed.
-				An active session ID was not returned from Okta.
+				Okta did not provide an expected response.
 				""" );
 			return null;
 		}
