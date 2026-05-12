@@ -185,14 +185,14 @@ internal class ConsolePrompter : IConsolePrompter {
 				Console.Error.Write( moveLeftString + emptyString + moveLeftString );
 				passwordBuilder.Clear();
 			} else
-			// The backspace key is received as the DEL character in raw mode
-			if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
-				Console.Error.Write( "\b \b" );
-				passwordBuilder.Length--;
-			} else if( !char.IsControl( key ) ) {
-				Console.Error.Write( '*' );
-				passwordBuilder.Append( key );
-			}
+				// The backspace key is received as the DEL character in raw mode
+				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
+					Console.Error.Write( "\b \b" );
+					passwordBuilder.Length--;
+				} else if( !char.IsControl( key ) ) {
+					Console.Error.Write( '*' );
+					passwordBuilder.Append( key );
+				}
 		}
 	}
 }
