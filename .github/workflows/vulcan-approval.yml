@@ -10,7 +10,7 @@ on:
 
 jobs:
   team-approval-check:
-    runs-on: [self-hosted, Linux, AWS]
+    runs-on: ubuntu-slim
     timeout-minutes: 1
     steps:
       - name: Check for team approval
