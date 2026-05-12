@@ -138,10 +138,9 @@ internal class OktaAuthenticator(
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionId );
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
 		if( oktaSession.Status != "ACTIVE" ) {
-			messageWriter.WriteWarning( """
-				Okta passwordless authentication failed.
-				Okta did not provide an expected response.
-				""" );
+			if( BmxEnvironment.IsDebug ) {
+				messageWriter.WriteWarning( "Okta passwordless authentication failed" );
+			}
 			return null;
 		}
 
