@@ -9,9 +9,86 @@ on:
       - synchronize
 
 jobs:
-  vulcan-approval:
-    uses: Brightspace/vulcan-shared-workflows/.github/workflows/team-approval-check.yml@main
-    with:
-      team: vulcan
-    secrets:
-      github-token: ${{ secrets.APPROVAL_CHECK_GITHUB_TOKEN }}
+  team-approval-check:
+    runs-on: [self-hosted, Linux, AWS]
+    timeout-minutes: 1
+    steps:
+      - name: Check for team approval
+        env:
+          GH_TOKEN: ${{ secrets.APPROVAL_CHECK_GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TEAM: vulcan
+          SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          create_success_check() {
+            local summary="$1"
+            echo "Creating success check on commit ${SHA}..."
+            gh api "/repos/${GITHUB_REPOSITORY}/check-runs" \
+              --method POST \
+              --field name="${TEAM}-approval" \
+              --field head_sha="${SHA}" \
+              --field status="completed" \
+              --field conclusion="success" \
+              --field "output[title]=${TEAM} approval" \
+              --field "output[summary]=${summary}"
+          }
+
+          # Get all reviews on the PR
+          REVIEWS=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" --paginate)
+
+          # Find all users who have submitted at least one approval
+          APPROVERS=$(echo "$REVIEWS" | jq -r '
+            [.[] | select(.state == "APPROVED")]
+            | map(.user.login)
+            | unique
+            | .[]
+          ')
+
+          if [ -z "$APPROVERS" ]; then
+            echo "No approvals found on this PR."
+            exit 0
+          fi
+
+          echo "Approvers found:"
+          echo "$APPROVERS"
+
+          # Check if any approver is a member of the team
+          for USER in $APPROVERS; do
+            MEMBERSHIP=$(gh api "/orgs/${GITHUB_REPOSITORY_OWNER}/teams/${TEAM}/memberships/${USER}" --jq '.state' 2>/dev/null || true)
+            echo "Membership status for ${USER}: ${MEMBERSHIP}"
+            if [ "$MEMBERSHIP" = "active" ]; then
+              echo "Found ${TEAM} team approval from: ${USER}"
+              create_success_check "Approved by ${TEAM} team member: ${USER}"
+              exit 0
+            fi
+          done
+
+          # Check for auto-approved dependency update PRs
+          PR_AUTHOR=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq '.user.login')
+          echo "PR author: ${PR_AUTHOR}"
+
+          AUTO_APPROVE_AUTHORS="dependabot[bot] d2l-github-action-tokens[bot]"
+          AUTO_APPROVE_REVIEWERS="github-actions[bot] d2l-github-action-tokens[bot]"
+
+          AUTHOR_MATCH=false
+          for AUTHOR in $AUTO_APPROVE_AUTHORS; do
+            if [ "$PR_AUTHOR" = "$AUTHOR" ]; then
+              AUTHOR_MATCH=true
+              break
+            fi
+          done
+
+          if [ "$AUTHOR_MATCH" = true ]; then
+            for APPROVER in $APPROVERS; do
+              for REVIEWER in $AUTO_APPROVE_REVIEWERS; do
+                if [ "$APPROVER" = "$REVIEWER" ]; then
+                  echo "Auto-approved dependency update PR: authored by ${PR_AUTHOR}, approved by ${APPROVER}"
+                  create_success_check "Auto-approved dependency update: authored by ${PR_AUTHOR}, approved by ${APPROVER}"
+                  exit 0
+                fi
+              done
+            done
+          fi
+
+          echo "No approvals from ${TEAM} team members found."
