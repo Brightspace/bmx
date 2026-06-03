@@ -18,10 +18,34 @@ var userOption = new Option<string>(
 	name: "--user",
 	description: ParameterDescriptions.User );
 
+var passwordlessTimeoutOption = new Option<int?>(
+	name: "--passwordless-timeout",
+	description: ParameterDescriptions.PasswordlessTimeout );
+
+passwordlessTimeoutOption.AddValidator( result => {
+	if( result.Tokens is [Token token, ..]
+		&& int.TryParse( token.Value, out int timeout ) ) {
+		if( timeout != 0
+			&& ( timeout < PasswordlessTimeoutDefaults.Min
+				|| timeout > PasswordlessTimeoutDefaults.Max ) ) {
+			result.ErrorMessage =
+				"Passwordless timeout must be 0 (disabled)"
+				+ $" or between {PasswordlessTimeoutDefaults.Min}"
+				+ $" and {PasswordlessTimeoutDefaults.Max} seconds";
+		}
+	} else if( result.Tokens.Count > 0 ) {
+		result.ErrorMessage =
+			"Passwordless timeout must be 0 (disabled)"
+			+ $" or between {PasswordlessTimeoutDefaults.Min}"
+			+ $" and {PasswordlessTimeoutDefaults.Max} seconds";
+	}
+} );
+
 // bmx login
 var loginCommand = new Command( "login", "Log into Okta and save an Okta session" ) {
 	orgOption,
 	userOption,
+	passwordlessTimeoutOption,
 };
 loginCommand.SetHandler( ( InvocationContext context ) => {
 	var messageWriter = new MessageWriter();
@@ -36,7 +60,8 @@ loginCommand.SetHandler( ( InvocationContext context ) => {
 	) );
 	return handler.HandleAsync(
 		org: context.ParseResult.GetValueForOption( orgOption ),
-		user: context.ParseResult.GetValueForOption( userOption )
+		user: context.ParseResult.GetValueForOption( userOption ),
+		passwordlessTimeout: context.ParseResult.GetValueForOption( passwordlessTimeoutOption )
 	);
 } );
 
@@ -64,6 +89,7 @@ var configureCommand = new Command( "configure", "Create or update the global BM
 	orgOption,
 	userOption,
 	durationOption,
+	passwordlessTimeoutOption,
 	nonInteractiveOption,
 };
 
@@ -75,6 +101,7 @@ configureCommand.SetHandler( ( InvocationContext context ) => {
 		org: context.ParseResult.GetValueForOption( orgOption ),
 		user: context.ParseResult.GetValueForOption( userOption ),
 		duration: context.ParseResult.GetValueForOption( durationOption ),
+		passwordlessTimeout: context.ParseResult.GetValueForOption( passwordlessTimeoutOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption )
 	);
 	return Task.CompletedTask;
@@ -120,6 +147,7 @@ var printCommand = new Command( "print", "Print AWS credentials" ) {
 	userOption,
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
+	passwordlessTimeoutOption,
 };
 
 printCommand.SetHandler( ( InvocationContext context ) => {
@@ -149,7 +177,8 @@ printCommand.SetHandler( ( InvocationContext context ) => {
 		duration: context.ParseResult.GetValueForOption( durationOption ),
 		nonInteractive: context.ParseResult.GetValueForOption( nonInteractiveOption ),
 		format: context.ParseResult.GetValueForOption( formatOption ),
-		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption )
+		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
+		passwordlessTimeout: context.ParseResult.GetValueForOption( passwordlessTimeoutOption )
 	);
 } );
 
@@ -175,6 +204,7 @@ var writeCommand = new Command( "write", "Write AWS credentials to the credentia
 	nonInteractiveOption,
 	cacheAwsCredentialsOption,
 	useCredentialProcessOption,
+	passwordlessTimeoutOption,
 };
 
 writeCommand.SetHandler( ( InvocationContext context ) => {
@@ -210,7 +240,8 @@ writeCommand.SetHandler( ( InvocationContext context ) => {
 		output: context.ParseResult.GetValueForOption( outputOption ),
 		profile: context.ParseResult.GetValueForOption( profileOption ),
 		cacheAwsCredentials: context.ParseResult.GetValueForOption( cacheAwsCredentialsOption ),
-		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption )
+		useCredentialProcess: context.ParseResult.GetValueForOption( useCredentialProcessOption ),
+		passwordlessTimeout: context.ParseResult.GetValueForOption( passwordlessTimeoutOption )
 	);
 } );
 

@@ -23,7 +23,8 @@ internal class OktaAuthenticator(
 		string? org,
 		string? user,
 		bool nonInteractive,
-		bool ignoreCache
+		bool ignoreCache,
+		int? passwordlessTimeout
 	) {
 		var orgSource = ParameterSource.CliArg;
 		if( string.IsNullOrEmpty( org ) && !string.IsNullOrEmpty( config.Org ) ) {
@@ -65,19 +66,30 @@ internal class OktaAuthenticator(
 			OperatingSystem.IsWindows()
 			&& browserLauncher.TryGetPathToBrowser( out string? browserPath )
 		) {
-			if( !nonInteractive ) {
-				Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
-			}
-			oktaAuthenticated = await GetDssoAuthenticatedClientAsync(
-				orgUrl,
-				user,
-				browserPath
-			);
-			if( oktaAuthenticated is not null ) {
-				return new( Org: org, User: user, Client: oktaAuthenticated );
-			}
-			if( !nonInteractive ) {
-				Console.Error.WriteLine( "Falling back to Okta password authentication..." );
+			int resolvedTimeout = passwordlessTimeout
+				?? config.PasswordlessTimeout
+				?? PasswordlessTimeoutDefaults.Default;
+
+			if( resolvedTimeout == 0 ) {
+				if( BmxEnvironment.IsDebug ) {
+					messageWriter.WriteWarning( "Okta passwordless authentication disabled via configuration" );
+				}
+			} else {
+				if( !nonInteractive ) {
+					Console.Error.WriteLine( "Attempting Okta passwordless authentication..." );
+				}
+				oktaAuthenticated = await GetDssoAuthenticatedClientAsync(
+					orgUrl,
+					user,
+					browserPath,
+					resolvedTimeout
+				);
+				if( oktaAuthenticated is not null ) {
+					return new( Org: org, User: user, Client: oktaAuthenticated );
+				}
+				if( !nonInteractive ) {
+					Console.Error.WriteLine( "Falling back to Okta password authentication..." );
+				}
 			}
 		} else if( BmxEnvironment.IsDebug ) {
 			messageWriter.WriteWarning( "No suitable browser found for Okta passwordless authentication" );
@@ -115,12 +127,13 @@ internal class OktaAuthenticator(
 	private async Task<IOktaAuthenticatedClient?> GetDssoAuthenticatedClientAsync(
 		Uri orgUrl,
 		string user,
-		string browserPath
+		string browserPath,
+		int timeoutSeconds
 	) {
 		string? sessionId = null;
 
 		try {
-			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl );
+			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl, timeoutSeconds );
 		} catch( TaskCanceledException ex ) {
 			if( BmxEnvironment.IsDebug ) {
 				messageWriter.WriteWarning( $"Okta passwordless authentication timed out. \n{ex}" );
@@ -151,7 +164,7 @@ internal class OktaAuthenticator(
 		return oktaAuthenticatedClient;
 	}
 
-	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl ) {
+	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl, int timeoutSeconds ) {
 		if( BmxEnvironment.IsDebug ) {
 			messageWriter.WriteWarning( $"Launching browser: {browserPath}" );
 		}
@@ -159,12 +172,13 @@ internal class OktaAuthenticator(
 
 		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
 
-		// cancel if the total time exceeds 15 seconds, including all page loads and retries
-		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 15 ) );
+		// cancel if the total time exceeds the configured timeout, including all page loads and retries
+		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( timeoutSeconds ) );
 		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
 
-		// cancel if we can't load the first page for 6 seconds
-		using var pageTimer = new System.Timers.Timer( TimeSpan.FromSeconds( 6 ) ) { AutoReset = false };
+		// cancel if we can't load the first page within a derived timeout
+		using var pageTimer = new System.Timers.Timer(
+			TimeSpan.FromSeconds( Math.Min( 6, timeoutSeconds / 2 ) ) ) { AutoReset = false };
 		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
 		pageTimer.Start();
 

@@ -9,6 +9,7 @@ internal interface IConsolePrompter {
 	string PromptUser( bool allowEmptyInput );
 	string PromptPassword();
 	int? PromptDuration();
+	int? PromptPasswordlessTimeout();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
@@ -61,6 +62,25 @@ internal class ConsolePrompter : IConsolePrompter {
 			return null;
 		}
 		return duration;
+	}
+
+	int? IConsolePrompter.PromptPasswordlessTimeout() {
+		Console.Error.Write(
+			"Okta passwordless (DSSO) timeout in seconds"
+			+ " (optional, 0 to disable,"
+			+ $" {PasswordlessTimeoutDefaults.Min}-{PasswordlessTimeoutDefaults.Max},"
+			+ $" default: {PasswordlessTimeoutDefaults.Default}): " );
+		string? input = Console.ReadLine();
+		if( input is null || string.IsNullOrWhiteSpace( input ) ) {
+			return null;
+		}
+		if( int.TryParse( input, out int timeout )
+			&& ( timeout == 0
+				|| ( timeout >= PasswordlessTimeoutDefaults.Min
+					&& timeout <= PasswordlessTimeoutDefaults.Max ) ) ) {
+			return timeout;
+		}
+		return null;
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {
@@ -185,14 +205,14 @@ internal class ConsolePrompter : IConsolePrompter {
 				Console.Error.Write( moveLeftString + emptyString + moveLeftString );
 				passwordBuilder.Clear();
 			} else
-			// The backspace key is received as the DEL character in raw mode
-			if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
-				Console.Error.Write( "\b \b" );
-				passwordBuilder.Length--;
-			} else if( !char.IsControl( key ) ) {
-				Console.Error.Write( '*' );
-				passwordBuilder.Append( key );
-			}
+				// The backspace key is received as the DEL character in raw mode
+				if( ( key == '\b' || key == DEL ) && passwordBuilder.Length > 0 ) {
+					Console.Error.Write( "\b \b" );
+					passwordBuilder.Length--;
+				} else if( !char.IsControl( key ) ) {
+					Console.Error.Write( '*' );
+					passwordBuilder.Append( key );
+				}
 		}
 	}
 }
