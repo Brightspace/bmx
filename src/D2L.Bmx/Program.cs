@@ -24,20 +24,10 @@ var passwordlessTimeoutOption = new Option<int?>(
 
 passwordlessTimeoutOption.AddValidator( result => {
 	if( result.Tokens is [Token token, ..]
-		&& int.TryParse( token.Value, out int timeout ) ) {
-		if( timeout != 0
-			&& ( timeout < PasswordlessTimeoutDefaults.Min
-				|| timeout > PasswordlessTimeoutDefaults.Max ) ) {
-			result.ErrorMessage =
-				"Passwordless timeout must be 0 (disabled)"
-				+ $" or between {PasswordlessTimeoutDefaults.Min}"
-				+ $" and {PasswordlessTimeoutDefaults.Max} seconds";
-		}
-	} else if( result.Tokens.Count > 0 ) {
-		result.ErrorMessage =
-			"Passwordless timeout must be 0 (disabled)"
-			+ $" or between {PasswordlessTimeoutDefaults.Min}"
-			+ $" and {PasswordlessTimeoutDefaults.Max} seconds";
+		&& int.TryParse( token.Value, out int timeout )
+		&& timeout < 0 ) {
+		result.ErrorMessage
+			= "Passwordless timeout must be 0 (passwordless authentication disabled) or a positive number of seconds";
 	}
 } );
 

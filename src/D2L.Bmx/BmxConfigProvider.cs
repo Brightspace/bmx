@@ -47,13 +47,10 @@ internal class BmxConfigProvider(
 		int? passwordlessTimeout = null;
 		if( !string.IsNullOrEmpty( data.Global["passwordlessTimeout"] ) ) {
 			if( !int.TryParse( data.Global["passwordlessTimeout"], out int configTimeout )
-				|| configTimeout < 0
-				|| ( configTimeout > 0 && configTimeout < PasswordlessTimeoutDefaults.Min )
-				|| configTimeout > PasswordlessTimeoutDefaults.Max ) {
+				|| configTimeout < 0 ) {
 				throw new BmxException(
 					"Invalid passwordlessTimeout in config."
-					+ $" Must be 0 (disabled) or between {PasswordlessTimeoutDefaults.Min}"
-					+ $" and {PasswordlessTimeoutDefaults.Max} seconds." );
+					+ " Must be 0 (to disable passwordless authentication) or a positive number of seconds." );
 			}
 			passwordlessTimeout = configTimeout;
 		}

@@ -68,7 +68,7 @@ internal class OktaAuthenticator(
 		) {
 			int resolvedTimeout = passwordlessTimeout
 				?? config.PasswordlessTimeout
-				?? PasswordlessTimeoutDefaults.Default;
+				?? 30;
 
 			if( resolvedTimeout == 0 ) {
 				if( BmxEnvironment.IsDebug ) {

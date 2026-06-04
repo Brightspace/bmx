@@ -65,19 +65,13 @@ internal class ConsolePrompter : IConsolePrompter {
 	}
 
 	int? IConsolePrompter.PromptPasswordlessTimeout() {
-		Console.Error.Write(
-			"Okta passwordless (DSSO) timeout in seconds"
-			+ " (optional, 0 to disable,"
-			+ $" {PasswordlessTimeoutDefaults.Min}-{PasswordlessTimeoutDefaults.Max},"
-			+ $" default: {PasswordlessTimeoutDefaults.Default}): " );
+		Console.Error.Write( $"{ParameterDescriptions.PasswordlessTimeout} " +
+				"(optional, 0 to disable passwordless authentication, default: 30): " );
 		string? input = Console.ReadLine();
 		if( input is null || string.IsNullOrWhiteSpace( input ) ) {
 			return null;
 		}
-		if( int.TryParse( input, out int timeout )
-			&& ( timeout == 0
-				|| ( timeout >= PasswordlessTimeoutDefaults.Min
-					&& timeout <= PasswordlessTimeoutDefaults.Max ) ) ) {
+		if( int.TryParse( input, out int timeout ) && timeout >= 0 ) {
 			return timeout;
 		}
 		return null;
