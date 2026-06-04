@@ -183,9 +183,9 @@ internal class OktaAuthenticator(
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( timeoutSeconds ) );
 		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
 
-		// cancel if we can't load the first page within a derived timeout
+		// cancel if we can't load a page within half the total timeout
 		using var pageTimer = new System.Timers.Timer(
-			TimeSpan.FromSeconds( Math.Max( 6, timeoutSeconds / 2.0 ) ) ) { AutoReset = false };
+			TimeSpan.FromSeconds( timeoutSeconds / 2.0 ) ) { AutoReset = false };
 		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
 		pageTimer.Start();
 
@@ -205,12 +205,8 @@ internal class OktaAuthenticator(
 
 		async Task OnPageLoadAsync() {
 			// reset the per-page timer on every page load
-			lock( pageTimer ) {
-				pageTimer.Stop();
-				// we give the first page 6 sec to load, but 3 sec is probably enough for subsequent pages
-				pageTimer.Interval = Math.Max( 3, timeoutSeconds / 2.0 ) * 1000;
-				pageTimer.Start();
-			}
+			pageTimer.Stop();
+			pageTimer.Start();
 
 			if( BmxEnvironment.IsDebug ) {
 				messageWriter.WriteWarning( $"Browser loaded {page.Url}" );
