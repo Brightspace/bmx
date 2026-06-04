@@ -205,8 +205,10 @@ internal class OktaAuthenticator(
 
 		async Task OnPageLoadAsync() {
 			// reset the per-page timer on every page load
-			pageTimer.Stop();
-			pageTimer.Start();
+			lock( pageTimer ) {
+				pageTimer.Stop();
+				pageTimer.Start();
+			}
 
 			if( BmxEnvironment.IsDebug ) {
 				messageWriter.WriteWarning( $"Browser loaded {page.Url}" );
