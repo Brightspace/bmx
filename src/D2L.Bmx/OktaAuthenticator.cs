@@ -185,7 +185,7 @@ internal class OktaAuthenticator(
 
 		// cancel if we can't load the first page within a derived timeout
 		using var pageTimer = new System.Timers.Timer(
-			TimeSpan.FromSeconds( Math.Max( 6, timeoutSeconds / 2 ) ) ) { AutoReset = false };
+			TimeSpan.FromSeconds( Math.Max( 6, timeoutSeconds / 2.0 ) ) ) { AutoReset = false };
 		pageTimer.Elapsed += ( _, _ ) => cancellationTokenSource.Cancel();
 		pageTimer.Start();
 
@@ -208,7 +208,7 @@ internal class OktaAuthenticator(
 			lock( pageTimer ) {
 				pageTimer.Stop();
 				// we give the first page 6 sec to load, but 3 sec is probably enough for subsequent pages
-				pageTimer.Interval = Math.Max( 3, timeoutSeconds / 4 ) * 1000;
+				pageTimer.Interval = Math.Max( 3, timeoutSeconds / 2.0 ) * 1000;
 				pageTimer.Start();
 			}
 
