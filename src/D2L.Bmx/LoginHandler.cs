@@ -5,7 +5,8 @@ internal class LoginHandler(
 ) {
 	public async Task HandleAsync(
 		string? org,
-		string? user
+		string? user,
+		int? passwordlessTimeout
 	) {
 		if( !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 			throw new BmxException(
@@ -16,7 +17,8 @@ internal class LoginHandler(
 			org,
 			user,
 			nonInteractive: false,
-			ignoreCache: true
+			ignoreCache: true,
+			passwordlessTimeout: passwordlessTimeout
 		);
 		Console.WriteLine( "Successfully logged in and Okta session has been cached." );
 	}

@@ -44,13 +44,25 @@ internal class BmxConfigProvider(
 			duration = configDuration;
 		}
 
+		int? passwordlessTimeout = null;
+		if( !string.IsNullOrEmpty( data.Global["passwordlessTimeout"] ) ) {
+			if( !int.TryParse( data.Global["passwordlessTimeout"], out int configTimeout )
+				|| configTimeout < 0 ) {
+				throw new BmxException(
+					"Invalid passwordlessTimeout in config."
+					+ " Must be 0 (to disable passwordless authentication) or a positive number of seconds." );
+			}
+			passwordlessTimeout = configTimeout;
+		}
+
 		return new BmxConfig(
 			Org: data.Global["org"],
 			User: data.Global["user"],
 			Account: data.Global["account"],
 			Role: data.Global["role"],
 			Profile: data.Global["profile"],
-			Duration: duration
+			Duration: duration,
+			PasswordlessTimeout: passwordlessTimeout
 		);
 	}
 
@@ -74,6 +86,9 @@ internal class BmxConfigProvider(
 		}
 		if( config.Duration.HasValue ) {
 			data.Global["duration"] = $"{config.Duration}";
+		}
+		if( config.PasswordlessTimeout.HasValue ) {
+			data.Global["passwordlessTimeout"] = $"{config.PasswordlessTimeout}";
 		}
 
 		fs.Position = 0;

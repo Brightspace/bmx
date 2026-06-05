@@ -14,6 +14,8 @@ internal static class ParameterDescriptions {
 	public const string NonInteractive = "Run non-interactively without showing any prompts";
 	public const string CacheAwsCredentials =
 		"Enables Cache for AWS tokens. Implied if '--use-credential-process' is supplied";
+	public const string PasswordlessTimeout =
+		"Timeout for Okta passwordless authentication in seconds";
 	public const string UseCredentialProcess = """
 		Write BMX command to AWS profile, so that AWS tools & SDKs using the profile will source credentials from BMX.
 		See https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sourcing-external.html.

@@ -9,6 +9,7 @@ internal interface IConsolePrompter {
 	string PromptUser( bool allowEmptyInput );
 	string PromptPassword();
 	int? PromptDuration();
+	int? PromptPasswordlessTimeout();
 	string PromptAccount( string[] accounts );
 	string PromptRole( string[] roles );
 	OktaMfaFactor SelectMfa( OktaMfaFactor[] mfaOptions );
@@ -61,6 +62,19 @@ internal class ConsolePrompter : IConsolePrompter {
 			return null;
 		}
 		return duration;
+	}
+
+	int? IConsolePrompter.PromptPasswordlessTimeout() {
+		Console.Error.Write( $"{ParameterDescriptions.PasswordlessTimeout} " +
+				"(optional, 0 to disable passwordless authentication, default: 30): " );
+		string? input = Console.ReadLine();
+		if( input is null || string.IsNullOrWhiteSpace( input ) ) {
+			return null;
+		}
+		if( int.TryParse( input, out int timeout ) && timeout >= 0 ) {
+			return timeout;
+		}
+		return null;
 	}
 
 	string IConsolePrompter.PromptAccount( string[] accounts ) {

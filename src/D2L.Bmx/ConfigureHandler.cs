@@ -9,6 +9,7 @@ internal class ConfigureHandler(
 		string? org,
 		string? user,
 		int? duration,
+		int? passwordlessTimeout,
 		bool nonInteractive
 	) {
 
@@ -24,13 +25,18 @@ internal class ConfigureHandler(
 			duration = consolePrompter.PromptDuration();
 		}
 
+		if( passwordlessTimeout is null && !nonInteractive ) {
+			passwordlessTimeout = consolePrompter.PromptPasswordlessTimeout();
+		}
+
 		BmxConfig config = new(
 			Org: org,
 			User: user,
 			Account: null,
 			Role: null,
 			Profile: null,
-			Duration: duration
+			Duration: duration,
+			PasswordlessTimeout: passwordlessTimeout
 		);
 		configProvider.SaveConfiguration( config );
 		Console.WriteLine( "Your configuration has been created. Okta sessions will now also be cached." );
