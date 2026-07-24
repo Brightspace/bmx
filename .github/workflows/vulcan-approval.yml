@@ -17,20 +17,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.APPROVAL_CHECK_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          TEAM: vulcan
+          TEAMS: vulcan
           SHA: ${{ github.event.pull_request.head.sha }}
         shell: bash
         run: |
+          if [ -z "$TEAMS" ]; then
+            echo "Error: 'teams' input is required."
+            exit 1
+          fi
+  
+          if [ -n "$TEAMS" ]; then
+            IFS=',' read -r -a TEAMS_LIST <<< "$TEAMS"
+          fi
+
+          TEAMS_STR=$(IFS=','; echo "${TEAMS_LIST[*]}")
+
           create_success_check() {
             local summary="$1"
             echo "Creating success check on commit ${SHA}..."
             gh api "/repos/${GITHUB_REPOSITORY}/check-runs" \
               --method POST \
-              --field name="${TEAM}-approval" \
+              --field name="[${TEAMS_STR}]-approval" \
               --field head_sha="${SHA}" \
               --field status="completed" \
               --field conclusion="success" \
-              --field "output[title]=${TEAM} approval" \
+              --field "output[title]=[${TEAMS_STR}] approval" \
               --field "output[summary]=${summary}"
           }
 
@@ -53,15 +64,18 @@ jobs:
           echo "Approvers found:"
           echo "$APPROVERS"
 
-          # Check if any approver is a member of the team
+          # Check if any approver is a member of the specified team(s)
           for USER in $APPROVERS; do
-            MEMBERSHIP=$(gh api "/orgs/${GITHUB_REPOSITORY_OWNER}/teams/${TEAM}/memberships/${USER}" --jq '.state' 2>/dev/null || true)
-            echo "Membership status for ${USER}: ${MEMBERSHIP}"
-            if [ "$MEMBERSHIP" = "active" ]; then
-              echo "Found ${TEAM} team approval from: ${USER}"
-              create_success_check "Approved by ${TEAM} team member: ${USER}"
-              exit 0
-            fi
+            for APPROVER_TEAM in "${TEAMS_LIST[@]}"; do
+              echo "Checking membership for user ${USER} in team ${APPROVER_TEAM}..."
+              MEMBERSHIP=$(gh api "/orgs/${GITHUB_REPOSITORY_OWNER}/teams/${APPROVER_TEAM}/memberships/${USER}" --jq '.state' 2>/dev/null || true)
+              echo "Membership status for ${USER}: ${MEMBERSHIP}"
+              if [ "$MEMBERSHIP" = "active" ]; then
+                echo "Found ${APPROVER_TEAM} team approval from: ${USER}"
+                create_success_check "Approved by ${APPROVER_TEAM} team member: ${USER}"
+                exit 0
+              fi
+            done
           done
 
           # Check for auto-approved dependency update PRs
@@ -91,4 +105,4 @@ jobs:
             done
           fi
 
-          echo "No approvals from ${TEAM} team members found."
+          echo "No approvals from ${TEAMS_STR} team members found."
