@@ -25,7 +25,7 @@ jobs:
             echo "Error: 'teams' input is required."
             exit 1
           fi
-  
+
           if [ -n "$TEAMS" ]; then
             IFS=',' read -r -a TEAMS_LIST <<< "$TEAMS"
           fi
