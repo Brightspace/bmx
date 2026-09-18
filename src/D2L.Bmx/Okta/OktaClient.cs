@@ -5,9 +5,14 @@ using D2L.Bmx.Okta.Models;
 
 namespace D2L.Bmx.Okta;
 
+internal static class OktaSessionCookieNames {
+	public const string Classic = "sid";
+	public const string IdentityEngine = "idx";
+}
+
 internal interface IOktaClientFactory {
 	IOktaAnonymousClient CreateAnonymousClient( Uri orgUrl );
-	IOktaAuthenticatedClient CreateAuthenticatedClient( Uri orgUrl, string sessionId );
+	IOktaAuthenticatedClient CreateAuthenticatedClient( Uri orgUrl, string sessionId, string sessionCookieName );
 }
 
 internal interface IOktaAnonymousClient {
@@ -36,11 +41,15 @@ internal class OktaClientFactory : IOktaClientFactory {
 		return new OktaAnonymousClient( httpClient );
 	}
 
-	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient( Uri orgUrl, string sessionId ) {
+	IOktaAuthenticatedClient IOktaClientFactory.CreateAuthenticatedClient(
+		Uri orgUrl,
+		string sessionId,
+		string sessionCookieName
+	) {
 		var baseAddress = GetApiBaseAddress( orgUrl );
 
 		var cookieContainer = new CookieContainer();
-		cookieContainer.Add( new Cookie( "sid", sessionId, "/", baseAddress.Host ) );
+		cookieContainer.Add( new Cookie( sessionCookieName, sessionId, "/", baseAddress.Host ) );
 
 		var httpClient = new HttpClient( new SocketsHttpHandler {
 			CookieContainer = cookieContainer,

@@ -4,5 +4,6 @@ internal record OktaSessionCache(
 	string UserId,
 	string Org,
 	string SessionId,
-	DateTimeOffset ExpiresAt
+	DateTimeOffset ExpiresAt,
+	string? SessionCookieName = null
 );

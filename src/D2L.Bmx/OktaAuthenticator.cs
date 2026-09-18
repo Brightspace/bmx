@@ -114,13 +114,17 @@ internal class OktaAuthenticator(
 		string user,
 		[NotNullWhen( true )] out IOktaAuthenticatedClient? oktaAuthenticated
 	) {
-		string? sessionId = GetCachedOktaSessionId( user, orgBaseAddress.Host );
-		if( string.IsNullOrEmpty( sessionId ) ) {
+		OktaSessionCache? session = GetCachedOktaSession( user, orgBaseAddress.Host );
+		if( session is null ) {
 			oktaAuthenticated = null;
 			return false;
 		}
 
-		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient( orgBaseAddress, sessionId );
+		oktaAuthenticated = oktaClientFactory.CreateAuthenticatedClient(
+			orgBaseAddress,
+			session.SessionId,
+			session.SessionCookieName ?? OktaSessionCookieNames.Classic
+		);
 		return true;
 	}
 
@@ -148,7 +152,11 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
-		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionId );
+		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient(
+			orgUrl,
+			sessionId,
+			OktaSessionCookieNames.IdentityEngine
+		);
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
 		if( oktaSession.Status != "ACTIVE" ) {
 			if( BmxEnvironment.IsDebug ) {
@@ -167,11 +175,21 @@ internal class OktaAuthenticator(
 			return null;
 		}
 
-		TryCacheOktaSession( user, orgUrl.Host, sessionId, oktaSession.ExpiresAt );
+		TryCacheOktaSession(
+			user,
+			orgUrl.Host,
+			sessionId,
+			oktaSession.ExpiresAt,
+			OktaSessionCookieNames.IdentityEngine
+		);
 		return oktaAuthenticatedClient;
 	}
 
-	private async Task<string?> GetSessionIdFromBrowserAsync( string browserPath, Uri orgUrl, int timeoutSeconds ) {
+	private async Task<string?> GetSessionIdFromBrowserAsync(
+		string browserPath,
+		Uri orgUrl,
+		int timeoutSeconds
+	) {
 		if( BmxEnvironment.IsDebug ) {
 			messageWriter.WriteWarning( $"Launching browser: {browserPath}" );
 		}
@@ -210,17 +228,22 @@ internal class OktaAuthenticator(
 				pageTimer.Start();
 			}
 
+			string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
+			var url = new Uri( page.Url );
 			if( BmxEnvironment.IsDebug ) {
-				messageWriter.WriteWarning( $"Browser loaded {page.Url}" );
+				messageWriter.WriteWarning(
+					$"Browser loaded {url.GetLeftPart( UriPartial.Path )} with title '{title}'"
+				);
 			}
 
-			var url = new Uri( page.Url );
-			if( url.Host == orgUrl.Host ) {
-				string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
-				// DSSO can sometimes takes more than one attempt.
-				// If the path is '/' with 'sign in' in the title, it means DSSO is not available and we should stop retrying.
-				if( title.Contains( "sign in", StringComparison.OrdinalIgnoreCase ) ) {
-					if( attempt < 3 && url.AbsolutePath != "/" ) {
+			if(
+				url.Host == orgUrl.Host
+				&& title.Contains( "sign in", StringComparison.OrdinalIgnoreCase )
+			) {
+				// DSSO can sometimes take more than one attempt. Both this terminal page and the
+				// transient Agentless DSSO page have "Sign In" titles, so only retry from this path.
+				if( url.AbsolutePath.Equals( "/oauth2/v1/authorize", StringComparison.OrdinalIgnoreCase ) ) {
+					if( attempt < 3 ) {
 						if( BmxEnvironment.IsDebug ) {
 							messageWriter.WriteWarning( $"Attempt {attempt} failed. Retry..." );
 						}
@@ -228,20 +251,19 @@ internal class OktaAuthenticator(
 						await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 					} else {
 						if( BmxEnvironment.IsDebug ) {
-							if( url.AbsolutePath == "/" ) {
-								messageWriter.WriteWarning( "Okta passwordless authentication is not available." );
-							} else {
-								messageWriter.WriteWarning( "Okta passwordless authentication failed" );
-							}
+							messageWriter.WriteWarning( "Okta passwordless authentication is not available" );
 						}
-						sessionIdTcs.SetResult( null );
+						sessionIdTcs.TrySetResult( null );
 					}
 					return;
 				}
+				if( BmxEnvironment.IsDebug ) {
+					messageWriter.WriteWarning( "Okta sign-in page loaded; waiting for DSSO to complete" );
+				}
 			}
 			var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-			if( Array.Find( cookies, c => c.Name == "sid" )?.Value is string sid ) {
-				sessionIdTcs.SetResult( sid );
+			if( Array.Find( cookies, c => c.Name == "idx" )?.Value is string sessionId ) {
+				sessionIdTcs.TrySetResult( sessionId );
 			}
 		}
 	}
@@ -281,8 +303,18 @@ internal class OktaAuthenticator(
 
 		if( authnResponse is AuthenticateResponse.Success successInfo ) {
 			var sessionResp = await oktaAnonymous.CreateSessionAsync( successInfo.SessionToken );
-			TryCacheOktaSession( user, orgUrl.Host, sessionResp.Id, sessionResp.ExpiresAt );
-			return oktaClientFactory.CreateAuthenticatedClient( orgUrl, sessionResp.Id );
+			TryCacheOktaSession(
+				user,
+				orgUrl.Host,
+				sessionResp.Id,
+				sessionResp.ExpiresAt,
+				OktaSessionCookieNames.Classic
+			);
+			return oktaClientFactory.CreateAuthenticatedClient(
+				orgUrl,
+				sessionResp.Id,
+				OktaSessionCookieNames.Classic
+			);
 		}
 
 		if( authnResponse is AuthenticateResponse.Failure failure2 ) {
@@ -292,9 +324,15 @@ internal class OktaAuthenticator(
 		throw new UnreachableException( $"Unexpected response type: {authnResponse.GetType()}" );
 	}
 
-	private bool TryCacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
+	private bool TryCacheOktaSession(
+		string userId,
+		string org,
+		string sessionId,
+		DateTimeOffset expiresAt,
+		string sessionCookieName
+	) {
 		if( File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
-			CacheOktaSession( userId, org, sessionId, expiresAt );
+			CacheOktaSession( userId, org, sessionId, expiresAt, sessionCookieName );
 			return true;
 		}
 		messageWriter.WriteWarning( """
@@ -304,8 +342,14 @@ internal class OktaAuthenticator(
 		return false;
 	}
 
-	private void CacheOktaSession( string userId, string org, string sessionId, DateTimeOffset expiresAt ) {
-		var session = new OktaSessionCache( userId, org, sessionId, expiresAt );
+	private void CacheOktaSession(
+		string userId,
+		string org,
+		string sessionId,
+		DateTimeOffset expiresAt,
+		string sessionCookieName
+	) {
+		var session = new OktaSessionCache( userId, org, sessionId, expiresAt, sessionCookieName );
 		var sessionsToCache = ReadOktaSessionCacheFile();
 		sessionsToCache = sessionsToCache.Where( session => session.UserId != userId || session.Org != org )
 			.ToList();
@@ -314,14 +358,13 @@ internal class OktaAuthenticator(
 		sessionStorage.SaveSessions( sessionsToCache );
 	}
 
-	private string? GetCachedOktaSessionId( string userId, string org ) {
+	private OktaSessionCache? GetCachedOktaSession( string userId, string org ) {
 		if( !File.Exists( BmxPaths.CONFIG_FILE_NAME ) ) {
 			return null;
 		}
 
 		var oktaSessions = ReadOktaSessionCacheFile();
-		var session = oktaSessions.Find( session => session.UserId == userId && session.Org == org );
-		return session?.SessionId;
+		return oktaSessions.Find( session => session.UserId == userId && session.Org == org );
 	}
 
 	private List<OktaSessionCache> ReadOktaSessionCacheFile() {
