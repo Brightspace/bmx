@@ -253,7 +253,7 @@ internal class OktaAuthenticator(
 						if( BmxEnvironment.IsDebug ) {
 							messageWriter.WriteWarning( "Okta passwordless authentication is not available" );
 						}
-						sessionIdTcs.TrySetResult( null );
+						sessionIdTcs.SetResult( null );
 					}
 					return;
 				}
@@ -263,7 +263,7 @@ internal class OktaAuthenticator(
 			}
 			var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
 			if( Array.Find( cookies, c => c.Name == "idx" )?.Value is string sessionId ) {
-				sessionIdTcs.TrySetResult( sessionId );
+				sessionIdTcs.SetResult( sessionId );
 			}
 		}
 	}
