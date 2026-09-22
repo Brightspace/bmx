@@ -134,10 +134,10 @@ internal class OktaAuthenticator(
 		string browserPath,
 		int timeoutSeconds
 	) {
-		string? sessionId = null;
+		(string Name, string Value)? sessionCookie = null;
 
 		try {
-			sessionId = await GetSessionIdFromBrowserAsync( browserPath, orgUrl, timeoutSeconds );
+			sessionCookie = await GetSessionCookieFromBrowserAsync( browserPath, orgUrl, timeoutSeconds );
 		} catch( TaskCanceledException ex ) {
 			if( BmxEnvironment.IsDebug ) {
 				messageWriter.WriteWarning( $"Okta passwordless authentication timed out. \n{ex}" );
@@ -148,14 +148,15 @@ internal class OktaAuthenticator(
 			}
 		}
 
-		if( sessionId is null ) {
+		if( sessionCookie is null ) {
 			return null;
 		}
+		(string sessionCookieName, string sessionId) = sessionCookie.Value;
 
 		var oktaAuthenticatedClient = oktaClientFactory.CreateAuthenticatedClient(
 			orgUrl,
 			sessionId,
-			OktaSessionCookieNames.IdentityEngine
+			sessionCookieName
 		);
 		var oktaSession = await oktaAuthenticatedClient.GetCurrentOktaSessionAsync();
 		if( oktaSession.Status != "ACTIVE" ) {
@@ -180,12 +181,12 @@ internal class OktaAuthenticator(
 			orgUrl.Host,
 			sessionId,
 			oktaSession.ExpiresAt,
-			OktaSessionCookieNames.IdentityEngine
+			sessionCookieName
 		);
 		return oktaAuthenticatedClient;
 	}
 
-	private async Task<string?> GetSessionIdFromBrowserAsync(
+	private async Task<(string Name, string Value)?> GetSessionCookieFromBrowserAsync(
 		string browserPath,
 		Uri orgUrl,
 		int timeoutSeconds
@@ -195,11 +196,13 @@ internal class OktaAuthenticator(
 		}
 		await using var browser = await browserLauncher.LaunchAsync( browserPath );
 
-		var sessionIdTcs = new TaskCompletionSource<string?>( TaskCreationOptions.RunContinuationsAsynchronously );
+		var sessionCookieTcs = new TaskCompletionSource<(string Name, string Value)?>(
+			TaskCreationOptions.RunContinuationsAsynchronously
+		);
 
 		// cancel if the total time exceeds the configured timeout, including all page loads and retries
 		using var cancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( timeoutSeconds ) );
-		cancellationTokenSource.Token.Register( () => sessionIdTcs.TrySetCanceled() );
+		cancellationTokenSource.Token.Register( () => sessionCookieTcs.TrySetCanceled() );
 
 		// cancel if we can't load a page within half the total timeout
 		using var pageTimer = new System.Timers.Timer(
@@ -219,7 +222,7 @@ internal class OktaAuthenticator(
 			messageWriter.WriteWarning( $"Navigating to {orgUrl}" );
 		}
 		await page.GoToAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-		return await sessionIdTcs.Task;
+		return await sessionCookieTcs.Task;
 
 		async Task OnPageLoadAsync() {
 			// reset the per-page timer on every page load
@@ -242,7 +245,7 @@ internal class OktaAuthenticator(
 			) {
 				// DSSO can sometimes take more than one attempt. Both this terminal page and the
 				// transient Agentless DSSO page have "Sign In" titles, so only retry from this path.
-				if( url.AbsolutePath.Equals( "/oauth2/v1/authorize", StringComparison.OrdinalIgnoreCase ) ) {
+				if( url.AbsolutePath.Equals( "/login/agentlessDsso/idx", StringComparison.OrdinalIgnoreCase ) ) {
 					if( attempt < 3 ) {
 						if( BmxEnvironment.IsDebug ) {
 							messageWriter.WriteWarning( $"Attempt {attempt} failed. Retry..." );
@@ -253,17 +256,28 @@ internal class OktaAuthenticator(
 						if( BmxEnvironment.IsDebug ) {
 							messageWriter.WriteWarning( "Okta passwordless authentication is not available" );
 						}
-						sessionIdTcs.SetResult( null );
+						sessionCookieTcs.SetResult( null );
 					}
 					return;
 				}
-				if( BmxEnvironment.IsDebug ) {
-					messageWriter.WriteWarning( "Okta sign-in page loaded; waiting for DSSO to complete" );
+
+				// Reaching this route AND the text being 'sign in' means we received a 200 and DSSO is not
+				// going to work. The happy path also uses this route but returns a 302 so we wouldn't reach this
+				if( url.AbsolutePath.Equals( "/oauth2/v1/authorize" ) ) {
+					if( BmxEnvironment.IsDebug ) {
+						messageWriter.WriteWarning( "Okta DSSO not supported in the current environment" );
+					}
+					sessionCookieTcs.SetResult( null );
 				}
 			}
 			var cookies = await page.GetCookiesAsync( orgUrl.AbsoluteUri ).WaitAsync( cancellationTokenSource.Token );
-			if( Array.Find( cookies, c => c.Name == "idx" )?.Value is string sessionId ) {
-				sessionIdTcs.SetResult( sessionId );
+			var sessionCookie = Array.Find(
+				cookies,
+				cookie => cookie.Name == OktaSessionCookieNames.IdentityEngine
+					|| cookie.Name == OktaSessionCookieNames.Classic
+			);
+			if( sessionCookie is not null ) {
+				sessionCookieTcs.SetResult( (sessionCookie.Name, sessionCookie.Value) );
 			}
 		}
 	}
