@@ -234,6 +234,7 @@ internal class OktaAuthenticator(
 			string title = await page.GetTitleAsync().WaitAsync( cancellationTokenSource.Token );
 			var url = new Uri( page.Url );
 			if( BmxEnvironment.IsDebug ) {
+				// Excludes any query parameters to prevent sensitive information from being logged
 				messageWriter.WriteWarning(
 					$"Browser loaded {url.GetLeftPart( UriPartial.Path )} with title '{title}'"
 				);
