@@ -6,3 +6,6 @@ publish/
 .vs/
 .vscode/
 .idea/
+
+# Auto-downloaded test tools (Detours, etc.)
+test/tools/
