@@ -16,8 +16,6 @@ jobs:
           ref: ${{ github.head_ref || github.ref }}
       - name: set up dotnet
         uses: Brightspace/third-party-actions@actions/setup-dotnet
-        with:
-          dotnet-version: 9.0.x
 
       - name: format
         id: format

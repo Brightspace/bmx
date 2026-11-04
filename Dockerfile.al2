@@ -7,11 +7,14 @@ ENV Version=${version}
 
 RUN yum update -y && yum install -y clang openssl-devel wget tar gzip libicu
 
+# used to determine which version of the SDK to install
+COPY global.json /global.json
+
 RUN mkdir -p /usr/share/dotnet && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
 RUN wget https://dot.net/v1/dotnet-install.sh \
     && chmod +x ./dotnet-install.sh \
-    && ./dotnet-install.sh --channel 9.0 --install-dir /usr/share/dotnet
+    && ./dotnet-install.sh --jsonfile /global.json --install-dir /usr/share/dotnet
 
 WORKDIR /source
 
